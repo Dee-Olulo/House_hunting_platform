@@ -1,0 +1,104 @@
+<div class="register-page">
+  <div class="register-content">
+    <!-- Left Side - Hero -->
+    <div class="register-hero">
+      <div class="hero-overlay">
+        <h2>Start Your Journey</h2>
+        <p>Join thousands finding their perfect home</p>
+        <div class="stats">
+          <div class="stat">
+            <h3>10,000+</h3>
+            <p>Properties</p>
+          </div>
+          <div class="stat">
+            <h3>5,000+</h3>
+            <p>Happy Users</p>
+          </div>
+          <div class="stat">
+            <h3>50+</h3>
+            <p>Cities</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side - Register Form -->
+    <div class="register-form-container">
+      <div class="form-wrapper">
+        <h2>Create Account</h2>
+        <p class="subtitle">Sign up to get started</p>
+
+        <form (ngSubmit)="register()" #registerForm="ngForm">
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              required
+              email
+              placeholder="Enter your email"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              [(ngModel)]="password"
+              required
+              minlength="6"
+              placeholder="Create a password (min. 6 characters)"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Role -->
+          <div class="form-group">
+            <label for="role">I am a</label>
+            <select
+              id="role"
+              name="role"
+              [(ngModel)]="role"
+              required
+              class="form-input"
+            >
+              <option value="">Select your role</option>
+              <option value="tenant">Tenant - Looking for a property</option>
+              <option value="landlord">Landlord - Listing properties</option>
+            </select>
+          </div>
+
+          <!-- Terms -->
+          <div class="terms-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="terms" required>
+              <span>I agree to the <a href="#">Terms & Conditions</a></span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            [disabled]="!registerForm.valid"
+            class="submit-btn"
+          >
+            Create Account
+          </button>
+        </form>
+
+        <!-- Login Link -->
+        <p class="switch-link">
+          Already have an account?
+          <a routerLink="/login" class="login-link">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

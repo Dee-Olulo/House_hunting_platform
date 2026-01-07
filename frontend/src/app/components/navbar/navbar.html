@@ -1,0 +1,40 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <!-- Logo/Brand -->
+    <a routerLink="/" class="navbar-brand">
+      <h1>House Hunting</h1>
+    </a>
+
+    <!-- Navigation Links -->
+    <ul class="navbar-menu">
+      <!-- Public Links -->
+      <li><a routerLink="/properties" routerLinkActive="active">Properties</a></li>
+      
+      <!-- Tenant Links -->
+      <li *ngIf="isLoggedIn() && getUserRole() === 'tenant'">
+        <a routerLink="/tenant/bookings" routerLinkActive="active">My Bookings</a>
+      </li>
+      
+      <!-- Landlord Links -->
+      <li *ngIf="isLoggedIn() && getUserRole() === 'landlord'">
+        <a routerLink="/landlord/properties" routerLinkActive="active">My Properties</a>
+      </li>
+      
+      <!-- Admin Links -->
+      <li *ngIf="isLoggedIn() && getUserRole() === 'admin'">
+        <a routerLink="/admin/dashboard" routerLinkActive="active">Admin Dashboard</a>
+      </li>
+
+      <!-- Auth Links -->
+      <li *ngIf="!isLoggedIn()">
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+      </li>
+      <li *ngIf="!isLoggedIn()">
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+      </li>
+      <li *ngIf="isLoggedIn()">
+        <button (click)="logout()" class="logout-btn">Logout</button>
+      </li>
+    </ul>
+  </div>
+</nav>

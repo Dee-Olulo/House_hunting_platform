@@ -1,0 +1,21 @@
+.app-header {
+  padding: 1rem;
+  background-color: #1f2937;
+  color: white;
+  text-align: center;
+}
+
+.app-content {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+}
+.app-footer {
+  padding: 1rem;
+  background-color: #1f2937;
+  color: white;
+  text-align: center;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
