@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from config import Config
 from extensions import mongo, bcrypt, jwt
+from flask_cors import CORS
 
 
 
@@ -15,6 +16,7 @@ def create_app():
     mongo.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    CORS(app)
 
     # Register blueprints
     from routes.auth_routes import auth_bp
