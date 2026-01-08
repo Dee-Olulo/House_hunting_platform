@@ -28,6 +28,16 @@
         <h2>Create Account</h2>
         <p class="subtitle">Sign up to get started</p>
 
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="successMessage" class="success-message">
+          {{ successMessage }}
+        </div>
+
         <form (ngSubmit)="register()" #registerForm="ngForm">
           <!-- Email -->
           <div class="form-group">
@@ -41,6 +51,7 @@
               email
               placeholder="Enter your email"
               class="form-input"
+              [disabled]="isLoading"
             />
           </div>
 
@@ -56,6 +67,7 @@
               minlength="6"
               placeholder="Create a password (min. 6 characters)"
               class="form-input"
+              [disabled]="isLoading"
             />
           </div>
 
@@ -68,6 +80,7 @@
               [(ngModel)]="role"
               required
               class="form-input"
+              [disabled]="isLoading"
             >
               <option value="">Select your role</option>
               <option value="tenant">Tenant - Looking for a property</option>
@@ -78,7 +91,7 @@
           <!-- Terms -->
           <div class="terms-group">
             <label class="checkbox-label">
-              <input type="checkbox" name="terms" required>
+              <input type="checkbox" name="terms" required [disabled]="isLoading">
               <span>I agree to the <a href="#">Terms & Conditions</a></span>
             </label>
           </div>
@@ -86,10 +99,10 @@
           <!-- Submit Button -->
           <button
             type="submit"
-            [disabled]="!registerForm.valid"
+            [disabled]="!registerForm.valid || isLoading"
             class="submit-btn"
           >
-            Create Account
+            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
           </button>
         </form>
 

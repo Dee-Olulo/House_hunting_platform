@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth';
@@ -10,19 +10,29 @@ import { AuthService } from '../../services/auth';
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  
+  isLoggedIn = false;
+  userRole: string | null = null;
+  userEmail: string | null = null;
 
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+  ngOnInit(): void {
+    // Subscribe to authentication status
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      this.isLoggedIn = isAuth;
+      if (isAuth) {
+        this.userRole = this.authService.getUserRole();
+        this.userEmail = this.authService.getUserEmail();
+      } else {
+        this.userRole = null;
+        this.userEmail = null;
+      }
+    });
   }
 
-  getUserRole(): string | null {
-    return localStorage.getItem('role');
-  }
-
-  logout() {
+  logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
