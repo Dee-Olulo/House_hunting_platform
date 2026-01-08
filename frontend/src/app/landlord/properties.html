@@ -1,0 +1,94 @@
+<div class="properties-container">
+  <div class="properties-header">
+    <h1>My Properties</h1>
+    <button routerLink="/landlord/properties/add" class="btn-add">
+      <span>+ Add Property</span>
+    </button>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading your properties...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && properties.length === 0" class="empty-state">
+    <div class="empty-icon">🏠</div>
+    <h2>No Properties Yet</h2>
+    <p>Start by adding your first property listing</p>
+    <button routerLink="/landlord/properties/add" class="btn-primary">
+      Add Your First Property
+    </button>
+  </div>
+
+  <!-- Properties Grid -->
+  <div *ngIf="!isLoading && properties.length > 0" class="properties-grid">
+    <div *ngFor="let property of properties" class="property-card">
+      <!-- Property Image -->
+      <div class="property-image">
+        <img 
+          *ngIf="property.images && property.images.length > 0"
+          [src]="getImageUrl(property.images[0])" 
+          [alt]="property.title"
+          (error)="$any($event.target).src='assets/placeholder.jpg'"
+        />
+        <img 
+          *ngIf="!property.images || property.images.length === 0"
+          src="assets/placeholder.jpg" 
+          alt="No image"
+        />
+        <span [class]="'status-badge ' + getStatusClass(property.status || 'active')">
+          {{ property.status || 'active' }}
+        </span>
+      </div>
+
+      <!-- Property Details -->
+      <div class="property-details">
+        <h3>{{ property.title }}</h3>
+        <p class="property-location">📍 {{ property.city }}, {{ property.state }}</p>
+        <p class="property-description">{{ property.description | slice:0:100 }}...</p>
+        
+        <div class="property-specs">
+          <span>🛏️ {{ property.bedrooms }} Beds</span>
+          <span>🚿 {{ property.bathrooms }} Baths</span>
+          <span>📐 {{ property.area_sqft }} sqft</span>
+        </div>
+
+        <div class="property-footer">
+          <div class="property-price">
+            KES {{ property.price | number }}
+            <span class="price-period">/month</span>
+          </div>
+          <div class="property-views">
+            👁️ {{ property.views || 0 }} views
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="property-actions">
+          <button (click)="viewProperty(property._id!)" class="btn-view" title="View">
+            👁️ View
+          </button>
+          <button (click)="editProperty(property._id!)" class="btn-edit" title="Edit">
+            ✏️ Edit
+          </button>
+          <button (click)="confirmProperty(property._id!)" class="btn-confirm" title="Confirm Listing">
+            ✓ Confirm
+          </button>
+          <button (click)="deleteProperty(property._id!, property.title)" class="btn-delete" title="Delete">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
