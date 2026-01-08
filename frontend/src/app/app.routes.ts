@@ -4,6 +4,10 @@ import { RouterOutlet } from '@angular/router';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { LoginComponent } from './auth/login/login';
+import { RegisterComponent } from './auth/register/register';
+import { authGuard } from './guards/auth-guard';
+import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -16,7 +20,7 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () =>
       import('./auth/register/register')
-        .then(m => m.Register)
+        .then(m => m.RegisterComponent)
   },
 
   // Default route
