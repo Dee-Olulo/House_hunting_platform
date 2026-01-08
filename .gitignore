@@ -1,8 +1,40 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 # Python virtual environment
-backend/venv/
+# backend/venv/
 
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables
 .env
+
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Uploaded files
+uploads/
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
 from extensions import mongo, bcrypt
 from models.user import User
 from utils.validators import validate_email, validate_password, validate_role
@@ -80,17 +80,22 @@ def login():
         if not bcrypt.check_password_hash(user["password"], password):
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # Create JWT token including role
-        access_token = create_access_token(identity={
-            "user_id": str(user["_id"]),
-            "email": user["email"],
-            "role": user["role"]
-        })
-
+        # ✅ FIXED: Create JWT token with correct structure
+        # identity must be a STRING (becomes 'sub' claim)
+        # Additional data goes in additional_claims
+        access_token = create_access_token(
+            identity=str(user["_id"]),  # ✅ String user ID for 'sub' claim
+            additional_claims={
+                "email": user["email"],
+                "role": user["role"]
+            }
+        )
+        
         return jsonify({
             "message": "Login successful",
             "access_token": access_token,
             "user": {
+                "user_id": str(user["_id"]),  # Added for clarity
                 "email": user["email"],
                 "role": user["role"]
             }
@@ -106,9 +111,16 @@ def login():
 @jwt_required()
 def get_current_user():
     try:
-        current_user = get_jwt_identity()
+        # ✅ FIXED: Get user ID from identity and other data from claims
+        user_id = get_jwt_identity()  # Returns string user ID
+        claims = get_jwt()  # Get additional claims
+        
         return jsonify({
-            "user": current_user
+            "user": {
+                "user_id": user_id,
+                "email": claims.get("email"),
+                "role": claims.get("role")
+            }
         }), 200
     except Exception as e:
         return jsonify({"error": f"Failed to get user: {str(e)}"}), 500
@@ -122,10 +134,16 @@ def get_current_user():
 @jwt_required()
 @admin_only
 def admin_dashboard():
-    current_user = get_jwt_identity()
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    
     return jsonify({
         "message": "Welcome to the admin dashboard",
-        "user": current_user
+        "user": {
+            "user_id": user_id,
+            "email": claims.get("email"),
+            "role": claims.get("role")
+        }
     }), 200
 
 # Landlord-only route
@@ -133,10 +151,16 @@ def admin_dashboard():
 @jwt_required()
 @landlord_only
 def landlord_properties():
-    current_user = get_jwt_identity()
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    
     return jsonify({
         "message": "Here are your properties",
-        "user": current_user
+        "user": {
+            "user_id": user_id,
+            "email": claims.get("email"),
+            "role": claims.get("role")
+        }
     }), 200
 
 # Tenant-only route
@@ -144,8 +168,14 @@ def landlord_properties():
 @jwt_required()
 @tenant_only
 def tenant_bookings():
-    current_user = get_jwt_identity()
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    
     return jsonify({
         "message": "Here are your bookings",
-        "user": current_user
+        "user": {
+            "user_id": user_id,
+            "email": claims.get("email"),
+            "role": claims.get("role")
+        }
     }), 200
