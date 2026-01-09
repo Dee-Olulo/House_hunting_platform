@@ -5,30 +5,36 @@
       <h1>House Hunting</h1>
     </a>
 
+
     <!-- Navigation Links -->
     <ul class="navbar-menu">
       <!-- Public Links -->
-      <li><a routerLink="/properties" routerLinkActive="active">Properties</a></li>
-      
+      <li><a routerLink="/properties" routerLinkActive="active"> View\Edit Properties</a></li>
+     
       <!-- Tenant Links -->
       <li *ngIf="isLoggedIn && userRole === 'tenant'">
         <a routerLink="/tenant/bookings" routerLinkActive="active">My Bookings</a>
       </li>
-      
+     
       <!-- Landlord Links -->
       <li *ngIf="isLoggedIn && userRole === 'landlord'">
-        <a routerLink="/landlord/properties" routerLinkActive="active">My Properties</a>
-      </li>
+         <a routerLink="/landlord/properties" routerLinkActive="active">My Properties</a>
+
+
+      </li> 
       
+     
       <!-- Admin Links -->
       <li *ngIf="isLoggedIn && userRole === 'admin'">
         <a routerLink="/admin/dashboard" routerLinkActive="active">Admin Dashboard</a>
       </li>
 
+
       <!-- User Email Display -->
       <li *ngIf="isLoggedIn" class="user-email">
         <span>{{ userEmail }}</span>
       </li>
+
 
       <!-- Auth Links -->
       <li *ngIf="!isLoggedIn">
@@ -43,3 +49,4 @@
     </ul>
   </div>
 </nav>
+

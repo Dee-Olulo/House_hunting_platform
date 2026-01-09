@@ -1,15 +1,21 @@
-<div class="add-property-container">
+<div class="edit-property-container">
   <div class="form-header">
-    <h1>Add New Property</h1>
-    <p>Fill in the details below to list your property</p>
+    <h1>Edit Property</h1>
+    <p>Update your property details</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isFetching" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading property...</p>
   </div>
 
   <!-- Error Message -->
-  <div *ngIf="errorMessage" class="alert alert-error">
+  <div *ngIf="errorMessage && !isFetching" class="alert alert-error">
     {{ errorMessage }}
   </div>
 
-  <form (ngSubmit)="onSubmit()" #propertyForm="ngForm">
+  <form *ngIf="!isFetching" (ngSubmit)="onSubmit()" #propertyForm="ngForm">
     <!-- Basic Information -->
     <div class="form-section">
       <h2>Basic Information</h2>
@@ -24,7 +30,6 @@
             [(ngModel)]="property.title"
             required
             minlength="5"
-            placeholder="e.g., Beautiful 2BR Apartment in Westlands"
             class="form-input"
           />
         </div>
@@ -40,7 +45,6 @@
             required
             minlength="20"
             rows="4"
-            placeholder="Describe your property in detail..."
             class="form-input"
           ></textarea>
         </div>
@@ -72,7 +76,6 @@
             [(ngModel)]="property.price"
             required
             min="0"
-            placeholder="50000"
             class="form-input"
           />
         </div>
@@ -92,7 +95,6 @@
             name="address"
             [(ngModel)]="property.address"
             required
-            placeholder="123 Main Street, Apartment 4B"
             class="form-input"
           />
         </div>
@@ -107,7 +109,6 @@
             name="city"
             [(ngModel)]="property.city"
             required
-            placeholder="Nairobi"
             class="form-input"
           />
         </div>
@@ -120,7 +121,6 @@
             name="state"
             [(ngModel)]="property.state"
             required
-            placeholder="Nairobi County"
             class="form-input"
           />
         </div>
@@ -135,7 +135,6 @@
             name="zip_code"
             [(ngModel)]="property.zip_code"
             required
-            placeholder="00100"
             class="form-input"
           />
         </div>
@@ -148,7 +147,6 @@
             name="country"
             [(ngModel)]="property.country"
             required
-            placeholder="Kenya"
             class="form-input"
           />
         </div>
@@ -156,27 +154,25 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="latitude">Latitude (optional)</label>
+          <label for="latitude">Latitude</label>
           <input
             type="number"
             id="latitude"
             name="latitude"
             [(ngModel)]="property.latitude"
             step="0.000001"
-            placeholder="-1.286389 (optional)"
             class="form-input"
           />
         </div>
 
         <div class="form-group">
-          <label for="longitude">Longitude (optional)</label>
+          <label for="longitude">Longitude</label>
           <input
             type="number"
             id="longitude"
             name="longitude"
             [(ngModel)]="property.longitude"
             step="0.000001"
-            placeholder="36.817223 (optional)"
             class="form-input"
           />
         </div>
@@ -197,7 +193,6 @@
             [(ngModel)]="property.bedrooms"
             required
             min="0"
-            placeholder="2"
             class="form-input"
           />
         </div>
@@ -212,7 +207,6 @@
             required
             min="0"
             step="0.5"
-            placeholder="1.5"
             class="form-input"
           />
         </div>
@@ -226,7 +220,6 @@
             [(ngModel)]="property.area_sqft"
             required
             min="0"
-            placeholder="1000"
             class="form-input"
           />
         </div>
@@ -253,82 +246,35 @@
     <!-- Images -->
     <div class="form-section">
       <h2>Images</h2>
-      <p class="form-hint">Upload up to 20 images (max 5MB each)</p>
+      <p class="form-note">Image upload temporarily disabled. You can edit other property details.</p>
       
-      <div class="file-upload">
-        <input
-          type="file"
-          id="images"
-          accept="image/*"
-          multiple
-          (change)="onImageSelect($event)"
-          #fileInput
-        />
-        <label for="images" class="file-upload-label">
-          📷 Choose Images
-        </label>
-      </div>
-
-      <!-- Selected Images Preview -->
-      <div *ngIf="selectedImages.length > 0" class="images-preview">
-        <h3>Selected Images ({{ selectedImages.length }})</h3>
+      <!-- Existing Images (Display Only) -->
+      <div *ngIf="existingImages.length > 0" class="images-preview">
+        <h3>Current Images ({{ existingImages.length }})</h3>
         <div class="images-grid">
-          <div *ngFor="let image of selectedImages; let i = index" class="image-preview">
-            <img [src]="image" alt="Preview" />
-            <button type="button" (click)="removeImage(i)" class="btn-remove">×</button>
-            <span class="image-name">{{ image.name }}</span>
+          <div *ngFor="let url of existingImages; let i = index" class="image-preview">
+            <img [src]="getImageUrl(url)" alt="Property image" />
           </div>
         </div>
       </div>
-
-      <!-- Uploaded Images -->
-      <div *ngIf="uploadedImageUrls.length > 0" class="images-preview">
-        <h3>Uploaded Images ({{ uploadedImageUrls.length }})</h3>
-        <div class="images-grid">
-          <div *ngFor="let url of uploadedImageUrls; let i = index" class="image-preview">
-            <img [src]="url" alt="Uploaded" />
-            <button type="button" (click)="removeUploadedImage(i)" class="btn-remove">×</button>
-          </div>
-        </div>
+      
+      <div *ngIf="!existingImages || existingImages.length === 0" class="no-images">
+        <p>No images uploaded yet</p>
       </div>
     </div>
 
     <!-- Form Actions -->
     <div class="form-actions">
-    <!-- Add this TEMPORARY debug section right before your form actions -->
-<div class="debug-info" style="background: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
-  <h3 style="margin: 0 0 10px 0; color: #856404;">🔍 Form Debug Info</h3>
-  <p><strong>Form Valid:</strong> {{ propertyForm.valid }}</p>
-  <p><strong>Form Dirty:</strong> {{ propertyForm.dirty }}</p>
-  <p><strong>Is Loading:</strong> {{ isLoading }}</p>
-  <p><strong>Is Uploading:</strong> {{ isUploading }}</p>
-  
-  <details>
-    <summary style="cursor: pointer; font-weight: bold; margin-top: 10px;">Show Invalid Fields</summary>
-    <div style="margin-top: 10px;">
-      <div *ngFor="let control of propertyForm.controls | keyvalue">
-        <p *ngIf="control.value.invalid" style="color: red;">
-          ❌ {{ control.key }}: 
-          <span *ngIf="control.value.errors?.['required']">Required</span>
-          <span *ngIf="control.value.errors?.['minlength']">Too short (min: {{ control.value.errors?.['minlength'].requiredLength }})</span>
-          <span *ngIf="control.value.errors?.['min']">Value too low</span>
-          <span *ngIf="control.value.errors?.['email']">Invalid email</span>
-        </p>
-      </div>
-    </div>
-  </details>
-</div>
-      <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="isLoading || isUploading">
+      <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="isLoading">
         Cancel
       </button>
       <button
         type="submit"
         class="btn-submit"
-        [disabled]="!propertyForm.valid || isLoading || isUploading"
+        [disabled]="!propertyForm.valid || isLoading"
       >
-        <span *ngIf="!isLoading && !isUploading">Create Property</span>
-        <span *ngIf="isUploading">Uploading Images...</span>
-        <span *ngIf="isLoading && !isUploading">Creating Property...</span>
+        <span *ngIf="!isLoading">Update Property</span>
+        <span *ngIf="isLoading">Updating...</span>
       </button>
     </div>
   </form>

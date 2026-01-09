@@ -48,6 +48,7 @@ export class PropertiesComponent implements OnInit {
 
   editProperty(propertyId: string): void {
     this.router.navigate(['/landlord/properties/edit', propertyId]);
+    
   }
 
   deleteProperty(propertyId: string, title: string): void {

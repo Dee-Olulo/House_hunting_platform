@@ -1,15 +1,10 @@
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PropertyService, Property } from '../../services/property.service';
 import { UploadService } from '../../services/upload.service';
-
-// ✅ NEW: Interface for image preview
-interface ImagePreview {
-  file: File;
-  previewUrl: string;
-}
 
 @Component({
   selector: 'app-add-property',
@@ -28,8 +23,8 @@ export class AddPropertyComponent {
     state: '',
     zip_code: '',
     country: 'Kenya',
-    latitude: 0,
-    longitude: 0,
+    latitude: undefined,
+    longitude: undefined,
     price: 0,
     bedrooms: 0,
     bathrooms: 0,
@@ -39,8 +34,7 @@ export class AddPropertyComponent {
     amenities: []
   };
 
-  // ✅ FIXED: Store ImagePreview instead of just File
-  selectedImages: ImagePreview[] = [];
+  selectedImages: File[] = [];
   uploadedImageUrls: string[] = [];
   selectedAmenities: string[] = [];
   
@@ -62,7 +56,6 @@ export class AddPropertyComponent {
     private router: Router
   ) {}
 
-  // ✅ FIXED: Generate preview URLs for images
   onImageSelect(event: any): void {
     const files = Array.from(event.target.files) as File[];
     
@@ -84,20 +77,9 @@ export class AddPropertyComponent {
       return;
     }
 
-    // ✅ FIXED: Create preview URLs using FileReader
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.selectedImages.push({
-          file: file,
-          previewUrl: e.target.result
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    this.selectedImages = [...this.selectedImages, ...validFiles];
   }
 
-  // ✅ FIXED: Remove image from preview array
   removeImage(index: number): void {
     this.selectedImages.splice(index, 1);
   }
@@ -127,7 +109,6 @@ export class AddPropertyComponent {
     return this.selectedAmenities.includes(amenity);
   }
 
-  // ✅ FIXED: Extract actual File objects from ImagePreview array
   async uploadImages(): Promise<string[]> {
     if (this.selectedImages.length === 0) {
       return [];
@@ -136,10 +117,7 @@ export class AddPropertyComponent {
     this.isUploading = true;
     
     try {
-      // Extract File objects from ImagePreview array
-      const files = this.selectedImages.map(img => img.file);
-      
-      const response = await this.uploadService.uploadMultipleImages(files).toPromise();
+      const response = await this.uploadService.uploadMultipleImages(this.selectedImages).toPromise();
       this.isUploading = false;
       
       if (response && response.files) {
@@ -164,8 +142,6 @@ export class AddPropertyComponent {
       if (this.selectedImages.length > 0) {
         const imageUrls = await this.uploadImages();
         this.uploadedImageUrls = [...this.uploadedImageUrls, ...imageUrls];
-        // Clear selected images after successful upload
-        this.selectedImages = [];
       }
 
       // Prepare property data
@@ -205,3 +181,4 @@ export class AddPropertyComponent {
     }
   }
 }
+

@@ -9,47 +9,6 @@ import { RegisterComponent } from './auth/register/register';
 import { authGuard } from './guards/auth-guard';
 import { roleGuard } from './guards/role.guard';
 
-// export const routes: Routes = [
-//   {
-//     path: 'login',
-//     loadComponent: () =>
-//       import('./auth/login/login')
-//         .then(m => m.LoginComponent)
-//   },
-//   {
-//     path: 'register',
-//     loadComponent: () =>
-//       import('./auth/register/register')
-//         .then(m => m.RegisterComponent)
-//   },
-
-//   // Default route
-//   { path: '', redirectTo: 'login', pathMatch: 'full' },
-
-//   // Catch-all
-//   { path: '**', redirectTo: 'login' }
-// ];
-
-
-// @Injectable({
-//   providedIn: 'root'
-// })
-// export class AuthService {
-//   // Flask backend base URL
-//   private API_URL = 'http://127.0.0.1:5000/auth';
-
-//   constructor(private http: HttpClient) {}
-
-//   // REGISTER user
-//   register(data: { email: string; password: string; role: string }): Observable<any> {
-//     return this.http.post(`${this.API_URL}/register`, data);
-//   }
-
-//   // LOGIN user
-//   login(data: { email: string; password: string }): Observable<any> {
-//     return this.http.post(`${this.API_URL}/login`, data);
-//   }
-// }
 
 
 
@@ -85,13 +44,19 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./landlord/add-property/add-property')
             .then(m => m.AddPropertyComponent)
+      },
+      {
+        path: 'properties/edit/:id',
+        loadComponent: () =>
+          import('./landlord/edit-property/edit-property')
+            .then(m => m.EditPropertyComponent)
       }
     ]
   },
 
-  // Default route
+//   //Default route
 //   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
-  // Catch-all
+//  // Catch-all
 //   { path: '**', redirectTo: 'login' }
 ];
