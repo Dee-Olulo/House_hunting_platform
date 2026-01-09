@@ -26,6 +26,15 @@ export const routes: Routes = [
       import('./auth/register/register')
         .then(m => m.RegisterComponent)
   },
+   // General property view route (accessible to all authenticated users)
+  {
+    path: 'properties/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./property-details/property-details')
+        .then(m => m.PropertyDetailsComponent)
+  },
+    
 
   // Landlord routes
   {

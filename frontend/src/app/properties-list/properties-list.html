@@ -1,0 +1,195 @@
+<div class="properties-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Find Your Dream Home</h1>
+      <p>Browse through {{ properties.length }} available properties</p>
+    </div>
+    <button (click)="toggleFilters()" class="btn-filter-toggle">
+      🔍 {{ showFilters ? 'Hide' : 'Show' }} Filters
+    </button>
+  </div>
+
+  <!-- Filters Panel -->
+  <div class="filters-panel" [class.show]="showFilters">
+    <div class="filters-content">
+      <h3>Search & Filter</h3>
+      
+      <div class="filter-group">
+        <label for="searchCity">City/Location</label>
+        <input
+          type="text"
+          id="searchCity"
+          [(ngModel)]="searchCity"
+          placeholder="e.g., Nairobi"
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Price Range (KES)</label>
+        <div class="price-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minPrice"
+            placeholder="Min"
+            class="filter-input"
+          />
+          <span>-</span>
+          <input
+            type="number"
+            [(ngModel)]="maxPrice"
+            placeholder="Max"
+            class="filter-input"
+          />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="bedrooms">Bedrooms</label>
+        <select
+          id="bedrooms"
+          [(ngModel)]="selectedBedrooms"
+          class="filter-input"
+        >
+          <option [ngValue]="null">Any</option>
+          <option *ngFor="let num of bedroomOptions" [ngValue]="num">
+            {{ num }}{{ num === 0 ? ' (Studio)' : '' }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="propertyType">Property Type</label>
+        <select
+          id="propertyType"
+          [(ngModel)]="selectedType"
+          class="filter-input"
+        >
+          <option value="">All Types</option>
+          <option *ngFor="let type of propertyTypes" [value]="type">
+            {{ type | titlecase }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button (click)="applyFilters()" class="btn-apply">
+          Apply Filters
+        </button>
+        <button 
+          (click)="clearFilters()" 
+          class="btn-clear"
+          [disabled]="!hasActiveFilters()"
+        >
+          Clear All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sort and Count -->
+  <div class="controls-bar">
+    <div class="results-count">
+      <span class="count-number">{{ filteredProperties.length }}</span>
+      <span class="count-label">properties found</span>
+    </div>
+
+    <div class="sort-controls">
+      <label for="sortBy">Sort by:</label>
+      <select
+        id="sortBy"
+        [(ngModel)]="sortBy"
+        (change)="onSortChange()"
+        class="sort-select"
+      >
+        <option value="newest">Newest First</option>
+        <option value="price_low">Price: Low to High</option>
+        <option value="price_high">Price: High to Low</option>
+        <option value="bedrooms">Most Bedrooms</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading properties...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredProperties.length === 0" class="empty-state">
+    <div class="empty-icon">🏠</div>
+    <h2>No Properties Found</h2>
+    <p>Try adjusting your search filters</p>
+    <button (click)="clearFilters()" class="btn-clear-filters">
+      Clear All Filters
+    </button>
+  </div>
+
+  <!-- Properties Grid -->
+  <div *ngIf="!isLoading && filteredProperties.length > 0" class="properties-grid">
+    <div 
+      *ngFor="let property of filteredProperties" 
+      class="property-card"
+      (click)="viewProperty(property._id!)"
+    >
+      <!-- Property Image -->
+      <div class="property-image">
+        <!-- Has Images -->
+        <img 
+          *ngIf="property.images && property.images.length > 0"
+          [src]="getImageUrl(property.images[0])" 
+          [alt]="property.title"
+          (error)="$any($event.target).style.display='none'"
+        />
+        
+        <!-- No Images -->
+        <div 
+          *ngIf="!property.images || property.images.length === 0"
+          class="no-image-placeholder"
+        >
+          <span class="placeholder-icon">🏠</span>
+        </div>
+        
+        <div class="image-overlay">
+          <span class="view-details">View Details</span>
+        </div>
+      </div>
+
+      <!-- Property Info -->
+      <div class="property-info">
+        <div class="property-type-badge">
+          {{ property.property_type | titlecase }}
+        </div>
+        
+        <h3 class="property-title">{{ property.title }}</h3>
+        
+        <p class="property-location">
+          📍 {{ property.city }}, {{ property.state }}
+        </p>
+
+        <div class="property-specs">
+          <span class="spec">🛏️ {{ property.bedrooms }}</span>
+          <span class="spec">🚿 {{ property.bathrooms }}</span>
+          <span class="spec">📐 {{ property.area_sqft }} sqft</span>
+        </div>
+
+        <div class="property-footer">
+          <div class="property-price">
+            KES {{ property.price | number }}
+            <span class="price-period">/mo</span>
+          </div>
+          <div class="property-views">
+            👁️ {{ property.views || 0 }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

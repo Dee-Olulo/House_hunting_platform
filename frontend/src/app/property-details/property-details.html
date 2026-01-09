@@ -1,0 +1,218 @@
+<div class="property-details-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading property details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="error-container">
+    <h2>{{ errorMessage }}</h2>
+    <button (click)="goBack()" class="btn-back">← Back to Properties</button>
+  </div>
+
+  <!-- Property Details -->
+  <div *ngIf="property && !isLoading" class="property-content">
+    <!-- Back Button -->
+    <button (click)="goBack()" class="btn-back">← Back to Properties</button>
+
+    <!-- Image Gallery -->
+    <div class="image-gallery">
+      <div class="main-image">
+        <!-- Has Images -->
+        <div *ngIf="property.images && property.images.length > 0">
+          <img 
+            [src]="getImageUrl(property.images[currentImageIndex])" 
+            [alt]="property.title"
+          />
+          
+          <!-- Navigation Arrows (only if multiple images) -->
+          <button 
+            *ngIf="property.images.length > 1"
+            (click)="previousImage()" 
+            class="nav-btn prev-btn"
+          >
+            ‹
+          </button>
+          <button 
+            *ngIf="property.images.length > 1"
+            (click)="nextImage()" 
+            class="nav-btn next-btn"
+          >
+            ›
+          </button>
+
+          <!-- Image Counter -->
+          <div *ngIf="property.images.length > 1" class="image-counter">
+            {{ currentImageIndex + 1 }} / {{ property.images.length }}
+          </div>
+        </div>
+
+        <!-- No Images -->
+        <div *ngIf="!property.images || property.images.length === 0" class="no-image-placeholder">
+          <div class="placeholder-content">
+            <span class="placeholder-icon">🏠</span>
+            <p>No images available</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thumbnail Strip (only if multiple images) -->
+      <div *ngIf="property.images && property.images.length > 1" class="thumbnails">
+        <div 
+          *ngFor="let image of property.images; let i = index"
+          [class.active]="i === currentImageIndex"
+          (click)="selectImage(i)"
+          class="thumbnail"
+        >
+          <img [src]="getImageUrl(image)" [alt]="'Image ' + (i + 1)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Property Info -->
+    <div class="property-info-section">
+      <!-- Main Info -->
+      <div class="main-info">
+        <div class="property-header">
+          <h1>{{ property.title }}</h1>
+          <div class="property-price">
+            KES {{ property.price | number }}
+            <span class="price-period">/month</span>
+          </div>
+        </div>
+
+        <p class="property-location">
+          📍 {{ property.address }}, {{ property.city }}, {{ property.state }}
+        </p>
+
+        <div class="property-specs">
+          <div class="spec-item">
+            <span class="spec-icon">🛏️</span>
+            <span class="spec-label">{{ property.bedrooms }} Bedrooms</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-icon">🚿</span>
+            <span class="spec-label">{{ property.bathrooms }} Bathrooms</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-icon">📐</span>
+            <span class="spec-label">{{ property.area_sqft }} sqft</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-icon">🏠</span>
+            <span class="spec-label">{{ property.property_type | titlecase }}</span>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button (click)="bookViewing()" class="btn-primary">
+            📅 Book Viewing
+          </button>
+          <button (click)="contactLandlord()" class="btn-secondary">
+            💬 Contact Landlord
+          </button>
+        </div>
+
+        <!-- Description -->
+        <div class="description-section">
+          <h2>Description</h2>
+          <p>{{ property.description }}</p>
+        </div>
+
+        <!-- Amenities -->
+        <div *ngIf="property.amenities && property.amenities.length > 0" class="amenities-section">
+          <h2>Amenities</h2>
+          <div class="amenities-list">
+            <div *ngFor="let amenity of property.amenities" class="amenity-badge">
+              ✓ {{ amenity | titlecase }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Property Details -->
+        <div class="details-section">
+          <h2>Property Details</h2>
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Type:</span>
+              <span class="detail-value">{{ property.property_type | titlecase }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Bedrooms:</span>
+              <span class="detail-value">{{ property.bedrooms }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Bathrooms:</span>
+              <span class="detail-value">{{ property.bathrooms }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Area:</span>
+              <span class="detail-value">{{ property.area_sqft }} sqft</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">City:</span>
+              <span class="detail-value">{{ property.city }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">State:</span>
+              <span class="detail-value">{{ property.state }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Zip Code:</span>
+              <span class="detail-value">{{ property.zip_code }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status:</span>
+              <span class="detail-value status-badge">{{ property.status || 'active' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="location-section">
+          <h2>Location</h2>
+          <p class="full-address">
+            {{ property.address }}<br>
+            {{ property.city }}, {{ property.state }} {{ property.zip_code }}<br>
+            {{ property.country }}
+          </p>
+          <!-- TODO: Add map integration here -->
+          <div class="map-placeholder">
+            <p>📍 Map view coming soon</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="contact-card">
+          <h3>Interested in this property?</h3>
+          <p>Contact the landlord to schedule a viewing or get more information.</p>
+          <button (click)="contactLandlord()" class="btn-contact-full">
+            💬 Send Message
+          </button>
+          <button (click)="bookViewing()" class="btn-book-full">
+            📅 Book Viewing
+          </button>
+        </div>
+
+        <div class="stats-card">
+          <h3>Property Stats</h3>
+          <div class="stat-row">
+            <span>Views:</span>
+            <span>{{ property.views || 0 }}</span>
+          </div>
+          <div class="stat-row">
+            <span>Listed:</span>
+            <span>{{ property.created_at | date:'mediumDate' }}</span>
+          </div>
+          <div class="stat-row">
+            <span>Updated:</span>
+            <span>{{ property.updated_at | date:'mediumDate' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
