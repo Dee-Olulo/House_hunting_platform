@@ -1,3 +1,4 @@
+
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
@@ -62,10 +63,34 @@ export const routes: Routes = [
       }
     ]
   },
+    // Tenant routes
+  {
+    path: 'tenant',
+    canActivate: [authGuard, roleGuard],
+    data: { role: 'tenant' },
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./tenant/dashboard/dashboard.component')
+            .then(m => m.DashboardComponent)
+      },
+       {
+        path: 'property/:id',
+        loadComponent: () =>
+          import('./property-details/property-details')
+            .then(m => m.PropertyDetailsComponent)
+      },
 
 //   //Default route
 //   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
 //  // Catch-all
 //   { path: '**', redirectTo: 'login' }
+]},
 ];

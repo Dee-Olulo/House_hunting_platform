@@ -44,7 +44,7 @@ export class LoginComponent {
         } else if (role === 'landlord') {
           this.router.navigate(['/landlord/properties']);
         } else if (role === 'tenant') {
-          this.router.navigate(['/tenant/bookings']);
+          this.router.navigate(['/tenant/dashboard']);
         } else {
           this.router.navigate(['/dashboard']);
         }

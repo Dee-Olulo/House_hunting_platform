@@ -1,0 +1,289 @@
+<!-- src/app/tenant/dashboard/dashboard.component.html -->
+
+<div class="dashboard-container">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <h1>Find Your Perfect Home</h1>
+    <p class="subtitle">Browse through {{totalProperties}} available properties</p>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-section">
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Search by location, title, or description..."
+        [(ngModel)]="searchFilters.search"
+        (keyup.enter)="applyFilters()"
+        class="search-input"
+      />
+      <button class="search-btn" (click)="applyFilters()">
+        <i class="fas fa-search"></i> Search
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters and Controls -->
+  <div class="controls-section">
+    <div class="controls-left">
+      <button class="filter-toggle-btn" (click)="toggleFilters()">
+        <i class="fas fa-filter"></i>
+        {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+      </button>
+      <span class="results-count">{{totalProperties}} properties found</span>
+    </div>
+
+    <div class="controls-right">
+      <select
+        [(ngModel)]="searchFilters.sort_by"
+        (change)="applyFilters()"
+        class="sort-select"
+      >
+        <option *ngFor="let option of sortOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+
+      <div class="view-toggle">
+        <button
+          [class.active]="viewMode === 'grid'"
+          (click)="viewMode = 'grid'"
+          class="view-btn"
+        >
+          <i class="fas fa-th"></i>
+        </button>
+        <button
+          [class.active]="viewMode === 'list'"
+          (click)="viewMode = 'list'"
+          class="view-btn"
+        >
+          <i class="fas fa-list"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content" [class.filters-open]="showFilters">
+    <!-- Sidebar Filters -->
+    <aside class="filters-sidebar" *ngIf="showFilters">
+      <div class="filters-header">
+        <h3>Filters</h3>
+        <button class="reset-btn" (click)="resetFilters()">Reset All</button>
+      </div>
+
+      <div class="filter-section">
+        <h4>Location</h4>
+        <div class="filter-group">
+          <label>City</label>
+          <select [(ngModel)]="searchFilters.city" class="filter-input">
+            <option [ngValue]="undefined">All Cities</option>
+            <option *ngFor="let city of filterOptions?.cities" [value]="city">
+              {{ city }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>State</label>
+          <select [(ngModel)]="searchFilters.state" class="filter-input">
+            <option [ngValue]="undefined">All States</option>
+            <option *ngFor="let state of filterOptions?.states" [value]="state">
+              {{ state }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Property Type</h4>
+        <select [(ngModel)]="searchFilters.property_type" class="filter-input">
+          <option [ngValue]="undefined">All Types</option>
+          <option *ngFor="let type of filterOptions?.property_types" [value]="type">
+            {{ type }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <h4>Price Range</h4>
+        <div class="filter-group">
+          <label>Min Price</label>
+          <input
+            type="number"
+            [(ngModel)]="searchFilters.min_price"
+            placeholder="Min"
+            class="filter-input"
+          />
+        </div>
+        <div class="filter-group">
+          <label>Max Price</label>
+          <input
+            type="number"
+            [(ngModel)]="searchFilters.max_price"
+            placeholder="Max"
+            class="filter-input"
+          />
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Bedrooms</h4>
+        <select [(ngModel)]="searchFilters.bedrooms" class="filter-input">
+          <option [ngValue]="undefined">Any</option>
+          <option [value]="1">1+</option>
+          <option [value]="2">2+</option>
+          <option [value]="3">3+</option>
+          <option [value]="4">4+</option>
+          <option [value]="5">5+</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <h4>Bathrooms</h4>
+        <select [(ngModel)]="searchFilters.bathrooms" class="filter-input">
+          <option [ngValue]="undefined">Any</option>
+          <option [value]="1">1+</option>
+          <option [value]="2">2+</option>
+          <option [value]="3">3+</option>
+        </select>
+      </div>
+
+      <button class="apply-filters-btn" (click)="applyFilters()">
+        Apply Filters
+      </button>
+    </aside>
+
+    <!-- Properties Grid/List -->
+    <div class="properties-container">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading properties...</p>
+      </div>
+
+      <!-- No Results -->
+      <div *ngIf="!isLoading && properties.length === 0" class="no-results">
+        <i class="fas fa-home"></i>
+        <h3>No properties found</h3>
+        <p>Try adjusting your filters or search criteria</p>
+        <button class="reset-btn" (click)="resetFilters()">Clear Filters</button>
+      </div>
+
+      <!-- Properties Grid View -->
+      <div
+        *ngIf="!isLoading && properties.length > 0 && viewMode === 'grid'"
+        class="properties-grid"
+      >
+        <div *ngFor="let property of properties" class="property-card">
+          <div class="property-image">
+            <img
+              [src]="property.images[0] || 'assets/images/placeholder-property.jpg'"
+              [alt]="property.title"
+            />
+            <span class="property-badge" *ngIf="property.is_featured">Featured</span>
+            <button class="favorite-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+
+          <div class="property-info">
+            <div class="property-type">{{ property.property_type }}</div>
+            <h3 class="property-title">{{ property.title }}</h3>
+            <p class="property-location">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ property.city }}, {{ property.state }}
+            </p>
+
+            <div class="property-features">
+              <span><i class="fas fa-bed"></i> {{ property.bedrooms }} Beds</span>
+              <span><i class="fas fa-bath"></i> {{ property.bathrooms }} Baths</span>
+              <span><i class="fas fa-ruler-combined"></i> {{ property.area_sqft }} sqft</span>
+            </div>
+
+            <div class="property-footer">
+              <div class="property-price">{{ formatPrice(property.price) }}<span>/month</span></div>
+              <button class="view-details-btn" [routerLink]="['/tenant/property', property._id]">
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Properties List View -->
+      <div
+        *ngIf="!isLoading && properties.length > 0 && viewMode === 'list'"
+        class="properties-list"
+      >
+        <div *ngFor="let property of properties" class="property-card-list">
+          <img
+            [src]="property.images[0] || 'assets/images/placeholder-property.jpg'"
+            [alt]="property.title"
+            class="property-image-list"
+          />
+
+          <div class="property-details-list">
+            <div class="property-header-list">
+              <h3>{{ property.title }}</h3>
+              <span class="property-type-badge">{{ property.property_type }}</span>
+            </div>
+
+            <p class="property-location-list">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ property.address }}, {{ property.city }}, {{ property.state }}
+            </p>
+
+            <p class="property-description-list">{{ property.description | slice:0:150 }}...</p>
+
+            <div class="property-features-list">
+              <span><i class="fas fa-bed"></i> {{ property.bedrooms }} Beds</span>
+              <span><i class="fas fa-bath"></i> {{ property.bathrooms }} Baths</span>
+              <span><i class="fas fa-ruler-combined"></i> {{ property.area_sqft }} sqft</span>
+            </div>
+          </div>
+
+          <div class="property-actions-list">
+            <div class="property-price-large">{{ formatPrice(property.price) }}<span>/month</span></div>
+            <button class="favorite-btn-list">
+              <i class="far fa-heart"></i> Save
+            </button>
+            <button class="view-details-btn-list" [routerLink]="['/tenant/property', property._id]">
+              View Details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!isLoading && properties.length > 0" class="pagination">
+        <button
+          class="pagination-btn"
+          [disabled]="currentPage === 1"
+          (click)="previousPage()"
+        >
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+
+        <div class="pagination-numbers">
+          <button
+            *ngFor="let page of getPageNumbers()"
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)"
+            class="page-number"
+          >
+            {{ page }}
+          </button>
+        </div>
+
+        <button
+          class="pagination-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="nextPage()"
+        >
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
