@@ -14,6 +14,9 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+     # CRITICAL: Set max content length for file uploads
+    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max
+
     # Initialize extensions
     mongo.init_app(app)
     bcrypt.init_app(app)
@@ -57,4 +60,10 @@ if __name__ == "__main__":
     os.makedirs('uploads/images', exist_ok=True)
     os.makedirs('uploads/videos', exist_ok=True)
     
+    print("\n" + "="*50)
+    print("Flask server starting...")
+    print("API URL: http://localhost:5000")
+    print("Uploads folder: ./uploads")
+    print("="*50 + "\n")
+   
     app.run(debug=True, host="0.0.0.0", port=5000)
