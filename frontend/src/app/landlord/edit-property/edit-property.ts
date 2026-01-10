@@ -225,11 +225,18 @@ export class EditPropertyComponent implements OnInit {
         this.errorMessage = error.error?.error || 'Failed to update property';
       }
     });
+
+
   }
+  // Navigate back to properties list
+    goBack(): void {
+    this.router.navigate(['/landlord/properties']);
+    }
 
   cancel(): void {
     if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
       this.router.navigate(['/landlord/properties']);
     }
   }
+  
 }

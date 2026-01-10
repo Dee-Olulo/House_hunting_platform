@@ -1,3 +1,4 @@
+# property_routes.py
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from extensions import mongo
@@ -64,9 +65,132 @@ def create_property():
         return jsonify({"error": f"Failed to create property: {str(e)}"}), 500
 
 # ---------------------------
+# # GET ALL PROPERTIES (PUBLIC)
+# # ---------------------------
+# @property_bp.route("/", methods=["GET"], strict_slashes=False)
+# def get_all_properties():
+#     try:
+#         # Get query parameters for filtering
+#         city = request.args.get("city")
+#         state = request.args.get("state")
+#         min_price = request.args.get("min_price", type=float)
+#         max_price = request.args.get("max_price", type=float)
+#         bedrooms = request.args.get("bedrooms", type=int)
+#         bathrooms = request.args.get("bathrooms", type=int)
+#         property_type = request.args.get("property_type")
+#         status = request.args.get("status", "active")
+#         # Sorting
+#         sort_by = request.args.get("sort_by", "newest")  # newest, price_low, price_high, bedrooms
+        
+#         # Pagination
+#         page = request.args.get("page", 1, type=int)
+#         per_page = request.args.get("per_page", 20, type=int)
+        
+#         # Search query (for title/description)
+#         search = request.args.get("search")
+        
+#         # Build query
+#         query = {"status": status}
+        
+#         if city:
+#             query["city"] = {"$regex": city, "$options": "i"}
+#         # State filter
+#         if state:
+#             query["state"] = {"$regex": state, "$options": "i"}
+        
+#         if min_price is not None or max_price is not None:
+#             query["price"] = {}
+#             if min_price is not None:
+#                 query["price"]["$gte"] = min_price
+#             if max_price is not None:
+#                 query["price"]["$lte"] = max_price
+        
+#         # Bedrooms filter
+#         if bedrooms is not None:
+#             query["bedrooms"] = bedrooms
+        
+#         # Property type filter
+#         if property_type:
+#             query["property_type"] = property_type
+
+        
+#         # Search filter
+#         if search:
+#             query["$or"] = [
+#                 {"title": {"$regex": search, "$options": "i"}},
+#                 {"description": {"$regex": search, "$options": "i"}}
+#             ]
+        
+#         # Build sort criteria
+#         sort_criteria = []
+#         if sort_by == "price_low":
+#             sort_criteria = [("price", 1)]
+#         elif sort_by == "price_high":
+#             sort_criteria = [("price", -1)]
+#         elif sort_by == "bedrooms":
+#             sort_criteria = [("bedrooms", -1)]
+#         else:  # newest (default)
+#             sort_criteria = [("created_at", -1)]
+
+#         # Apply pagination
+#         skip = (page - 1) * per_page
+#         properties_cursor = mongo.db.properties.find(query).sort(sort_criteria).skip(skip).limit(per_page)
+#         properties = list(properties_cursor)
+
+#         # Get total count for pagination
+#         total_count = mongo.db.properties.count_documents(query)
+
+#         # Convert ObjectId to string
+#         # Convert ObjectId to string
+#         for prop in properties:
+#             prop["_id"] = str(prop["_id"])
+#             prop["landlord_id"] = str(prop["landlord_id"])
+#             prop["created_at"] = prop["created_at"].isoformat() if isinstance(prop["created_at"], datetime) else prop["created_at"]
+#             prop["updated_at"] = prop["updated_at"].isoformat() if isinstance(prop["updated_at"], datetime) else prop["updated_at"]
+        
+#         return jsonify({
+#             "properties": properties,
+#             "count": len(properties),
+#             "total": total_count,
+#             "page": page,
+#             "per_page": per_page,
+#             "total_pages": (total_count + per_page - 1) // per_page,
+#             "filters_applied": {
+#                 "city": city,
+#                 "state": state,
+#                 "min_price": min_price,
+#                 "max_price": max_price,
+#                 "bedrooms": bedrooms,
+#                 "bathrooms": bathrooms,
+#                 "property_type": property_type,
+#                 "search": search,
+#                 "sort_by": sort_by
+#             }
+#         }), 200
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to fetch properties: {str(e)}"}), 500
+
+    
+    #     # Get properties
+    #     properties = list(mongo.db.properties.find(query))
+        
+    #     # Convert ObjectId to string
+    #     for prop in properties:
+    #         prop["_id"] = str(prop["_id"])
+    #         prop["landlord_id"] = str(prop["landlord_id"])
+    #         prop["created_at"] = prop["created_at"].isoformat() if isinstance(prop["created_at"], datetime) else prop["created_at"]
+    #         prop["updated_at"] = prop["updated_at"].isoformat() if isinstance(prop["updated_at"], datetime) else prop["updated_at"]
+        
+    #     return jsonify({
+    #         "properties": properties,
+    #         "count": len(properties)
+    #     }), 200
+        
+    # except Exception as e:
+    #     return jsonify({"error": f"Failed to fetch properties: {str(e)}"}), 500
 # GET ALL PROPERTIES (PUBLIC)
 # ---------------------------
-@property_bp.route("/", methods=["GET"])
+@property_bp.route("/", methods=["GET"], strict_slashes=False)
 def get_all_properties():
     try:
         # Get query parameters for filtering
@@ -139,13 +263,29 @@ def get_all_properties():
         # Get total count for pagination
         total_count = mongo.db.properties.count_documents(query)
 
-        # Convert ObjectId to string
-        # Convert ObjectId to string
+        # Get the base URL for images
+        base_url = request.host_url.rstrip('/')
+        
+        # Convert ObjectId to string and fix image URLs
         for prop in properties:
             prop["_id"] = str(prop["_id"])
             prop["landlord_id"] = str(prop["landlord_id"])
             prop["created_at"] = prop["created_at"].isoformat() if isinstance(prop["created_at"], datetime) else prop["created_at"]
             prop["updated_at"] = prop["updated_at"].isoformat() if isinstance(prop["updated_at"], datetime) else prop["updated_at"]
+            
+            # Convert relative image paths to full URLs
+            if prop.get("images"):
+                prop["images"] = [
+                    f"{base_url}{img}" if not img.startswith('http') else img
+                    for img in prop["images"]
+                ]
+            
+            # Convert video paths if they exist
+            if prop.get("videos"):
+                prop["videos"] = [
+                    f"{base_url}{vid}" if not vid.startswith('http') else vid
+                    for vid in prop["videos"]
+                ]
         
         return jsonify({
             "properties": properties,
@@ -168,24 +308,6 @@ def get_all_properties():
         }), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch properties: {str(e)}"}), 500
-    
-    #     # Get properties
-    #     properties = list(mongo.db.properties.find(query))
-        
-    #     # Convert ObjectId to string
-    #     for prop in properties:
-    #         prop["_id"] = str(prop["_id"])
-    #         prop["landlord_id"] = str(prop["landlord_id"])
-    #         prop["created_at"] = prop["created_at"].isoformat() if isinstance(prop["created_at"], datetime) else prop["created_at"]
-    #         prop["updated_at"] = prop["updated_at"].isoformat() if isinstance(prop["updated_at"], datetime) else prop["updated_at"]
-        
-    #     return jsonify({
-    #         "properties": properties,
-    #         "count": len(properties)
-    #     }), 200
-        
-    # except Exception as e:
-    #     return jsonify({"error": f"Failed to fetch properties: {str(e)}"}), 500
 
 # ---------------------------
 # GET SINGLE PROPERTY
