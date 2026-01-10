@@ -11,18 +11,69 @@ import os
 
 property_bp = Blueprint("property", __name__)
 
+# # ---------------------------
+# # CREATE PROPERTY
+# # ---------------------------
+# @property_bp.route("/", methods=["POST"])
+# @jwt_required()
+# @landlord_only
+# def create_property():
+#     try:
+#         # ✅ FIXED: Get user ID from identity (string)
+#         user_id = get_jwt_identity()  # Returns string user ID
+#         claims = get_jwt()  # Get additional claims if needed
+        
+#         data = request.get_json()
+        
+#         # Validate property data
+#         is_valid, errors = validate_property_data(data)
+#         if not is_valid:
+#             return jsonify({"error": errors}), 400
+        
+#         # Create property object
+#         property_obj = Property(
+#             landlord_id=user_id,  # ✅ Use user_id directly (it's already a string)
+#             title=data.get("title"),
+#             description=data.get("description"),
+#             property_type=data.get("property_type"),
+#             address=data.get("address"),
+#             city=data.get("city"),
+#             state=data.get("state"),
+#             zip_code=data.get("zip_code"),
+#             country=data.get("country"),
+#             latitude=data.get("latitude"),
+#             longitude=data.get("longitude"),
+#             price=data.get("price"),
+#             bedrooms=data.get("bedrooms"),
+#             bathrooms=data.get("bathrooms"),
+#             area_sqft=data.get("area_sqft"),
+#             images=data.get("images", []),
+#             videos=data.get("videos", []),
+#             amenities=data.get("amenities", []),
+#             is_featured=data.get("is_featured", False)
+#         )
+        
+#         # Insert into database
+#         result = mongo.db.properties.insert_one(property_obj.to_dict())
+        
+#         return jsonify({
+#             "message": "Property created successfully",
+#             "property_id": str(result.inserted_id)
+#         }), 201
+        
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to create property: {str(e)}"}), 500
+    
+    #  ---------------------------
+# VALIDATE AND AUTO-GEOCODE ON PROPERTY CREATION
 # ---------------------------
-# CREATE PROPERTY
-# ---------------------------
+# Modify the create_property endpoint to auto-geocode if coordinates not provided
 @property_bp.route("/", methods=["POST"])
 @jwt_required()
 @landlord_only
 def create_property():
     try:
-        # ✅ FIXED: Get user ID from identity (string)
-        user_id = get_jwt_identity()  # Returns string user ID
-        claims = get_jwt()  # Get additional claims if needed
-        
+        user_id = get_jwt_identity()
         data = request.get_json()
         
         # Validate property data
@@ -30,9 +81,27 @@ def create_property():
         if not is_valid:
             return jsonify({"error": errors}), 400
         
+        # Auto-geocode if coordinates not provided
+        if not data.get("latitude") or not data.get("longitude"):
+            print("⚠️ No coordinates provided. Attempting to geocode address...")
+            
+            geocode_result = geocode_address(
+                data.get("address"),
+                data.get("city"),
+                data.get("state"),
+                data.get("country")
+            )
+            
+            if geocode_result:
+                data["latitude"] = geocode_result["latitude"]
+                data["longitude"] = geocode_result["longitude"]
+                print(f"✅ Auto-geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
+            else:
+                print("⚠️ Auto-geocoding failed. Property will be created without coordinates.")
+        
         # Create property object
         property_obj = Property(
-            landlord_id=user_id,  # ✅ Use user_id directly (it's already a string)
+            landlord_id=user_id,
             title=data.get("title"),
             description=data.get("description"),
             property_type=data.get("property_type"),
@@ -58,7 +127,8 @@ def create_property():
         
         return jsonify({
             "message": "Property created successfully",
-            "property_id": str(result.inserted_id)
+            "property_id": str(result.inserted_id),
+            "coordinates_added": bool(data.get("latitude") and data.get("longitude"))
         }), 201
         
     except Exception as e:
@@ -735,3 +805,278 @@ def get_property_stats():
         
     except Exception as e:
         return jsonify({"error": f"Failed to get statistics: {str(e)}"}), 500
+    
+# routes/property_routes.py (ADD THESE NEW ENDPOINTS)
+
+# Add these imports at the top
+from utils.location_utils import (
+    geocode_address, 
+    reverse_geocode, 
+    calculate_distance,
+    find_properties_nearby,
+    validate_coordinates,
+    get_bounding_box
+)
+
+# ---------------------------
+# GEOCODE ADDRESS (Convert address to coordinates)
+# ---------------------------
+@property_bp.route("/geocode", methods=["POST"])
+def geocode_property_address():
+    """
+    Convert address to coordinates
+    Request body: {
+        "address": "123 Main St",
+        "city": "New York",
+        "state": "NY",
+        "country": "USA"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        address = data.get("address")
+        city = data.get("city")
+        state = data.get("state")
+        country = data.get("country")
+        
+        if not address:
+            return jsonify({"error": "Address is required"}), 400
+        
+        # Geocode the address
+        result = geocode_address(address, city, state, country)
+        
+        if result:
+            return jsonify({
+                "success": True,
+                "data": result
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Could not geocode address. Please check the address and try again."
+            }), 404
+            
+    except Exception as e:
+        return jsonify({"error": f"Geocoding failed: {str(e)}"}), 500
+
+
+# ---------------------------
+# REVERSE GEOCODE (Convert coordinates to address)
+# ---------------------------
+@property_bp.route("/reverse-geocode", methods=["POST"])
+def reverse_geocode_coordinates():
+    """
+    Convert coordinates to address
+    Request body: {
+        "latitude": 40.7128,
+        "longitude": -74.0060
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+        
+        if latitude is None or longitude is None:
+            return jsonify({"error": "Latitude and longitude are required"}), 400
+        
+        # Validate coordinates
+        is_valid, error_msg = validate_coordinates(latitude, longitude)
+        if not is_valid:
+            return jsonify({"error": error_msg}), 400
+        
+        # Reverse geocode
+        result = reverse_geocode(latitude, longitude)
+        
+        if result:
+            return jsonify({
+                "success": True,
+                "data": result
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Could not reverse geocode coordinates"
+            }), 404
+            
+    except Exception as e:
+        return jsonify({"error": f"Reverse geocoding failed: {str(e)}"}), 500
+
+
+# ---------------------------
+# SEARCH PROPERTIES BY LOCATION (Nearby search)
+# ---------------------------
+@property_bp.route("/nearby", methods=["POST"])
+def search_properties_nearby():
+    """
+    Search properties near a location
+    Request body: {
+        "latitude": 40.7128,
+        "longitude": -74.0060,
+        "radius_km": 10,
+        "property_type": "apartment" (optional),
+        "min_price": 1000 (optional),
+        "max_price": 5000 (optional),
+        "bedrooms": 2 (optional),
+        "page": 1,
+        "per_page": 20
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+        radius_km = data.get("radius_km", 10)  # Default 10km radius
+        
+        if latitude is None or longitude is None:
+            return jsonify({"error": "Latitude and longitude are required"}), 400
+        
+        # Validate coordinates
+        is_valid, error_msg = validate_coordinates(latitude, longitude)
+        if not is_valid:
+            return jsonify({"error": error_msg}), 400
+        
+        # Validate radius
+        try:
+            radius_km = float(radius_km)
+            if radius_km <= 0 or radius_km > 100:
+                return jsonify({"error": "Radius must be between 0 and 100 km"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid radius value"}), 400
+        
+        # Get bounding box for efficient querying
+        bbox = get_bounding_box(latitude, longitude, radius_km)
+        
+        # Build query with optional filters
+        query = {
+            "status": "active",
+            "latitude": {"$gte": bbox["min_lat"], "$lte": bbox["max_lat"]},
+            "longitude": {"$gte": bbox["min_lon"], "$lte": bbox["max_lon"]}
+        }
+        
+        # Add optional filters
+        if data.get("property_type"):
+            query["property_type"] = data["property_type"]
+        
+        if data.get("min_price") or data.get("max_price"):
+            query["price"] = {}
+            if data.get("min_price"):
+                query["price"]["$gte"] = float(data["min_price"])
+            if data.get("max_price"):
+                query["price"]["$lte"] = float(data["max_price"])
+        
+        if data.get("bedrooms"):
+            query["bedrooms"] = int(data["bedrooms"])
+        
+        # Get properties from database
+        properties = list(mongo.db.properties.find(query))
+        
+        # Filter by actual distance and add distance field
+        nearby_properties = find_properties_nearby(
+            properties, latitude, longitude, radius_km
+        )
+        
+        # Pagination
+        page = data.get("page", 1)
+        per_page = data.get("per_page", 20)
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        
+        paginated_properties = nearby_properties[start_idx:end_idx]
+        
+        # Convert ObjectId to string
+        for prop in paginated_properties:
+            prop["_id"] = str(prop["_id"])
+            prop["landlord_id"] = str(prop["landlord_id"])
+            prop["created_at"] = prop["created_at"].isoformat() if isinstance(prop["created_at"], datetime) else prop["created_at"]
+            prop["updated_at"] = prop["updated_at"].isoformat() if isinstance(prop["updated_at"], datetime) else prop["updated_at"]
+        
+        return jsonify({
+            "properties": paginated_properties,
+            "count": len(paginated_properties),
+            "total": len(nearby_properties),
+            "page": page,
+            "per_page": per_page,
+            "total_pages": (len(nearby_properties) + per_page - 1) // per_page,
+            "search_center": {
+                "latitude": latitude,
+                "longitude": longitude,
+                "radius_km": radius_km
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Nearby search failed: {str(e)}"}), 500
+
+
+# ---------------------------
+# GET PROPERTY WITH DISTANCE FROM USER
+# ---------------------------
+@property_bp.route("/<property_id>/distance", methods=["POST"])
+def get_property_distance(property_id):
+    """
+    Get distance from user's location to property
+    Request body: {
+        "latitude": 40.7128,
+        "longitude": -74.0060
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        user_lat = data.get("latitude")
+        user_lon = data.get("longitude")
+        
+        if user_lat is None or user_lon is None:
+            return jsonify({"error": "User latitude and longitude are required"}), 400
+        
+        # Validate coordinates
+        is_valid, error_msg = validate_coordinates(user_lat, user_lon)
+        if not is_valid:
+            return jsonify({"error": error_msg}), 400
+        
+        # Validate property ID
+        if not ObjectId.is_valid(property_id):
+            return jsonify({"error": "Invalid property ID"}), 400
+        
+        # Get property
+        property_data = mongo.db.properties.find_one({"_id": ObjectId(property_id)})
+        
+        if not property_data:
+            return jsonify({"error": "Property not found"}), 404
+        
+        # Check if property has coordinates
+        if not property_data.get("latitude") or not property_data.get("longitude"):
+            return jsonify({
+                "error": "Property does not have location coordinates"
+            }), 400
+        
+        # Calculate distance
+        distance = calculate_distance(
+            user_lat, user_lon,
+            property_data["latitude"], property_data["longitude"]
+        )
+        
+        return jsonify({
+            "property_id": property_id,
+            "distance_km": distance,
+            "property_location": {
+                "latitude": property_data["latitude"],
+                "longitude": property_data["longitude"],
+                "address": property_data.get("address"),
+                "city": property_data.get("city")
+            },
+            "user_location": {
+                "latitude": user_lat,
+                "longitude": user_lon
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to calculate distance: {str(e)}"}), 500
+
+
+#
