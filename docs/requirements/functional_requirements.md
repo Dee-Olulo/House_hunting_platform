@@ -25,7 +25,7 @@ Based on dependencies and complexity, here's a logical order:
 ### **Phase 2: Search & Discovery (Requirement 2)**
 **Priority: HIGH** - Core tenant feature
 - Search properties by location, price, distance
-- Filter and sort functionality
+- Filter and sort functionalitycd
 - Property listing display
 
 ### **Phase 3: Location Services (Requirement 4)**
