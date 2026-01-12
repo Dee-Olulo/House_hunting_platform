@@ -1,4 +1,6 @@
 import re
+from datetime import datetime, timedelta
+
 def validate_role(role):
     return role in ["tenant", "landlord", "admin"]
 
@@ -149,3 +151,105 @@ def validate_property_data(data, is_update=False):
             errors.append(f"Status must be one of: {', '.join(valid_statuses)}")
     
     return (len(errors) == 0, errors)
+
+# Booking data validation
+def validate_booking_data(data, is_update=False):
+    """
+    Validate booking request data
+    is_update: If True, allows partial validation (for updates)
+    """
+    errors = []
+    
+    # Required fields for new booking
+    if not is_update:
+        required_fields = [
+            "property_id", "booking_type", "booking_date", 
+            "booking_time", "tenant_name", "tenant_email"
+        ]
+        
+        for field in required_fields:
+            if field not in data or not data[field]:
+                errors.append(f"{field} is required")
+    
+    # Validate booking type
+    if "booking_type" in data:
+        valid_types = ["viewing", "rental_inquiry"]
+        if data["booking_type"] not in valid_types:
+            errors.append(f"Booking type must be one of: {', '.join(valid_types)}")
+    
+    # Validate booking date
+    if "booking_date" in data:
+        try:
+            booking_date_str = data["booking_date"]
+            # Expected format: YYYY-MM-DD
+            booking_date = datetime.strptime(booking_date_str, "%Y-%m-%d")
+            
+            # Check if date is in the past
+            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            if booking_date < today:
+                errors.append("Booking date cannot be in the past")
+            
+            # Check if date is too far in the future (e.g., 6 months)
+            max_future_date = today + timedelta(days=180)
+            if booking_date > max_future_date:
+                errors.append("Booking date cannot be more than 6 months in the future")
+                
+        except ValueError:
+            errors.append("Invalid booking date format. Use YYYY-MM-DD")
+    
+    # Validate booking time
+    if "booking_time" in data:
+        try:
+            # Expected format: HH:MM (24-hour format)
+            time_pattern = r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+            if not re.match(time_pattern, data["booking_time"]):
+                errors.append("Invalid booking time format. Use HH:MM (24-hour format)")
+        except Exception:
+            errors.append("Invalid booking time")
+    
+    # Validate tenant name
+    if "tenant_name" in data:
+        if not isinstance(data["tenant_name"], str) or len(data["tenant_name"]) < 2:
+            errors.append("Tenant name must be at least 2 characters long")
+        elif len(data["tenant_name"]) > 100:
+            errors.append("Tenant name must not exceed 100 characters")
+    
+    # Validate tenant email
+    if "tenant_email" in data:
+        if not validate_email(data["tenant_email"]):
+            errors.append("Invalid tenant email format")
+    
+    # Validate tenant phone (optional but if provided must be valid)
+    if "tenant_phone" in data and data["tenant_phone"]:
+        phone_pattern = r'^\+?[0-9]{10,15}$'
+        if not re.match(phone_pattern, data["tenant_phone"]):
+            errors.append("Invalid phone number format")
+    
+    # Validate message (optional)
+    if "message" in data and data["message"]:
+        if len(data["message"]) > 1000:
+            errors.append("Message must not exceed 1000 characters")
+    
+    # Validate status (if provided)
+    if "status" in data:
+        valid_statuses = ["pending", "confirmed", "rejected", "completed", "cancelled"]
+        if data["status"] not in valid_statuses:
+            errors.append(f"Status must be one of: {', '.join(valid_statuses)}")
+    
+    # Validate rejection reason (required when rejecting)
+    if data.get("status") == "rejected" and not data.get("rejection_reason"):
+        errors.append("Rejection reason is required when rejecting a booking")
+    
+    # Validate cancellation reason (required when cancelling)
+    if data.get("status") == "cancelled" and not data.get("cancellation_reason"):
+        errors.append("Cancellation reason is required when cancelling a booking")
+    
+    return (len(errors) == 0, errors)
+
+
+def validate_phone_number(phone):
+    """Validate phone number format"""
+    if not phone:
+        return False
+    phone_pattern = r'^\+?[0-9]{10,15}$'
+    return re.match(phone_pattern, phone) is not None

@@ -1,5 +1,5 @@
 import os
-from flask import Flask, send_from_directory, request, make_response
+from flask import Flask, app, send_from_directory, request, make_response
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
@@ -9,6 +9,7 @@ from flask_cors import CORS
 from routes.auth_routes import auth_bp
 from routes.property_routes import property_bp
 from routes.upload_routes import upload_bp
+from routes.booking_routes import booking_bp
 
 def create_app():
     app = Flask(__name__)
@@ -50,7 +51,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(property_bp, url_prefix="/properties")
     app.register_blueprint(upload_bp, url_prefix="/upload")
-
+    app.register_blueprint(booking_bp, url_prefix="/bookings")          
     # Health check endpoint
     @app.route("/health", methods=["GET"])
     def health_check():
