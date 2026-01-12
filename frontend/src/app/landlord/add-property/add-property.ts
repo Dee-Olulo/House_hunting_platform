@@ -1,188 +1,4 @@
 
-// import { Component } from '@angular/core';
-// import { CommonModule } from '@angular/common';
-// import { FormsModule } from '@angular/forms';
-// import { Router } from '@angular/router';
-// import { PropertyService, Property } from '../../services/property.service';
-// import { UploadService } from '../../services/upload.service';
-
-// @Component({
-//   selector: 'app-add-property',
-//   standalone: true,
-//   imports: [CommonModule, FormsModule],
-//   templateUrl: './add-property.html',
-//   styleUrls: ['./add-property.css']
-// })
-// export class AddPropertyComponent {
-//   property: Property = {
-//     title: '',
-//     description: '',
-//     property_type: '',
-//     address: '',
-//     city: '',
-//     state: '',
-//     zip_code: '',
-//     country: 'Kenya',
-//     latitude: undefined,
-//     longitude: undefined,
-//     price: 0,
-//     bedrooms: 0,
-//     bathrooms: 0,
-//     area_sqft: 0,
-//     images: [],
-//     videos: [],
-//     amenities: []
-//   };
-
-//   selectedImages: File[] = [];
-//   uploadedImageUrls: string[] = [];
-//   selectedAmenities: string[] = [];
-  
-//   isLoading = false;
-//   isUploading = false;
-//   errorMessage = '';
-//   successMessage = '';
-  
-//   propertyTypes = ['apartment', 'house', 'studio', 'condo', 'townhouse', 'villa'];
-  
-//   availableAmenities = [
-//     'parking', 'wifi', 'security', 'gym', 'pool', 
-//     'garden', 'backup_generator', 'water', 'elevator',
-//     'balcony', 'furnished', 'pet_friendly'
-//   ];
-
-//   constructor(
-//     private propertyService: PropertyService,
-//     private uploadService: UploadService,
-//     private router: Router
-//   ) {}
-
-//   onImageSelect(event: any): void {
-//     const files = Array.from(event.target.files) as File[];
-    
-//     // Validate files
-//     const validFiles = files.filter(file => {
-//       if (!this.uploadService.validateImageType(file)) {
-//         alert(`${file.name} is not a valid image type`);
-//         return false;
-//       }
-//       if (!this.uploadService.validateFileSize(file, 5)) {
-//         alert(`${file.name} exceeds 5MB limit`);
-//         return false;
-//       }
-//       return true;
-//     });
-
-//     if (this.selectedImages.length + validFiles.length > 20) {
-//       alert('Maximum 20 images allowed');
-//       return;
-//     }
-
-//     this.selectedImages = [...this.selectedImages, ...validFiles];
-//   }
-
-//   removeImage(index: number): void {
-//     this.selectedImages.splice(index, 1);
-//   }
-
-//   removeUploadedImage(index: number): void {
-//     const url = this.uploadedImageUrls[index];
-//     this.uploadService.deleteFile(url).subscribe({
-//       next: () => {
-//         this.uploadedImageUrls.splice(index, 1);
-//       },
-//       error: (error) => {
-//         console.error('Error deleting image:', error);
-//       }
-//     });
-//   }
-
-//   toggleAmenity(amenity: string): void {
-//     const index = this.selectedAmenities.indexOf(amenity);
-//     if (index > -1) {
-//       this.selectedAmenities.splice(index, 1);
-//     } else {
-//       this.selectedAmenities.push(amenity);
-//     }
-//   }
-
-//   isAmenitySelected(amenity: string): boolean {
-//     return this.selectedAmenities.includes(amenity);
-//   }
-
-//   async uploadImages(): Promise<string[]> {
-//     if (this.selectedImages.length === 0) {
-//       return [];
-//     }
-
-//     this.isUploading = true;
-    
-//     try {
-//       const response = await this.uploadService.uploadMultipleImages(this.selectedImages).toPromise();
-//       this.isUploading = false;
-      
-//       if (response && response.files) {
-//         return response.files.map(file => file.url);
-//       }
-//       return [];
-//     } catch (error) {
-//       this.isUploading = false;
-//       console.error('Error uploading images:', error);
-//       throw error;
-//     }
-//   }
-
-//   async onSubmit(): Promise<void> {
-//     if (this.isLoading || this.isUploading) return;
-
-//     this.errorMessage = '';
-//     this.isLoading = true;
-
-//     try {
-//       // Upload images first
-//       if (this.selectedImages.length > 0) {
-//         const imageUrls = await this.uploadImages();
-//         this.uploadedImageUrls = [...this.uploadedImageUrls, ...imageUrls];
-//       }
-
-//       // Prepare property data
-//       const propertyData: Property = {
-//         ...this.property,
-//         images: this.uploadedImageUrls,
-//         amenities: this.selectedAmenities,
-//         latitude: this.property.latitude || undefined,
-//         longitude: this.property.longitude || undefined
-//       };
-
-//       // Create property
-//       this.propertyService.createProperty(propertyData).subscribe({
-//         next: (response) => {
-//           console.log('Property created:', response);
-//           this.isLoading = false;
-//           alert('Property created successfully!');
-//           this.router.navigate(['/landlord/properties']);
-//         },
-//         error: (error) => {
-//           console.error('Error creating property:', error);
-//           this.isLoading = false;
-//           this.errorMessage = error.error?.error || 'Failed to create property';
-//         }
-//       });
-
-//     } catch (error) {
-//       console.error('Error in form submission:', error);
-//       this.isLoading = false;
-//       this.errorMessage = 'Failed to upload images';
-//     }
-//   }
-
-//   cancel(): void {
-//     if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-//       this.router.navigate(['/landlord/properties']);
-//     }
-//   }
-// }
-
 
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -190,13 +6,32 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PropertyService, Property } from '../../services/property.service';
 import { UploadService } from '../../services/upload.service';
+import { LocationPickerComponent, LocationData } from '../location-picker/location-picker.component';
 
 @Component({
   selector: 'app-add-property',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LocationPickerComponent],
   templateUrl: './add-property.html',
-  styleUrls: ['./add-property.css']
+  styleUrls: ['./add-property.css'],
+  template: `
+    <div class="add-property-container">
+      <h1>Add New Property</h1>
+      
+      <form (ngSubmit)="onSubmit()">
+        <!-- Other property fields... -->
+        
+        <!-- Location Picker -->
+        <app-location-picker
+          [locationData]="locationData"
+          (locationChange)="onLocationChange($event)"
+        ></app-location-picker>
+        
+        <!-- Submit button -->
+        <button type="submit">Create Property</button>
+      </form>
+    </div>
+  `
 })
 export class AddPropertyComponent {
   property: Property = {
@@ -376,6 +211,19 @@ export class AddPropertyComponent {
       throw new Error(error.error?.message || error.message || 'Failed to upload images');
     }
   }
+  locationData: LocationData = {
+    latitude: null,
+    longitude: null,
+    address: '',
+    city: '',
+    state: '',
+    country: ''
+  };
+
+  onLocationChange(location: LocationData): void {
+    this.locationData = location;
+    console.log('Location updated:', location);
+  }
 
   async onSubmit(): Promise<void> {
     console.log('🚀 Form submission started');
@@ -404,7 +252,11 @@ export class AddPropertyComponent {
         images: this.uploadedImageUrls,
         amenities: this.selectedAmenities,
         latitude: this.property.latitude || undefined,
-        longitude: this.property.longitude || undefined
+        longitude: this.property.longitude || undefined,
+        address: this.locationData.address || this.property.address,
+        city: this.locationData.city || this.property.city,
+        state: this.locationData.state || this.property.state,
+        country: this.locationData.country || this.property.country,
       };
 
       console.log('Creating property:', propertyData);
@@ -415,12 +267,13 @@ export class AddPropertyComponent {
           console.log('✅ Property created:', response);
           this.isLoading = false;
           this.successMessage = 'Property created successfully!';
+      //locationdata
           
           // Redirect after 1.5 seconds
           setTimeout(() => {
             // Try multiple navigation options
             this.router.navigate(['/landlord-dashboard']).catch(() => {
-              this.router.navigate(['/dashboard']).catch(() => {
+              this.router.navigate(['/landlord/properties']).catch(() => {
                 this.router.navigate(['/']);
               });
             });
@@ -450,4 +303,7 @@ export class AddPropertyComponent {
       });
     }
   }
+   
+
 }
+

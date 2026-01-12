@@ -1,0 +1,228 @@
+<!-- src/app/tenant/nearby-search/nearby-search.component.html -->
+
+<div class="nearby-search-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>Find Properties Near You</h1>
+    <p class="subtitle">Discover available properties in your area</p>
+  </div>
+
+  <!-- Location Access -->
+  <div class="location-section" *ngIf="!userLocation">
+    <div class="location-prompt">
+      <i class="fas fa-map-marker-alt"></i>
+      <div class="location-text">
+        <h3>Enable Location Access</h3>
+        <p>Allow location access to find properties near you</p>
+      </div>
+      <button 
+        class="location-btn"
+        (click)="getUserLocation()"
+        [disabled]="isLoadingLocation"
+      >
+        <i class="fas" [ngClass]="isLoadingLocation ? 'fa-spinner fa-spin' : 'fa-crosshairs'"></i>
+        {{ isLoadingLocation ? 'Getting location...' : 'Use My Location' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Search Controls -->
+  <div class="controls-section" *ngIf="userLocation">
+    <div class="controls-header">
+      <div class="location-info">
+        <i class="fas fa-check-circle"></i>
+        <span>Location enabled • Searching within {{ radiusKm }} km</span>
+      </div>
+      
+      <div class="controls-actions">
+        <button class="filter-btn" (click)="toggleFilters()">
+          <i class="fas fa-filter"></i>
+          {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+        </button>
+        
+        <button class="view-toggle-btn" (click)="toggleViewMode()">
+          <i class="fas" [ngClass]="viewMode === 'list' ? 'fa-map' : 'fa-list'"></i>
+          {{ viewMode === 'list' ? 'Map View' : 'List View' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel" *ngIf="showFilters">
+      <div class="filter-group">
+        <label>Search Radius</label>
+        <div class="radius-control">
+          <input
+            type="range"
+            [(ngModel)]="radiusKm"
+            min="1"
+            max="50"
+            step="1"
+            class="radius-slider"
+          />
+          <span class="radius-value">{{ radiusKm }} km</span>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Property Type</label>
+          <select [(ngModel)]="propertyType" class="filter-select">
+            <option value="">All Types</option>
+            <option *ngFor="let type of propertyTypes" [value]="type">
+              {{ type | titlecase }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Bedrooms</label>
+          <select [(ngModel)]="bedrooms" class="filter-select">
+            <option [ngValue]="null">Any</option>
+            <option [value]="1">1+</option>
+            <option [value]="2">2+</option>
+            <option [value]="3">3+</option>
+            <option [value]="4">4+</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Min Price ($)</label>
+          <input
+            type="number"
+            [(ngModel)]="minPrice"
+            placeholder="Min"
+            class="filter-input"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label>Max Price ($)</label>
+          <input
+            type="number"
+            [(ngModel)]="maxPrice"
+            placeholder="Max"
+            class="filter-input"
+          />
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="apply-btn" (click)="searchNearby()" [disabled]="isSearching">
+          <i class="fas" [ngClass]="isSearching ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+          {{ isSearching ? 'Searching...' : 'Apply Filters' }}
+        </button>
+        <button class="reset-btn" (click)="resetFilters()">
+          <i class="fas fa-redo"></i>
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" *ngIf="userLocation">
+    <!-- Results Count -->
+    <div class="results-header" *ngIf="!isSearching">
+      <p class="results-count">
+        <strong>{{ totalResults }}</strong> {{ totalResults === 1 ? 'property' : 'properties' }} found
+      </p>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" *ngIf="isSearching">
+      <div class="spinner"></div>
+      <p>Searching for properties...</p>
+    </div>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="!isSearching && properties.length === 0 && userLocation">
+      <i class="fas fa-search"></i>
+      <h3>No properties found nearby</h3>
+      <p>Try increasing the search radius or adjusting your filters</p>
+      <button class="reset-btn" (click)="resetFilters()">
+        <i class="fas fa-redo"></i>
+        Reset Filters
+      </button>
+    </div>
+
+    <!-- List View -->
+    <div class="properties-list" *ngIf="!isSearching && properties.length > 0 && viewMode === 'list'">
+      <div class="property-card" *ngFor="let property of properties">
+        <!-- <img
+          [src]="property.images?.[0] || 'assets/images/placeholder-property.jpg'"
+          [alt]="property.title"
+          class="property-image"
+        /> -->
+        
+        <div class="property-content">
+          <div class="property-header">
+            <h3>{{ property.title }}</h3>
+            <span class="property-type">{{ property.title }}</span>
+          </div>
+
+          <p class="property-location">
+            <i class="fas fa-map-marker-alt"></i>
+            {{ property.city }}, {{ property.state }}
+          </p>
+
+          <div class="property-features">
+            <span><i class="fas fa-bed"></i> {{ property.bedrooms }} beds</span>
+            <span><i class="fas fa-bath"></i> {{ property.bathrooms }} baths</span>
+            <!-- <span><i class="fas fa-ruler-combined"></i> {{ property.area_sqft }} sqft</span> -->
+          </div>
+
+          <div class="property-distance">
+            <i class="fas fa-location-arrow"></i>
+            {{ formatDistance(property.distance_km) }} away
+          </div>
+        </div>
+
+        <div class="property-actions">
+          <div class="property-price">{{ formatPrice(property.price) }}<span>/month</span></div>
+          <button class="navigate-btn" (click)="navigateToProperty(property)">
+            <i class="fas fa-directions"></i>
+            Navigate
+          </button>
+          <button class="view-btn" [routerLink]="['/tenant/property', property._id]">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map View -->
+    <div class="map-view" *ngIf="!isSearching && properties.length > 0 && viewMode === 'map'">
+      <app-map
+        #mapComponent
+        [height]="'600px'"
+        [centerLat]="userLocation!.latitude"
+        [centerLng]="userLocation!.longitude"
+        [zoom]="12"
+        [markers]="markers"
+        [showUserLocation]="true"
+        
+      ></app-map>
+
+      <!-- Map Legend -->
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="legend-icon user"></div>
+          <span>Your Location</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon property"></div>
+          <span>Available Properties</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

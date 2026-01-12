@@ -86,6 +86,12 @@ export const routes: Routes = [
           import('./property-details/property-details')
             .then(m => m.PropertyDetailsComponent)
       },
+      {
+      path: 'nearby',  // ✅ Add this route
+      loadComponent: () =>
+        import('./tenant/nearby-search/nearby-search.component')
+          .then(m => m.NearbySearchComponent)
+      }
 
 //   //Default route
 //   { path: '', redirectTo: 'login', pathMatch: 'full' },

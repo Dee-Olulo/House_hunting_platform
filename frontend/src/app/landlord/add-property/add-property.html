@@ -1,3 +1,5 @@
+<!-- src/app/landlord/add-property/add-property.html -->
+
 <div class="add-property-container">
   <div class="form-header">
     <h1>Add New Property</h1>
@@ -7,6 +9,11 @@
   <!-- Error Message -->
   <div *ngIf="errorMessage" class="alert alert-error">
     {{ errorMessage }}
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
   </div>
 
   <form (ngSubmit)="onSubmit()" #propertyForm="ngForm">
@@ -79,108 +86,12 @@
       </div>
     </div>
 
-    <!-- Location -->
+    <!-- ✅ NEW: Location Picker Component -->
     <div class="form-section">
-      <h2>Location</h2>
-      
-      <div class="form-row">
-        <div class="form-group full-width">
-          <label for="address">Street Address *</label>
-          <input
-            type="text"
-            id="address"
-            name="address"
-            [(ngModel)]="property.address"
-            required
-            placeholder="123 Main Street, Apartment 4B"
-            class="form-input"
-          />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="city">City *</label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            [(ngModel)]="property.city"
-            required
-            placeholder="Nairobi"
-            class="form-input"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="state">State/County *</label>
-          <input
-            type="text"
-            id="state"
-            name="state"
-            [(ngModel)]="property.state"
-            required
-            placeholder="Nairobi County"
-            class="form-input"
-          />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="zip_code">Zip Code *</label>
-          <input
-            type="text"
-            id="zip_code"
-            name="zip_code"
-            [(ngModel)]="property.zip_code"
-            required
-            placeholder="00100"
-            class="form-input"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="country">Country *</label>
-          <input
-            type="text"
-            id="country"
-            name="country"
-            [(ngModel)]="property.country"
-            required
-            placeholder="Kenya"
-            class="form-input"
-          />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="latitude">Latitude (optional)</label>
-          <input
-            type="number"
-            id="latitude"
-            name="latitude"
-            [(ngModel)]="property.latitude"
-            step="0.000001"
-            placeholder="-1.286389 (optional)"
-            class="form-input"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="longitude">Longitude (optional)</label>
-          <input
-            type="number"
-            id="longitude"
-            name="longitude"
-            [(ngModel)]="property.longitude"
-            step="0.000001"
-            placeholder="36.817223 (optional)"
-            class="form-input"
-          />
-        </div>
-      </div>
+      <app-location-picker
+        [locationData]="locationData"
+        (locationChange)="onLocationChange($event)"
+      ></app-location-picker>
     </div>
 
     <!-- Property Details -->
@@ -276,7 +187,6 @@
           <div *ngFor="let image of selectedImages; let i = index" class="image-preview">
             <img [src]="image" alt="Preview" />
             <button type="button" (click)="removeImage(i)" class="btn-remove">×</button>
-            <span class="image-name">{{ image.name }}</span>
           </div>
         </div>
       </div>
@@ -295,29 +205,6 @@
 
     <!-- Form Actions -->
     <div class="form-actions">
-    <!-- Add this TEMPORARY debug section right before your form actions -->
-<div class="debug-info" style="background: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
-  <h3 style="margin: 0 0 10px 0; color: #856404;">🔍 Form Debug Info</h3>
-  <p><strong>Form Valid:</strong> {{ propertyForm.valid }}</p>
-  <p><strong>Form Dirty:</strong> {{ propertyForm.dirty }}</p>
-  <p><strong>Is Loading:</strong> {{ isLoading }}</p>
-  <p><strong>Is Uploading:</strong> {{ isUploading }}</p>
-  
-  <details>
-    <summary style="cursor: pointer; font-weight: bold; margin-top: 10px;">Show Invalid Fields</summary>
-    <div style="margin-top: 10px;">
-      <div *ngFor="let control of propertyForm.controls | keyvalue">
-        <p *ngIf="control.value.invalid" style="color: red;">
-          ❌ {{ control.key }}: 
-          <span *ngIf="control.value.errors?.['required']">Required</span>
-          <span *ngIf="control.value.errors?.['minlength']">Too short (min: {{ control.value.errors?.['minlength'].requiredLength }})</span>
-          <span *ngIf="control.value.errors?.['min']">Value too low</span>
-          <span *ngIf="control.value.errors?.['email']">Invalid email</span>
-        </p>
-      </div>
-    </div>
-  </details>
-</div>
       <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="isLoading || isUploading">
         Cancel
       </button>
