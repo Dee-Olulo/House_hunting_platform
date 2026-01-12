@@ -85,6 +85,11 @@
         <p class="property-location">
           📍 {{ property.address }}, {{ property.city }}, {{ property.state }}
         </p>
+        <!-- Distance indicator -->
+        <div *ngIf="distanceToProperty" class="distance-badge">
+          <i class="fas fa-location-arrow"></i>
+          {{ formatDistance(distanceToProperty) }} from you
+        </div>
 
         <div class="property-specs">
           <div class="spec-item">
@@ -111,6 +116,14 @@
           </button>
           <button (click)="contactLandlord()" class="btn-secondary">
             💬 Contact Landlord
+          </button>
+          <button 
+            *ngIf="property.latitude && property.longitude"
+            (click)="getDirections()" 
+            class="btn-directions"
+          >
+            <i class="fas fa-directions"></i>
+            Get Directions
           </button>
         </div>
 
@@ -169,7 +182,7 @@
           </div>
         </div>
 
-        <!-- Location -->
+        <!-- Location  with map-->
         <div class="location-section">
           <h2>Location</h2>
           <p class="full-address">
@@ -177,9 +190,22 @@
             {{ property.city }}, {{ property.state }} {{ property.zip_code }}<br>
             {{ property.country }}
           </p>
-          <!-- TODO: Add map integration here -->
-          <div class="map-placeholder">
-            <p>📍 Map view coming soon</p>
+           <!-- Interactive Map -->
+          <div *ngIf="property.latitude && property.longitude" class="map-container">
+            <app-map
+              #mapComponent
+              [height]="'400px'"
+              [centerLat]="property.latitude"
+              [centerLng]="property.longitude"
+              [zoom]="15"
+            ></app-map>
+          </div>
+
+          <!-- No coordinates message -->
+          <div *ngIf="!property.latitude || !property.longitude" class="no-location-message">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>Location coordinates not available for this property</p>
+            <p class="location-text">{{ property.address }}, {{ property.city }}</p>
           </div>
         </div>
       </div>
@@ -194,6 +220,14 @@
           </button>
           <button (click)="bookViewing()" class="btn-book-full">
             📅 Book Viewing
+          </button>
+          <button 
+            *ngIf="property.latitude && property.longitude"
+            (click)="getDirections()" 
+            class="btn-directions-full"
+          >
+            <i class="fas fa-directions"></i>
+            Get Directions
           </button>
         </div>
 
