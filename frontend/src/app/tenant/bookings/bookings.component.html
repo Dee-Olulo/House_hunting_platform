@@ -1,0 +1,233 @@
+<!-- src/app/tenant/tenant-bookings/tenant-bookings.component.html -->
+<div class="bookings-container">
+  <div class="bookings-wrapper">
+    
+    <!-- Header -->
+    <div class="bookings-header">
+      <h1>📅 My Booking Requests</h1>
+      <div class="header-stats" *ngIf="statistics">
+        <div class="stat-card">
+          <span class="stat-value">{{ getStatusCount('pending') }}</span>
+          <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-card confirmed">
+          <span class="stat-value">{{ upcomingBookings.length }}</span>
+          <span class="stat-label">Upcoming</span>
+        </div>
+        <div class="stat-card completed">
+          <span class="stat-value">{{ getStatusCount('completed') }}</span>
+          <span class="stat-label">Completed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      ✅ {{ successMessage }}
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage">
+      ❌ {{ errorMessage }}
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <h3>🔍 Filter Bookings</h3>
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>Status</label>
+          <select [(ngModel)]="filterStatus" (change)="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="rejected">Rejected</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Type</label>
+          <select [(ngModel)]="filterType" (change)="applyFilters()">
+            <option value="">All Types</option>
+            <option value="viewing">Viewing</option>
+            <option value="rental_inquiry">Rental Inquiry</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>From Date</label>
+          <input type="date" [(ngModel)]="filterFromDate" (change)="applyFilters()">
+        </div>
+
+        <div class="filter-group">
+          <label>To Date</label>
+          <input type="date" [(ngModel)]="filterToDate" (change)="applyFilters()">
+        </div>
+
+        <button class="btn-clear-filters" (click)="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <h2>Loading your bookings...</h2>
+    </div>
+
+    <!-- Bookings List -->
+    <div class="bookings-list" *ngIf="!isLoading">
+      <div class="booking-card" *ngFor="let booking of filteredBookings">
+        <div class="booking-image">
+          <img [src]="getImageUrl(booking.property_details?.images)" [alt]="booking.property_details?.title">
+          <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
+            {{ getStatusText(booking.status) }}
+          </span>
+        </div>
+
+        <div class="booking-content">
+          <div class="booking-header-card">
+            <h3>{{ booking.property_details?.title }}</h3>
+            <span class="booking-type">{{ getBookingTypeText(booking.booking_type) }}</span>
+          </div>
+
+          <div class="booking-info">
+            <div class="info-row">
+              <span class="label">📍 Location:</span>
+              <span>{{ booking.property_details?.address }}, {{ booking.property_details?.city }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">💰 Price:</span>
+              <span>KES {{ booking.property_details?.price?.toLocaleString() }}/month</span>
+            </div>
+            <div class="info-row">
+              <span class="label">📅 Date:</span>
+              <span>{{ formatDate(booking.booking_date) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">🕐 Time:</span>
+              <span>{{ formatTime(booking.booking_time) }}</span>
+            </div>
+            
+            <!-- Show landlord contact for confirmed bookings -->
+            <div class="landlord-contact" *ngIf="booking.status === 'confirmed' && booking.landlord_contact">
+              <h4>📞 Landlord Contact:</h4>
+              <p><strong>Email:</strong> {{ booking.landlord_contact.email }}</p>
+              <p *ngIf="booking.landlord_contact.phone"><strong>Phone:</strong> {{ booking.landlord_contact.phone }}</p>
+            </div>
+
+            <!-- Show rejection reason -->
+            <div class="rejection-info" *ngIf="booking.status === 'rejected' && booking.rejection_reason">
+              <h4>❌ Rejection Reason:</h4>
+              <p>{{ booking.rejection_reason }}</p>
+            </div>
+
+            <!-- Show cancellation reason -->
+            <div class="cancellation-info" *ngIf="booking.status === 'cancelled' && booking.cancellation_reason">
+              <h4>🚫 Cancellation Reason:</h4>
+              <p>{{ booking.cancellation_reason }}</p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="booking-actions">
+            <button class="btn-view" (click)="viewBookingDetails(booking._id!)">
+              View Details
+            </button>
+            <button class="btn-property" (click)="viewProperty(booking.property_id)">
+              View Property
+            </button>
+            
+            <!-- Update button (only for pending) -->
+            <button 
+              class="btn-update" 
+              *ngIf="canUpdate(booking)"
+              (click)="openUpdateModal(booking)">
+              ✏️ Update
+            </button>
+
+            <!-- Cancel button -->
+            <button 
+              class="btn-cancel-booking" 
+              *ngIf="canCancel(booking)"
+              (click)="openCancelModal(booking)">
+              ❌ Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredBookings.length === 0">
+        <div class="empty-icon">📭</div>
+        <h2>No bookings found</h2>
+        <p>You haven't made any booking requests yet.</p>
+        <a routerLink="/properties" class="btn-primary">Browse Properties</a>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button (click)="previousPage()" [disabled]="currentPage === 1">← Previous</button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages">Next →</button>
+    </div>
+  </div>
+
+  <!-- Cancel Modal -->
+  <div class="modal-overlay" *ngIf="showCancelModal" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Cancel Booking</h2>
+      <p>Please provide a reason for cancelling this booking:</p>
+      <textarea 
+        [(ngModel)]="cancellationReason" 
+        placeholder="Reason for cancellation..."
+        rows="4"></textarea>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeModals()">Close</button>
+        <button class="btn-submit" (click)="cancelBooking()">Cancel Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Modal -->
+  <div class="modal-overlay" *ngIf="showUpdateModal" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Update Booking</h2>
+      <p>Update your booking details:</p>
+      
+      <div class="form-group">
+        <label>Date:</label>
+        <input type="date" [(ngModel)]="updateForm.booking_date">
+      </div>
+
+      <div class="form-group">
+        <label>Time:</label>
+        <select [(ngModel)]="updateForm.booking_time">
+          <option value="09:00">9:00 AM</option>
+          <option value="10:00">10:00 AM</option>
+          <option value="11:00">11:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+          <option value="13:00">1:00 PM</option>
+          <option value="14:00">2:00 PM</option>
+          <option value="15:00">3:00 PM</option>
+          <option value="16:00">4:00 PM</option>
+          <option value="17:00">5:00 PM</option>
+          <option value="18:00">6:00 PM</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Message:</label>
+        <textarea 
+          [(ngModel)]="updateForm.message" 
+          placeholder="Additional message..."
+          rows="3"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeModals()">Close</button>
+        <button class="btn-submit" (click)="updateBooking()">Update Booking</button>
+      </div>
+    </div>
+  </div>
+</div>

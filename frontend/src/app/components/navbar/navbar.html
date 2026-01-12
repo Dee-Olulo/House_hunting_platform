@@ -19,6 +19,8 @@
       <!-- Landlord Links -->
       <li *ngIf="isLoggedIn && userRole === 'landlord'">
          <a routerLink="/landlord/properties" routerLinkActive="active">My Properties</a>
+         <a routerLink="/landlord/bookings" routerLinkActive="active">My Bookings</a>
+         <a routerLink="/landlord/properties/edit" routerLinkActive="active">Edit Property</a>
 
 
       </li> 

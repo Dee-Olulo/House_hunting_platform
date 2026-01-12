@@ -9,6 +9,10 @@ import { LoginComponent } from './auth/login/login';
 import { RegisterComponent } from './auth/register/register';
 import { authGuard } from './guards/auth-guard';
 import { roleGuard } from './guards/role.guard';
+import { CreateBookingComponent } from './tenant/create-booking/create-booking.component';
+import { TenantBookingsComponent } from './tenant/bookings/bookings.component';
+import { LandlordBookingsComponent } from './landlord/bookings/bookings.component';
+
 
 
 
@@ -60,7 +64,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./landlord/edit-property/edit-property')
             .then(m => m.EditPropertyComponent)
-      }
+      },
+      // Booking routes for landlord
+      {
+        path: 'bookings',
+        loadComponent: () =>
+          import('./landlord/bookings/bookings.component')
+            .then(m => m.LandlordBookingsComponent)
+      },
     ]
   },
     // Tenant routes
@@ -91,12 +102,27 @@ export const routes: Routes = [
       loadComponent: () =>
         import('./tenant/nearby-search/nearby-search.component')
           .then(m => m.NearbySearchComponent)
-      }
+      },
+      {
+        path: 'book-viewing/:id',
+        loadComponent: () =>
+        import('./tenant/create-booking/create-booking.component')
+          .then(m => m.CreateBookingComponent),
+        // canActivate: [authGuard, roleGuard],
+        // title: 'Book Viewing'
+      },
+      {
+        path: 'bookings',
+              loadComponent: () =>
+        import('./tenant/bookings/bookings.component')
+          .then(m => m.TenantBookingsComponent)
+      },
+    ],
 
 //   //Default route
 //   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
 //  // Catch-all
 //   { path: '**', redirectTo: 'login' }
-]},
+  },
 ];

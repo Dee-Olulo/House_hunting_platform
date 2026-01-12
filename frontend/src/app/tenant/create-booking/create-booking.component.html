@@ -1,0 +1,220 @@
+<!-- src/app/tenant/create-booking/create-booking.component.html -->
+<div class="create-booking-container">
+  <div class="booking-wrapper">
+    
+    <!-- Header -->
+    <div class="booking-header">
+      <button class="btn-back" (click)="goBack()">
+        ← Back
+      </button>
+      <h1>📅 Book a Viewing</h1>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      ✅ {{ successMessage }}
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage">
+      ❌ {{ errorMessage }}
+    </div>
+
+    <!-- Loading Property -->
+    <div class="loading-container" *ngIf="isLoadingProperty">
+      <div class="spinner"></div>
+      <p>Loading property details...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="booking-content" *ngIf="!isLoadingProperty && property">
+      
+      <!-- Property Preview -->
+      <div class="property-preview">
+        <div class="property-image">
+          <img [src]="getPropertyImage()" [alt]="property.title">
+        </div>
+        <div class="property-info">
+          <h2>{{ property.title }}</h2>
+          <p class="property-location">📍 {{ property.address }}, {{ property.city }}</p>
+          <p class="property-price">💰 KES {{ property.price.toLocaleString() }}/month</p>
+          <div class="property-features">
+            <span *ngIf="property.bedrooms">🛏️ {{ property.bedrooms }} Beds</span>
+            <span *ngIf="property.bathrooms">🚿 {{ property.bathrooms }} Baths</span>
+            <span *ngIf="property.area_sqft">📐 {{ property.area_sqft }} sqft</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Form -->
+      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="booking-form">
+        
+        <h3>Booking Details</h3>
+
+        <!-- Booking Type -->
+        <div class="form-group">
+          <label for="booking_type">Booking Type <span class="required">*</span></label>
+          <select 
+            id="booking_type" 
+            formControlName="booking_type"
+            [class.invalid]="isFieldInvalid('booking_type')">
+            <option value="viewing">Property Viewing</option>
+            <option value="rental_inquiry">Rental Inquiry</option>
+          </select>
+          <span class="error-message" *ngIf="isFieldInvalid('booking_type')">
+            {{ getFieldError('booking_type') }}
+          </span>
+          <small class="help-text">
+            Choose "Viewing" to schedule a property tour, or "Rental Inquiry" to discuss lease terms
+          </small>
+        </div>
+
+        <!-- Booking Date -->
+        <div class="form-group">
+          <label for="booking_date">Preferred Date <span class="required">*</span></label>
+          <input 
+            type="date" 
+            id="booking_date"
+            formControlName="booking_date"
+            [min]="minDate"
+            [max]="maxDate"
+            [class.invalid]="isFieldInvalid('booking_date')">
+          <span class="error-message" *ngIf="isFieldInvalid('booking_date')">
+            {{ getFieldError('booking_date') }}
+          </span>
+          <small class="help-text">Select a date within the next 6 months</small>
+        </div>
+
+        <!-- Booking Time -->
+        <div class="form-group">
+          <label for="booking_time">Preferred Time <span class="required">*</span></label>
+          <select 
+            id="booking_time"
+            formControlName="booking_time"
+            [class.invalid]="isFieldInvalid('booking_time')">
+            <option value="">Select a time</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="09:30">9:30 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="10:30">10:30 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="11:30">11:30 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="12:30">12:30 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="13:30">1:30 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="14:30">2:30 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="15:30">3:30 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="16:30">4:30 PM</option>
+            <option value="17:00">5:00 PM</option>
+            <option value="17:30">5:30 PM</option>
+            <option value="18:00">6:00 PM</option>
+          </select>
+          <span class="error-message" *ngIf="isFieldInvalid('booking_time')">
+            {{ getFieldError('booking_time') }}
+          </span>
+        </div>
+
+        <h3>Your Contact Information</h3>
+
+        <!-- Tenant Name -->
+        <div class="form-group">
+          <label for="tenant_name">Full Name <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="tenant_name"
+            formControlName="tenant_name"
+            placeholder="Enter your full name"
+            [class.invalid]="isFieldInvalid('tenant_name')">
+          <span class="error-message" *ngIf="isFieldInvalid('tenant_name')">
+            {{ getFieldError('tenant_name') }}
+          </span>
+        </div>
+
+        <!-- Tenant Email -->
+        <div class="form-group">
+          <label for="tenant_email">Email Address <span class="required">*</span></label>
+          <input 
+            type="email" 
+            id="tenant_email"
+            formControlName="tenant_email"
+            placeholder="your.email@example.com"
+            [class.invalid]="isFieldInvalid('tenant_email')">
+          <span class="error-message" *ngIf="isFieldInvalid('tenant_email')">
+            {{ getFieldError('tenant_email') }}
+          </span>
+        </div>
+
+        <!-- Tenant Phone -->
+        <div class="form-group">
+          <label for="tenant_phone">Phone Number (Optional)</label>
+          <input 
+            type="tel" 
+            id="tenant_phone"
+            formControlName="tenant_phone"
+            placeholder="+254712345678"
+            [class.invalid]="isFieldInvalid('tenant_phone')">
+          <span class="error-message" *ngIf="isFieldInvalid('tenant_phone')">
+            {{ getFieldError('tenant_phone') }}
+          </span>
+          <small class="help-text">Format: +254712345678 (10-15 digits)</small>
+        </div>
+
+        <!-- Message -->
+        <div class="form-group">
+          <label for="message">Additional Message (Optional)</label>
+          <textarea 
+            id="message"
+            formControlName="message"
+            rows="4"
+            placeholder="Any specific requirements or questions?"
+            [class.invalid]="isFieldInvalid('message')"></textarea>
+          <span class="error-message" *ngIf="isFieldInvalid('message')">
+            {{ getFieldError('message') }}
+          </span>
+          <small class="help-text">Maximum 1000 characters</small>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <h4>📋 What happens next?</h4>
+          <ol>
+            <li>Your booking request will be sent to the landlord</li>
+            <li>The landlord will review and confirm or suggest an alternative time</li>
+            <li>You'll receive a notification once the booking is confirmed</li>
+            <li>You can view and manage your bookings in "My Bookings"</li>
+          </ol>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn-cancel" 
+            (click)="goBack()"
+            [disabled]="isLoading">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn-submit"
+            [disabled]="isLoading || bookingForm.invalid">
+            <span *ngIf="!isLoading">📅 Submit Booking Request</span>
+            <span *ngIf="isLoading">
+              <span class="spinner-small"></span> Submitting...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Property Not Found -->
+    <div class="error-state" *ngIf="!isLoadingProperty && !property">
+      <div class="error-icon">❌</div>
+      <h2>Property Not Found</h2>
+      <p>{{ errorMessage }}</p>
+      <button class="btn-primary" (click)="goBack()">Go Back</button>
+    </div>
+  </div>
+</div>

@@ -464,25 +464,24 @@ export class PropertyDetailsComponent implements OnInit {
   }
 
   bookViewing(): void {
-    console.log('Book viewing clicked');
-    
-    if (!this.isLoggedIn) {
-      alert('Please login to book a viewing');
-      this.router.navigate(['/login'], { 
-        queryParams: { returnUrl: `/properties/${this.propertyId}` }
-      });
-      return;
-    }
-    
-    if (this.userRole !== 'tenant') {
-      alert('Only tenants can book property viewings');
-      return;
-    }
-    
-    // TODO: Navigate to booking page
-    alert('Booking system coming soon!\n\nYou will be able to:\n• Schedule property viewings\n• Choose time slots\n• Get confirmation from landlord');
-    // Future: this.router.navigate(['/tenant/book-viewing', this.propertyId]);
+  console.log('Book viewing clicked');
+  
+  if (!this.isLoggedIn) {
+    alert('Please login to book a viewing');
+    this.router.navigate(['/login'], { 
+      queryParams: { returnUrl: `/properties/${this.propertyId}` }
+    });
+    return;
   }
+  
+  if (this.userRole !== 'tenant') {
+    alert('Only tenants can book property viewings');
+    return;
+  }
+  
+  // Navigate to booking page with property ID
+  this.router.navigate(['/tenant/book-viewing', this.propertyId]);
+}
 
   goBack(): void {
     console.log('Going back');
