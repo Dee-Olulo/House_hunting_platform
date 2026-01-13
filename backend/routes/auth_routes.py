@@ -5,9 +5,13 @@ from extensions import mongo, bcrypt
 from models.user import User
 from utils.validators import validate_email, validate_password, validate_role
 from utils.decorators import admin_only, landlord_only, tenant_only
+from services.notification_service import NotificationService
 
 # Blueprint with URL prefix /auth
 auth_bp = Blueprint("auth", __name__)
+
+# Initialize notification service
+notification_service = NotificationService()
 
 # ---------------------------
 # REGISTER USER
@@ -44,7 +48,15 @@ def register():
 
         # Create user object and insert into DB
         user = User(email=email, password=hashed_password, role=role)
-        mongo.db.users.insert_one(user.to_dict())
+        user_dict = user.to_dict()
+        result = mongo.db.users.insert_one(user_dict)
+        
+        # SEND WELCOME NOTIFICATION
+        user_dict['_id'] = result.inserted_id
+        user_dict['name'] = email.split('@')[0]  # Use email prefix as name
+        
+        notification_service.notify_welcome(user_dict)
+        # mongo.db.users.insert_one(user.to_dict())
 
         return jsonify({
             "message": "User registered successfully",

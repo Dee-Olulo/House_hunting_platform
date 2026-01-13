@@ -72,6 +72,13 @@ export const routes: Routes = [
           import('./landlord/bookings/bookings.component')
             .then(m => m.LandlordBookingsComponent)
       },
+      // ✨ NOTIFICATION ROUTE
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./shared/notifications/notifications')
+            .then(m => m.NotificationsComponent)
+      }
     ]
   },
     // Tenant routes
@@ -117,6 +124,13 @@ export const routes: Routes = [
         import('./tenant/bookings/bookings.component')
           .then(m => m.TenantBookingsComponent)
       },
+       // ✨ NOTIFICATION ROUTE
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./shared/notifications/notifications')
+            .then(m => m.NotificationsComponent)
+      }
     ],
 
 //   //Default route

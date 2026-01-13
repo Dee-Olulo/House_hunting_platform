@@ -6,8 +6,12 @@ from utils.decorators import landlord_only, tenant_only
 from utils.validators import validate_booking_data
 from bson import ObjectId
 from datetime import datetime
+from services.notification_service import NotificationService
 
 booking_bp = Blueprint("booking", __name__)
+
+# Initialize notification service
+notification_service = NotificationService()
 
 # ---------------------------
 # LANDLORD: GET ALL BOOKINGS FOR MY PROPERTIES
@@ -206,6 +210,22 @@ def confirm_booking(booking_id):
             {"_id": ObjectId(booking_id)},
             {"$set": update_data}
         )
+
+                # ✨ SEND NOTIFICATIONS TO TENANT
+        property_data = mongo.db.properties.find_one({"_id": ObjectId(booking["property_id"])})
+        tenant_data = mongo.db.users.find_one({"_id": ObjectId(booking["tenant_id"])})
+        landlord_data = mongo.db.users.find_one({"_id": ObjectId(booking["landlord_id"])})
+        
+        # Update booking data with confirmation
+        booking["status"] = "confirmed"
+        booking["confirmed_at"] = datetime.utcnow()
+        
+        notification_service.notify_booking_confirmed(
+            booking_data=booking,
+            property_data=property_data,
+            tenant_data=tenant_data,
+            landlord_data=landlord_data
+        )
         
         return jsonify({
             "message": "Booking confirmed successfully",
@@ -262,6 +282,21 @@ def reject_booking(booking_id):
             {"$set": update_data}
         )
         
+
+                # ✨ SEND NOTIFICATIONS TO TENANT
+        property_data = mongo.db.properties.find_one({"_id": ObjectId(booking["property_id"])})
+        tenant_data = mongo.db.users.find_one({"_id": ObjectId(booking["tenant_id"])})
+        
+        # Update booking data with rejection
+        booking["status"] = "rejected"
+        booking["rejection_reason"] = data["rejection_reason"]
+        
+        notification_service.notify_booking_rejected(
+            booking_data=booking,
+            property_data=property_data,
+            tenant_data=tenant_data,
+            rejection_reason=data["rejection_reason"]
+        )
         return jsonify({
             "message": "Booking rejected successfully",
             "booking_id": booking_id,
@@ -546,7 +581,19 @@ def create_booking():
         
         # Insert into database
         result = mongo.db.bookings.insert_one(booking.to_dict())
+
+        # ✨ SEND NOTIFICATIONS TO LANDLORD
+        booking_data_with_id = booking.to_dict()
+        booking_data_with_id['_id'] = result.inserted_id
         
+        landlord_data = mongo.db.users.find_one({"_id": ObjectId(landlord_id)})
+        
+        notification_service.notify_new_booking(
+            booking_data=booking_data_with_id,
+            property_data=property_data,
+            landlord_data=landlord_data
+        )
+
         return jsonify({
             "message": "Booking request created successfully",
             "booking_id": str(result.inserted_id),
@@ -555,7 +602,7 @@ def create_booking():
             "booking_date": data.get("booking_date"),
             "booking_time": data.get("booking_time")
         }), 201
-        
+    
     except Exception as e:
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
 
@@ -771,6 +818,20 @@ def cancel_tenant_booking(booking_id):
             {"_id": ObjectId(booking_id)},
             {"$set": update_data}
         )
+                # ✨ SEND NOTIFICATIONS TO LANDLORD
+        property_data = mongo.db.properties.find_one({"_id": ObjectId(booking["property_id"])})
+        landlord_data = mongo.db.users.find_one({"_id": ObjectId(booking["landlord_id"])})
+        
+        # Update booking data with cancellation
+        booking["status"] = "cancelled"
+        booking["cancellation_reason"] = data["cancellation_reason"]
+        
+        notification_service.notify_booking_cancelled(
+            booking_data=booking,
+            property_data=property_data,
+            landlord_data=landlord_data,
+            cancellation_reason=data["cancellation_reason"]
+        )
         
         return jsonify({
             "message": "Booking cancelled successfully",
@@ -840,6 +901,20 @@ def update_tenant_booking(booking_id):
             {"$set": update_data}
         )
         
+        #         # ✨ SEND NOTIFICATIONS TO LANDLORD
+        # property_data = mongo.db.properties.find_one({"_id": ObjectId(booking["property_id"])})
+        # landlord_data = mongo.db.users.find_one({"_id": ObjectId(booking["landlord_id"])})
+        
+        # # Update booking data with cancellation
+        # booking["status"] = "updated"
+        # booking["updated_reason"] = data["updated_reason"]
+        
+        # notification_service.notify_booking_updated(
+        #     booking_data=booking,
+        #     property_data=property_data,
+        #     landlord_data=landlord_data,
+        #     updated_reason=data["updated_reason"]
+        # )
         return jsonify({
             "message": "Booking updated successfully",
             "booking_id": booking_id

@@ -1,0 +1,187 @@
+<div class="notifications-container">
+  <div class="notifications-wrapper">
+    
+    <!-- Header -->
+    <div class="notifications-header">
+      <div class="header-content">
+        <h1>🔔 Notifications</h1>
+        <div class="header-stats" *ngIf="statistics">
+          <div class="stat-badge">
+            <span class="stat-value">{{ statistics.unread_count }}</span>
+            <span class="stat-label">Unread</span>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-value">{{ statistics.total_notifications }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-mark-all" (click)="markAllAsRead()" *ngIf="statistics && statistics.unread_count > 0">
+          ✓ Mark All Read
+        </button>
+        <button class="btn-delete-all" (click)="deleteAllNotifications()" *ngIf="notifications.length > 0">
+          🗑️ Delete All
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      ✅ {{ successMessage }}
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage">
+      ❌ {{ errorMessage }}
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>Status</label>
+          <select [(ngModel)]="filterReadStatus" (change)="applyFilters()">
+            <option value="all">All Notifications</option>
+            <option value="unread">Unread Only</option>
+            <option value="read">Read Only</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Type</label>
+          <select [(ngModel)]="filterType" (change)="applyFilters()">
+            <option value="">All Types</option>
+            <option value="booking_confirmed">Booking Confirmed</option>
+            <option value="booking_rejected">Booking Rejected</option>
+            <option value="booking_cancelled">Booking Cancelled</option>
+            <option value="new_booking">New Booking</option>
+            <option value="booking_reminder">Reminder</option>
+            <option value="property_expiring">Property Expiring</option>
+            <option value="welcome">Welcome</option>
+          </select>
+        </div>
+
+        <button class="btn-clear-filters" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions" *ngIf="selectedNotifications.size > 0">
+      <div class="selection-info">
+        {{ selectedNotifications.size }} selected
+      </div>
+      <button class="btn-delete-selected" (click)="deleteSelected()">
+        Delete Selected
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <h2>Loading notifications...</h2>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="notifications-list" *ngIf="!isLoading">
+      <!-- Select All -->
+      <div class="select-all-bar" *ngIf="notifications.length > 0">
+        <label class="checkbox-label">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="selectAll" 
+            (change)="toggleSelectAll()">
+          <span>Select All</span>
+        </label>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="notifications.length === 0">
+        <div class="empty-icon">📭</div>
+        <h2>No notifications found</h2>
+        <p>You don't have any notifications matching your filters.</p>
+      </div>
+
+      <!-- Notification Cards -->
+      <div 
+        class="notification-card" 
+        *ngFor="let notification of notifications"
+        [class.unread]="!notification.is_read"
+        [ngClass]="getNotificationColor(notification.notification_type)">
+        
+        <div class="notification-select">
+          <input 
+            type="checkbox" 
+            [checked]="selectedNotifications.has(notification._id)"
+            (change)="toggleSelection(notification._id)"
+            (click)="$event.stopPropagation()">
+        </div>
+
+        <div class="notification-main" (click)="handleNotificationClick(notification)">
+          <div class="notification-icon-large">
+            {{ getNotificationIcon(notification.notification_type) }}
+          </div>
+
+          <div class="notification-body">
+            <div class="notification-header-row">
+              <h3 class="notification-title-large">{{ notification.title }}</h3>
+              <span class="notification-date">{{ formatDate(notification.created_at) }}</span>
+            </div>
+
+            <p class="notification-message-large">{{ notification.message }}</p>
+
+            <div class="notification-meta">
+              <span class="notification-time-badge">
+                ⏱️ {{ getRelativeTime(notification.created_at) }}
+              </span>
+              <span class="notification-type-badge">
+                {{ notification.notification_type.replace('_', ' ') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="notification-status">
+            <span class="unread-dot" *ngIf="!notification.is_read"></span>
+          </div>
+        </div>
+
+        <div class="notification-actions">
+          <button 
+            class="btn-action" 
+            (click)="markAsRead(notification._id, $event)"
+            *ngIf="!notification.is_read"
+            title="Mark as read">
+            ✓
+          </button>
+          <button 
+            class="btn-action btn-delete" 
+            (click)="deleteNotification(notification._id, $event)"
+            title="Delete">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="btn-pagination" (click)="previousPage()" [disabled]="currentPage === 1">
+        ← Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="page-number"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+      
+      <button class="btn-pagination" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        Next →
+      </button>
+    </div>
+  </div>
+</div>

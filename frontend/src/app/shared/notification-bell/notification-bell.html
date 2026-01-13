@@ -1,0 +1,67 @@
+<div class="notification-bell-container">
+  <!-- Bell Icon with Badge -->
+  <div class="bell-icon" (click)="toggleDropdown($event)">
+    <span class="icon">🔔</span>
+    <span class="badge" *ngIf="unreadCount > 0">
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+  </div>
+
+  <!-- Dropdown Panel -->
+  <div class="notification-dropdown" *ngIf="showDropdown" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="dropdown-header">
+      <h3>Notifications</h3>
+      <button 
+        class="mark-all-read" 
+        (click)="markAllAsRead()" 
+        *ngIf="unreadCount > 0"
+        title="Mark all as read">
+        ✓ Mark all read
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner-small"></div>
+      <p>Loading...</p>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="notifications-list" *ngIf="!isLoading">
+      <!-- No Notifications -->
+      <div class="empty-state" *ngIf="recentNotifications.length === 0">
+        <span class="empty-icon">📭</span>
+        <p>No notifications yet</p>
+      </div>
+
+      <!-- Notification Items -->
+      <div 
+        class="notification-item"
+        *ngFor="let notification of recentNotifications"
+        [class.unread]="!notification.is_read"
+        [ngClass]="getNotificationColor(notification.notification_type)"
+        (click)="handleNotificationClick(notification, $event)">
+        
+        <div class="notification-icon">
+          {{ getNotificationIcon(notification.notification_type) }}
+        </div>
+
+        <div class="notification-content">
+          <div class="notification-title">{{ notification.title }}</div>
+          <div class="notification-message">{{ notification.message }}</div>
+          <div class="notification-time">{{ getRelativeTime(notification.created_at) }}</div>
+        </div>
+
+        <div class="unread-indicator" *ngIf="!notification.is_read"></div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="dropdown-footer">
+      <button class="view-all-btn" (click)="viewAllNotifications($event)">
+        View All Notifications
+      </button>
+    </div>
+  </div>
+</div>
