@@ -288,4 +288,5 @@ export class NotificationsComponent implements OnInit {
     this.errorMessage = message;
     setTimeout(() => this.errorMessage = '', 3000);
   }
+
 }

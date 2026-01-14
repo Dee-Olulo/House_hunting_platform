@@ -11,6 +11,7 @@ from routes.property_routes import property_bp
 from routes.upload_routes import upload_bp
 from routes.booking_routes import booking_bp
 from routes.notification_routes import notification_bp
+from routes.payment_routes import payment_bp 
 
 def create_app():
     app = Flask(__name__)
@@ -53,7 +54,8 @@ def create_app():
     app.register_blueprint(property_bp, url_prefix="/properties")
     app.register_blueprint(upload_bp, url_prefix="/upload")
     app.register_blueprint(booking_bp, url_prefix="/bookings")  
-    app.register_blueprint(notification_bp, url_prefix="/notifications")        
+    app.register_blueprint(notification_bp, url_prefix="/notifications") 
+    app.register_blueprint(payment_bp, url_prefix="/payments")       
     # Health check endpoint
     @app.route("/health", methods=["GET"])
     def health_check():

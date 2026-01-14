@@ -253,3 +253,141 @@ def validate_phone_number(phone):
         return False
     phone_pattern = r'^\+?[0-9]{10,15}$'
     return re.match(phone_pattern, phone) is not None
+
+#payment validation
+def validate_payment_data(data, is_update=False):
+    """
+    Validate payment data
+    is_update: If True, allows partial validation (for updates)
+    """
+    errors = []
+    
+    # Required fields for new payment
+    if not is_update:
+        required_fields = [
+            "property_id", "amount", "payment_type", "payment_method"
+        ]
+        
+        for field in required_fields:
+            if field not in data or not data[field]:
+                errors.append(f"{field} is required")
+    
+    # Validate property_id format
+    if "property_id" in data:
+        try:
+            from bson import ObjectId
+            ObjectId(data["property_id"])
+        except Exception:
+            errors.append("Invalid property_id format")
+    
+    # Validate booking_id format (optional)
+    if "booking_id" in data and data["booking_id"]:
+        try:
+            from bson import ObjectId
+            ObjectId(data["booking_id"])
+        except Exception:
+            errors.append("Invalid booking_id format")
+    
+    # Validate amount
+    if "amount" in data:
+        try:
+            amount = float(data["amount"])
+            if amount <= 0:
+                errors.append("Amount must be greater than 0")
+            elif amount > 10000000:  # 10 million max
+                errors.append("Amount is too high")
+        except (ValueError, TypeError):
+            errors.append("Amount must be a valid number")
+    
+    # Validate currency
+    if "currency" in data:
+        valid_currencies = ["USD", "EUR", "GBP", "KES", "NGN", "ZAR"]
+        if data["currency"] not in valid_currencies:
+            errors.append(f"Currency must be one of: {', '.join(valid_currencies)}")
+    
+    # Validate payment_type
+    if "payment_type" in data:
+        valid_types = ["deposit", "rent", "booking_fee", "security_deposit", "other"]
+        if data["payment_type"] not in valid_types:
+            errors.append(f"Payment type must be one of: {', '.join(valid_types)}")
+    
+    # Validate payment_method
+    if "payment_method" in data:
+        valid_methods = [
+            "card", "bank_transfer", "mpesa", "paypal", 
+            "stripe", "cash", "cheque"
+        ]
+        if data["payment_method"] not in valid_methods:
+            errors.append(f"Payment method must be one of: {', '.join(valid_methods)}")
+    
+    # Validate description (optional)
+    if "description" in data and data["description"]:
+        if len(data["description"]) > 500:
+            errors.append("Description must not exceed 500 characters")
+    
+    # Validate metadata (optional)
+    if "metadata" in data:
+        if not isinstance(data["metadata"], dict):
+            errors.append("Metadata must be a dictionary/object")
+    
+    return (len(errors) == 0, errors)
+
+
+def validate_refund_data(data):
+    """Validate refund request data"""
+    errors = []
+    
+    # Reason is required
+    if "reason" not in data or not data["reason"]:
+        errors.append("Refund reason is required")
+    elif len(data["reason"]) < 10:
+        errors.append("Refund reason must be at least 10 characters")
+    elif len(data["reason"]) > 500:
+        errors.append("Refund reason must not exceed 500 characters")
+    
+    # Validate amount (optional - defaults to full amount)
+    if "amount" in data:
+        try:
+            amount = float(data["amount"])
+            if amount <= 0:
+                errors.append("Refund amount must be greater than 0")
+        except (ValueError, TypeError):
+            errors.append("Refund amount must be a valid number")
+    
+    return (len(errors) == 0, errors)
+
+
+def validate_payment_gateway_config(config):
+    """Validate payment gateway configuration"""
+    errors = []
+    
+    gateway_type = config.get("gateway_type")
+    if not gateway_type:
+        errors.append("Gateway type is required")
+    
+    valid_gateways = ["stripe", "paypal", "mpesa", "flutterwave", "paystack"]
+    if gateway_type and gateway_type not in valid_gateways:
+        errors.append(f"Gateway type must be one of: {', '.join(valid_gateways)}")
+    
+    # Gateway-specific validation
+    if gateway_type == "stripe":
+        if not config.get("stripe_secret_key"):
+            errors.append("Stripe secret key is required")
+        if not config.get("stripe_publishable_key"):
+            errors.append("Stripe publishable key is required")
+    
+    elif gateway_type == "paypal":
+        if not config.get("paypal_client_id"):
+            errors.append("PayPal client ID is required")
+        if not config.get("paypal_client_secret"):
+            errors.append("PayPal client secret is required")
+    
+    elif gateway_type == "mpesa":
+        if not config.get("mpesa_consumer_key"):
+            errors.append("M-Pesa consumer key is required")
+        if not config.get("mpesa_consumer_secret"):
+            errors.append("M-Pesa consumer secret is required")
+        if not config.get("mpesa_shortcode"):
+            errors.append("M-Pesa shortcode is required")
+    
+    return (len(errors) == 0, errors)

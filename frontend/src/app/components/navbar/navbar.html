@@ -13,17 +13,22 @@
       </li>
       <!-- Tenant Links -->
       <li *ngIf="isLoggedIn && userRole === 'tenant'">
+          <a routerLink="/shared/notifications" routerLinkActive="active">Notifications</a>
         <a routerLink="/tenant/bookings" routerLinkActive="active">My Bookings</a>
         <a routerLink="/tenant/create-booking" routerLinkActive="active">Create Booking</a>
         <a routerLink="/properties" routerLinkActive="active">View Properties</a>
+      
+
       </li>
      
       <!-- Landlord Links -->
       <li *ngIf="isLoggedIn && userRole === 'landlord'">
+        <a routerLink="/shared/notifications" routerLinkActive="active">Notifications</a>
         <a routerLink="/landlord/properties/edit" routerLinkActive="active">Edit Property</a>
         <a routerLink="/landlord/properties/add" routerLinkActive="active">Add Property</a>
         <a routerLink="/landlord/properties" routerLinkActive="active">My Properties</a>
         <a routerLink="/landlord/bookings" routerLinkActive="active">Bookings</a>
+        
       </li> 
       
       <!-- Admin Links -->
