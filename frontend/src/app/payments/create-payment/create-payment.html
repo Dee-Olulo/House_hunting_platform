@@ -1,0 +1,154 @@
+<div class="payment-container">
+  <div class="payment-card">
+    <h2>💳 Make Payment</h2>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="alert alert-error">
+      <span class="icon">⚠️</span>
+      {{ error }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="success" class="alert alert-success">
+      <span class="icon">✓</span>
+      {{ success }}
+    </div>
+
+    <!-- M-Pesa Prompt -->
+    <div *ngIf="showMpesaPrompt" class="mpesa-prompt">
+      <div class="mpesa-animation">
+        <div class="phone-icon">📱</div>
+        <div class="pulse"></div>
+      </div>
+      <h3>Check Your Phone</h3>
+      <p>Enter your M-Pesa PIN to complete the payment</p>
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Payment Form -->
+    <form *ngIf="!showMpesaPrompt" (ngSubmit)="createPayment()" class="payment-form">
+      
+      <!-- Amount -->
+      <div class="form-group">
+        <label for="amount">Amount *</label>
+        <div class="input-group">
+          <select [(ngModel)]="payment.currency" name="currency" class="currency-select">
+            <option value="KES">KES</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+          <input
+            type="number"
+            id="amount"
+            name="amount"
+            [(ngModel)]="payment.amount"
+            placeholder="Enter amount"
+            min="1"
+            step="0.01"
+            required
+            class="form-control amount-input"
+          />
+        </div>
+        <small class="form-text">Minimum amount: 1 {{ payment.currency }}</small>
+      </div>
+
+      <!-- Payment Type -->
+      <div class="form-group">
+        <label for="paymentType">Payment Type *</label>
+        <select
+          id="paymentType"
+          name="paymentType"
+          [(ngModel)]="payment.payment_type"
+          required
+          class="form-control"
+        >
+          <option *ngFor="let type of paymentTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="form-group">
+        <label>Payment Method *</label>
+        <div class="payment-methods">
+          <div
+            *ngFor="let method of paymentMethods"
+            class="payment-method"
+            [class.selected]="payment.payment_method === method.value"
+            (click)="payment.payment_method = method.value"
+          >
+            <span class="method-icon">{{ method.icon }}</span>
+            <span class="method-label">{{ method.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- M-Pesa Phone Number -->
+      <div *ngIf="payment.payment_method === 'mpesa'" class="form-group">
+        <label for="phoneNumber">M-Pesa Phone Number *</label>
+        <input
+          type="tel"
+          id="phoneNumber"
+          name="phoneNumber"
+          [(ngModel)]="mpesaPhoneNumber"
+          placeholder="254712345678"
+          pattern="[0-9]{10,12}"
+          required
+          class="form-control"
+        />
+        <small class="form-text">Format: 254XXXXXXXXX or 07XXXXXXXX</small>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Description (Optional)</label>
+        <textarea
+          id="description"
+          name="description"
+          [(ngModel)]="payment.description"
+          placeholder="Add a note about this payment"
+          rows="3"
+          class="form-control"
+        ></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        <button
+          type="button"
+          (click)="cancelPayment()"
+          class="btn btn-secondary"
+          [disabled]="loading"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading">Pay {{ payment.currency }} {{ payment.amount }}</span>
+          <span *ngIf="loading" class="loading-spinner"></span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Payment Summary -->
+    <div class="payment-summary" *ngIf="!showMpesaPrompt">
+      <h3>Payment Summary</h3>
+      <div class="summary-row">
+        <span>Amount:</span>
+        <strong>{{ payment.currency }} {{ payment.amount | number:'1.2-2' }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Payment Type:</span>
+        <strong>{{ getPaymentTypeLabel() }}</strong>
+      </div>
+      <div class="summary-row">
+        <span>Payment Method:</span>
+        <strong>{{ getPaymentMethodLabel() }}</strong>
+      </div>
+    </div>
+  </div>
+</div>

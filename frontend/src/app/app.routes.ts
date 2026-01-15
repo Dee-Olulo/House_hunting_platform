@@ -39,6 +39,7 @@ export const routes: Routes = [
       import('./property-details/property-details')
         .then(m => m.PropertyDetailsComponent)
   },
+
     
 
   // Landlord routes
@@ -78,6 +79,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./shared/notifications/notifications')
             .then(m => m.NotificationsComponent)
+      },
+       {
+        path: 'payments',
+        loadComponent: () =>
+          import('./payments/payment-history/payment-history')
+            .then(m => m.PaymentHistoryComponent)
+      },
+      {
+        path: 'payments/:id',
+        loadComponent: () =>
+          import('./payments/payment-details/payment-details')
+            .then(m => m.PaymentDetailsComponent)
       }
     ]
   },
@@ -130,7 +143,27 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./shared/notifications/notifications')
             .then(m => m.NotificationsComponent)
+      },
+      // ✨ PAYMENT ROUTES FOR TENANT
+      {
+        path: 'payments/create',
+        loadComponent: () =>
+          import('./payments/create-payment/create-payment')
+            .then(m => m.CreatePaymentComponent)
+      },
+      {
+        path: 'payments/history',
+        loadComponent: () =>
+          import('./payments/payment-history/payment-history')
+            .then(m => m.PaymentHistoryComponent)
+      },
+      {
+        path: 'payments/:id',
+        loadComponent: () =>
+          import('./payments/payment-details/payment-details')
+            .then(m => m.PaymentDetailsComponent)
       }
+      
     ],
 
 //   //Default route

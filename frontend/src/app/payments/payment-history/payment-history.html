@@ -1,0 +1,239 @@
+<div class="payment-history-container">
+  <div class="header">
+    <h1>💳 Payment History</h1>
+    <!-- <button class="btn btn-primary" routerLink="/tenant/payments/create">
+      
+      <a routerLink="./payments/create-payment">+ New Payment</a>
+    </button> -->
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid" *ngIf="stats">
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.total_payments }}</div>
+        <div class="stat-label">Total Payments</div>
+      </div>
+    </div>
+
+    <div class="stat-card success">
+      <div class="stat-icon">✓</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.completed }}</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+
+    <div class="stat-card warning">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.pending }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+
+    <div class="stat-card primary">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ formatCurrency(stats.total_amount, 'KES') }}</div>
+        <div class="stat-label">Total Amount</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button
+      class="filter-btn"
+      [class.active]="statusFilter === ''"
+      (click)="filterByStatus('')"
+    >
+      All
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="statusFilter === 'completed'"
+      (click)="filterByStatus('completed')"
+    >
+      Completed
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="statusFilter === 'pending'"
+      (click)="filterByStatus('pending')"
+    >
+      Pending
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="statusFilter === 'processing'"
+      (click)="filterByStatus('processing')"
+    >
+      Processing
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="statusFilter === 'failed'"
+      (click)="filterByStatus('failed')"
+    >
+      Failed
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading payments...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && payments.length === 0" class="empty-state">
+    <div class="empty-icon">💳</div>
+    <h3>No Payments Found</h3>
+    <p>You haven't made any payments yet.</p>
+    <button class="btn btn-primary" routerLink="./payments/create-payment/create-payment">
+      Make Your First Payment
+    </button>
+  </div>
+
+  <!-- Payments Table -->
+  <div *ngIf="!loading && payments.length > 0" class="payments-table-container">
+    <table class="payments-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Property</th>
+          <th>Amount</th>
+          <th>Type</th>
+          <th>Method</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of payments">
+          <td>{{ formatDate(payment.created_at) }}</td>
+          <td>
+            <div class="property-info">
+              <strong>{{ payment.property_details?.title || 'N/A' }}</strong>
+              <small>{{ payment.property_details?.city }}</small>
+            </div>
+          </td>
+          <td>
+            <strong>{{ formatCurrency(payment.amount, payment.currency) }}</strong>
+          </td>
+          <td>
+            <span class="payment-type">{{ payment.payment_type }}</span>
+          </td>
+          <td>
+            <span class="payment-method">{{ payment.payment_method }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(payment.status)">
+              {{ getStatusIcon(payment.status) }} {{ payment.status }}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                class="btn-icon"
+                (click)="viewPaymentDetails(payment._id)"
+                title="View Details"
+              >
+                👁️
+              </button>
+              <button
+                *ngIf="canRequestRefund(payment)"
+                class="btn-icon"
+                (click)="openRefundModal(payment)"
+                title="Request Refund"
+              >
+                ↩️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && payments.length > 0" class="pagination">
+    <button
+      class="page-btn"
+      (click)="goToPage(currentPage - 1)"
+      [disabled]="currentPage === 1"
+    >
+      ← Previous
+    </button>
+
+    <div class="page-info">
+      Page {{ currentPage }} of {{ totalPages }}
+      <span class="total-items">({{ totalItems }} total)</span>
+    </div>
+
+    <button
+      class="page-btn"
+      (click)="goToPage(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+    >
+      Next →
+    </button>
+  </div>
+</div>
+
+<!-- Refund Modal -->
+<div *ngIf="showRefundModal" class="modal-overlay" (click)="closeRefundModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Request Refund</h3>
+      <button class="close-btn" (click)="closeRefundModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p><strong>Payment Amount:</strong> {{ formatCurrency(selectedPayment?.amount || 0, selectedPayment?.currency || 'KES') }}</p>
+      
+      <div class="form-group">
+        <label for="refundAmount">Refund Amount</label>
+        <input
+          type="number"
+          id="refundAmount"
+          [(ngModel)]="refundAmount"
+          [max]="selectedPayment?.amount ?? 0"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="refundReason">Reason for Refund *</label>
+        <textarea
+          id="refundReason"
+          [(ngModel)]="refundReason"
+          rows="4"
+          placeholder="Please explain why you're requesting a refund"
+          class="form-control"
+          required
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeRefundModal()">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="requestRefund()"
+        [disabled]="!refundReason || refundReason.length < 10"
+      >
+        Submit Refund Request
+      </button>
+    </div>
+  </div>
+</div>

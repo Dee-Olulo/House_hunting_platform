@@ -14,8 +14,8 @@ export interface Property {
   state: string;
   zip_code: string;
   country: string;
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | null;
+  longitude?: number | null;
   price: number;
   bedrooms: number;
   bathrooms: number;

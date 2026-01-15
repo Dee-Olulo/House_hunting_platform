@@ -42,7 +42,7 @@ export class LoginComponent {
         if (role === 'admin') {
           this.router.navigate(['/admin/dashboard']);
         } else if (role === 'landlord') {
-          this.router.navigate(['/landlord/properties']);
+          this.router.navigate(['/landlord/properties/']);
         } else if (role === 'tenant') {
           this.router.navigate(['/tenant/dashboard']);
         } else {

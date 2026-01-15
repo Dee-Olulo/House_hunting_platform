@@ -1,0 +1,204 @@
+<div class="payment-details-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading payment details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h3>Error Loading Payment</h3>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" (click)="goBack()">Go Back</button>
+  </div>
+
+  <!-- Payment Details -->
+  <div *ngIf="payment && !loading" class="payment-details">
+    <!-- Header -->
+    <div class="details-header">
+      <button class="back-btn" (click)="goBack()">
+        ← Back to Payments
+      </button>
+      <h1>Payment Details</h1>
+    </div>
+
+    <!-- Status Card -->
+    <div class="status-card" [ngClass]="getStatusClass(payment.status)">
+      <div class="status-icon">{{ getStatusIcon(payment.status) }}</div>
+      <div class="status-content">
+        <h2>{{ payment.status | titlecase }}</h2>
+        <p *ngIf="payment.status === 'completed'">Payment successfully processed</p>
+        <p *ngIf="payment.status === 'pending'">Waiting for payment confirmation</p>
+        <p *ngIf="payment.status === 'processing'">Payment is being processed</p>
+        <p *ngIf="payment.status === 'failed'">{{ payment || 'Payment failed' }}</p>
+        <p *ngIf="payment.status === 'refunded'">Payment has been refunded</p>
+      </div>
+    </div>
+
+    <!-- Main Details Grid -->
+    <div class="details-grid">
+      <!-- Payment Information -->
+      <div class="details-section">
+        <h3>💳 Payment Information</h3>
+        <div class="detail-row">
+          <span class="label">Amount:</span>
+          <strong class="value">{{ formatCurrency(payment.amount, payment.currency) }}</strong>
+        </div>
+        <div class="detail-row">
+          <span class="label">Payment Type:</span>
+          <span class="value">{{ payment.payment_type | titlecase }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Payment Method:</span>
+          <span class="value">{{ payment.payment_method | titlecase }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.currency">
+          <span class="label">Currency:</span>
+          <span class="value">{{ payment.currency }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.description">
+          <span class="label">Description:</span>
+          <span class="value">{{ payment.description }}</span>
+        </div>
+      </div>
+
+      <!-- Transaction Details -->
+      <div class="details-section">
+        <h3>🔖 Transaction Details</h3>
+        <div class="detail-row" *ngIf="payment.transaction_id">
+          <span class="label">Transaction ID:</span>
+          <div class="value-with-copy">
+            <code>{{ payment.transaction_id }}</code>
+            <button class="copy-btn" (click)="copyToClipboard(payment.transaction_id!)" title="Copy">
+              📋
+            </button>
+          </div>
+        </div>
+        <div class="detail-row" *ngIf="payment.gateway_reference">
+          <span class="label">Gateway Reference:</span>
+          <div class="value-with-copy">
+            <code>{{ payment.gateway_reference }}</code>
+            <button class="copy-btn" (click)="copyToClipboard(payment.gateway_reference!)" title="Copy">
+              📋
+            </button>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="label">Payment ID:</span>
+          <div class="value-with-copy">
+            <code>{{ payment._id }}</code>
+            <button class="copy-btn" (click)="copyToClipboard(payment._id)" title="Copy">
+              📋
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Property Information -->
+      <div class="details-section" *ngIf="payment.property_details">
+        <h3>🏠 Property Information</h3>
+        <div class="detail-row">
+          <span class="label">Property:</span>
+          <strong class="value">{{ payment.property_details.title }}</strong>
+        </div>
+        <div class="detail-row">
+          <span class="label">Address:</span>
+          <span class="value">{{ payment.property_details.address }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">City:</span>
+          <span class="value">{{ payment.property_details.city }}</span>
+        </div>
+      </div>
+
+      <!-- Tenant/Landlord Information -->
+      <div class="details-section" *ngIf="payment.tenant_details && userRole === 'landlord'">
+        <h3>👤 Tenant Information</h3>
+        <div class="detail-row">
+          <span class="label">Name:</span>
+          <span class="value">{{ payment.tenant_details.name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Email:</span>
+          <span class="value">{{ payment.tenant_details.email }}</span>
+        </div>
+      </div>
+
+      <!-- Timestamps -->
+      <div class="details-section">
+        <h3>⏰ Timeline</h3>
+        <div class="detail-row">
+          <span class="label">Created:</span>
+          <span class="value">{{ formatDate(payment.created_at) }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.completed_at">
+          <span class="label">Completed:</span>
+          <span class="value">{{ formatDate(payment.completed_at) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Last Updated:</span>
+          <span class="value">{{ formatDate(payment.updated_at) }}</span>
+        </div>
+      </div>
+
+      <!-- M-Pesa Specific Details -->
+      <div class="details-section" *ngIf="payment.metadata?.mpesa_receipt">
+        <h3>📱 M-Pesa Details</h3>
+        <div class="detail-row">
+          <span class="label">M-Pesa Receipt:</span>
+          <div class="value-with-copy">
+            <code>{{ payment.metadata.mpesa_receipt }}</code>
+            <button class="copy-btn" (click)="copyToClipboard(payment.metadata.mpesa_receipt)" title="Copy">
+              📋
+            </button>
+          </div>
+        </div>
+        <div class="detail-row" *ngIf="payment.metadata.mpesa_phone">
+          <span class="label">Phone Number:</span>
+          <span class="value">{{ payment.metadata.mpesa_phone }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.metadata.result_desc">
+          <span class="label">Result:</span>
+          <span class="value">{{ payment.metadata.result_desc }}</span>
+        </div>
+      </div>
+
+      <!-- Refund Information -->
+      <div class="details-section" *ngIf="payment.refund_status">
+        <h3>↩️ Refund Information</h3>
+        <div class="detail-row">
+          <span class="label">Refund Status:</span>
+          <span class="value">{{ payment.refund_status | titlecase }}</span>
+        </div>
+        <div class="detail-row" *ngIf="payment.refund_amount">
+          <span class="label">Refund Amount:</span>
+          <strong class="value">{{ formatCurrency(payment.refund_amount, payment.currency) }}</strong>
+        </div>
+        <div class="detail-row" *ngIf="payment.refund_reason">
+          <span class="label">Reason:</span>
+          <span class="value">{{ payment.refund_reason }}</span>
+        </div>
+        <!-- <div class="detail-row" *ngIf="payment.">
+          <span class="label">Refund Transaction ID:</span>
+          <div class="value-with-copy">
+            <code>{{ payment.refund_transaction_id }}</code>
+            <button class="copy-btn" (click)="copyToClipboard(payment.refund_transaction_id)" title="Copy">
+              📋
+            </button>
+          </div>
+        </div> -->
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-section">
+      <button class="btn btn-secondary" (click)="goBack()">
+        Back to History
+      </button>
+      <button class="btn btn-primary" onclick="window.print()">
+        🖨️ Print Receipt
+      </button>
+    </div>
+  </div>
+</div>

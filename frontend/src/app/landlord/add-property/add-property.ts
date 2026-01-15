@@ -1,4 +1,4 @@
-
+// src/app/landlord/add-property/add-property.component.ts
 
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -13,25 +13,7 @@ import { LocationPickerComponent, LocationData } from '../location-picker/locati
   standalone: true,
   imports: [CommonModule, FormsModule, LocationPickerComponent],
   templateUrl: './add-property.html',
-  styleUrls: ['./add-property.css'],
-  template: `
-    <div class="add-property-container">
-      <h1>Add New Property</h1>
-      
-      <form (ngSubmit)="onSubmit()">
-        <!-- Other property fields... -->
-        
-        <!-- Location Picker -->
-        <app-location-picker
-          [locationData]="locationData"
-          (locationChange)="onLocationChange($event)"
-        ></app-location-picker>
-        
-        <!-- Submit button -->
-        <button type="submit">Create Property</button>
-      </form>
-    </div>
-  `
+  styleUrls: ['./add-property.css']
 })
 export class AddPropertyComponent {
   property: Property = {
@@ -54,9 +36,26 @@ export class AddPropertyComponent {
     amenities: []
   };
 
+  // Image properties
   selectedImages: File[] = [];
+  selectedImagePreviews: string[] = [];
   uploadedImageUrls: string[] = [];
+  
+  // Video properties (NEW)
+  selectedVideos: File[] = [];
+  videoPreviewUrls: string[] = [];
+  uploadedVideoUrls: string[] = [];
+  
+  // Other properties
   selectedAmenities: string[] = [];
+  locationData: LocationData = {
+    latitude: null,
+    longitude: null,
+    address: '',
+    city: '',
+    state: '',
+    country: ''
+  };
   
   isLoading = false;
   isUploading = false;
@@ -77,16 +76,13 @@ export class AddPropertyComponent {
     private router: Router
   ) {}
 
+  // ============================================
+  // IMAGE HANDLING
+  // ============================================
+  
   onImageSelect(event: any): void {
     console.log('📸 onImageSelect triggered');
-    console.log('Event:', event);
-    console.log('Event target:', event.target);
-    console.log('Files from event:', event.target.files);
-    
     const files = Array.from(event.target.files) as File[];
-    
-    console.log('Files array after conversion:', files);
-    console.log('Files length:', files.length);
     
     if (!files || files.length === 0) {
       console.log('❌ No files detected');
@@ -107,11 +103,8 @@ export class AddPropertyComponent {
         setTimeout(() => this.errorMessage = '', 3000);
         return false;
       }
-      console.log(`✅ File ${file.name} is valid`);
       return true;
     });
-
-    console.log('Valid files count:', validFiles.length);
 
     if (this.selectedImages.length + validFiles.length > 20) {
       this.errorMessage = 'Maximum 20 images allowed';
@@ -119,16 +112,24 @@ export class AddPropertyComponent {
       return;
     }
 
+    // Generate preview URLs
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.selectedImagePreviews.push(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
     this.selectedImages = [...this.selectedImages, ...validFiles];
     console.log(`✅ Total selected images: ${this.selectedImages.length}`);
-    console.log('Selected images array:', this.selectedImages);
     
-    // Reset the input so the same file can be selected again if needed
     event.target.value = '';
   }
 
   removeImage(index: number): void {
     this.selectedImages.splice(index, 1);
+    this.selectedImagePreviews.splice(index, 1);
   }
 
   removeUploadedImage(index: number): void {
@@ -143,6 +144,150 @@ export class AddPropertyComponent {
     });
   }
 
+  async uploadImages(): Promise<string[]> {
+    if (this.selectedImages.length === 0) {
+      console.log('⚠️ No images to upload');
+      return [];
+    }
+
+    console.log(`📤 Starting upload of ${this.selectedImages.length} images...`);
+    this.isUploading = true;
+    
+    try {
+      const response = await this.uploadService.uploadMultipleImages(this.selectedImages).toPromise();
+      this.isUploading = false;
+      
+      if (response && response.files) {
+        const urls = response.files.map((file: any) => file.url);
+        console.log('✅ Images uploaded:', urls);
+        return urls;
+      }
+      
+      return [];
+    } catch (error: any) {
+      this.isUploading = false;
+      console.error('❌ Upload error:', error);
+      
+      if (error.status === 401) {
+        throw new Error('Authentication failed. Please log in again.');
+      } else if (error.status === 400) {
+        throw new Error(`Upload failed: ${error.error?.error || 'Invalid request'}`);
+      } else if (error.status === 413) {
+        throw new Error('Files too large. Maximum size is 5MB per image.');
+      }
+      
+      throw new Error(error.error?.message || 'Failed to upload images');
+    }
+  }
+
+  // ============================================
+  // VIDEO HANDLING (NEW)
+  // ============================================
+  
+  onVideoSelect(event: any): void {
+    console.log('🎥 onVideoSelect triggered');
+    const files = Array.from(event.target.files) as File[];
+    
+    if (!files || files.length === 0) {
+      console.log('❌ No files detected');
+      return;
+    }
+
+    // Validate files
+    const validFiles = files.filter(file => {
+      console.log(`Validating video: ${file.name}`);
+      
+      if (!this.uploadService.validateVideoType(file)) {
+        this.errorMessage = `${file.name} is not a valid video type. Accepted: MP4, MOV, AVI, WEBM`;
+        setTimeout(() => this.errorMessage = '', 3000);
+        return false;
+      }
+      if (!this.uploadService.validateVideoSize(file, 100)) {
+        this.errorMessage = `${file.name} exceeds 100MB limit`;
+        setTimeout(() => this.errorMessage = '', 3000);
+        return false;
+      }
+      return true;
+    });
+
+    if (this.selectedVideos.length + validFiles.length > 5) {
+      this.errorMessage = 'Maximum 5 videos allowed';
+      setTimeout(() => this.errorMessage = '', 3000);
+      return;
+    }
+
+    // Generate preview URLs
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.videoPreviewUrls.push(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    this.selectedVideos = [...this.selectedVideos, ...validFiles];
+    console.log(`✅ Total selected videos: ${this.selectedVideos.length}`);
+    
+    event.target.value = '';
+  }
+
+  removeVideo(index: number): void {
+    this.selectedVideos.splice(index, 1);
+    this.videoPreviewUrls.splice(index, 1);
+  }
+
+  removeUploadedVideo(index: number): void {
+    const url = this.uploadedVideoUrls[index];
+    this.uploadService.deleteFile(url, 'video').subscribe({
+      next: () => {
+        this.uploadedVideoUrls.splice(index, 1);
+      },
+      error: (error) => {
+        console.error('Error deleting video:', error);
+      }
+    });
+  }
+
+  async uploadVideos(): Promise<string[]> {
+    if (this.selectedVideos.length === 0) {
+      console.log('⚠️ No videos to upload');
+      return [];
+    }
+
+    console.log(`📤 Starting upload of ${this.selectedVideos.length} videos...`);
+    this.isUploading = true;
+    
+    try {
+      const response = await this.uploadService.uploadMultipleVideos(this.selectedVideos).toPromise();
+      this.isUploading = false;
+      
+      if (response && response.files) {
+        const urls = response.files.map((file: any) => file.url);
+        console.log('✅ Videos uploaded:', urls);
+        return urls;
+      }
+      
+      return [];
+    } catch (error: any) {
+      this.isUploading = false;
+      console.error('❌ Video upload error:', error);
+      
+      if (error.status === 401) {
+        throw new Error('Authentication failed. Please log in again.');
+      } else if (error.status === 400) {
+        throw new Error(`Upload failed: ${error.error?.error || 'Invalid request'}`);
+      } else if (error.status === 413) {
+        throw new Error('Video too large. Maximum size is 100MB per video.');
+      }
+      
+      throw new Error(error.error?.message || 'Failed to upload videos');
+    }
+  }
+
+  // ============================================
+  // AMENITIES HANDLING
+  // ============================================
+  
   toggleAmenity(amenity: string): void {
     const index = this.selectedAmenities.indexOf(amenity);
     if (index > -1) {
@@ -156,75 +301,19 @@ export class AddPropertyComponent {
     return this.selectedAmenities.includes(amenity);
   }
 
-  async uploadImages(): Promise<string[]> {
-    if (this.selectedImages.length === 0) {
-      console.log('⚠️ No images to upload');
-      return [];
-    }
-
-    console.log(`📤 Starting upload of ${this.selectedImages.length} images...`);
-    console.log('Images to upload:', this.selectedImages.map(f => ({
-      name: f.name,
-      size: f.size,
-      type: f.type
-    })));
-    
-    this.isUploading = true;
-    
-    try {
-      console.log('Calling uploadService.uploadMultipleImages...');
-      const response = await this.uploadService.uploadMultipleImages(this.selectedImages).toPromise();
-      
-      this.isUploading = false;
-      console.log('✅ Upload response received:', response);
-      
-      if (response && response.files) {
-        const urls = response.files.map(file => file.url);
-        console.log('✅ Extracted URLs:', urls);
-        return urls;
-      }
-      
-      console.warn('⚠️ Response has no files array');
-      return [];
-    } catch (error: any) {
-      this.isUploading = false;
-      console.error('❌ Upload error details:');
-      console.error('  Full error object:', error);
-      console.error('  Status:', error.status);
-      console.error('  Status Text:', error.statusText);
-      console.error('  Error body:', error.error);
-      console.error('  Message:', error.message);
-      
-      // Detailed error messages
-      if (error.status === 401) {
-        throw new Error('Authentication failed. Please log in again.');
-      } else if (error.status === 400) {
-        const errorMsg = error.error?.error || error.error?.message || 'Invalid request format';
-        console.error('  Backend said:', errorMsg);
-        throw new Error(`Upload failed: ${errorMsg}`);
-      } else if (error.status === 413) {
-        throw new Error('Files too large. Maximum size is 5MB per image.');
-      } else if (error.status === 0) {
-        throw new Error('Cannot connect to server. Check your connection.');
-      }
-      
-      throw new Error(error.error?.message || error.message || 'Failed to upload images');
-    }
-  }
-  locationData: LocationData = {
-    latitude: null,
-    longitude: null,
-    address: '',
-    city: '',
-    state: '',
-    country: ''
-  };
-
+  // ============================================
+  // LOCATION HANDLING
+  // ============================================
+  
   onLocationChange(location: LocationData): void {
     this.locationData = location;
     console.log('Location updated:', location);
   }
 
+  // ============================================
+  // FORM SUBMISSION
+  // ============================================
+  
   async onSubmit(): Promise<void> {
     console.log('🚀 Form submission started');
     
@@ -240,26 +329,37 @@ export class AddPropertyComponent {
     try {
       // Upload images first
       if (this.selectedImages.length > 0) {
-        console.log('Uploading images...');
+        console.log('📤 Uploading images...');
         const imageUrls = await this.uploadImages();
         this.uploadedImageUrls = [...this.uploadedImageUrls, ...imageUrls];
-        this.selectedImages = []; // Clear selected images after upload
+        this.selectedImages = [];
+        this.selectedImagePreviews = [];
+      }
+
+      // Upload videos
+      if (this.selectedVideos.length > 0) {
+        console.log('📤 Uploading videos...');
+        const videoUrls = await this.uploadVideos();
+        this.uploadedVideoUrls = [...this.uploadedVideoUrls, ...videoUrls];
+        this.selectedVideos = [];
+        this.videoPreviewUrls = [];
       }
 
       // Prepare property data
       const propertyData: Property = {
         ...this.property,
         images: this.uploadedImageUrls,
+        videos: this.uploadedVideoUrls, // Include videos
         amenities: this.selectedAmenities,
-        latitude: this.property.latitude || undefined,
-        longitude: this.property.longitude || undefined,
+        latitude: this.locationData.latitude || this.property.latitude || undefined,
+        longitude: this.locationData.longitude || this.property.longitude || undefined,
         address: this.locationData.address || this.property.address,
         city: this.locationData.city || this.property.city,
         state: this.locationData.state || this.property.state,
         country: this.locationData.country || this.property.country,
       };
 
-      console.log('Creating property:', propertyData);
+      console.log('Creating property with data:', propertyData);
 
       // Create property
       this.propertyService.createProperty(propertyData).subscribe({
@@ -267,11 +367,9 @@ export class AddPropertyComponent {
           console.log('✅ Property created:', response);
           this.isLoading = false;
           this.successMessage = 'Property created successfully!';
-      //locationdata
           
           // Redirect after 1.5 seconds
           setTimeout(() => {
-            // Try multiple navigation options
             this.router.navigate(['/landlord-dashboard']).catch(() => {
               this.router.navigate(['/landlord/properties']).catch(() => {
                 this.router.navigate(['/']);
@@ -289,13 +387,12 @@ export class AddPropertyComponent {
     } catch (error: any) {
       console.error('❌ Error in form submission:', error);
       this.isLoading = false;
-      this.errorMessage = error.message || 'Failed to upload images';
+      this.errorMessage = error.message || 'Failed to upload media';
     }
   }
 
   cancel(): void {
     if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-      // Try multiple navigation options
       this.router.navigate(['/landlord-dashboard']).catch(() => {
         this.router.navigate(['/dashboard']).catch(() => {
           this.router.navigate(['/']);
@@ -303,7 +400,4 @@ export class AddPropertyComponent {
       });
     }
   }
-   
-
 }
-

@@ -86,7 +86,7 @@
       </div>
     </div>
 
-    <!-- ✅ NEW: Location Picker Component -->
+    <!-- Location Picker Component -->
     <div class="form-section">
       <app-location-picker
         [locationData]="locationData"
@@ -161,7 +161,7 @@
       </div>
     </div>
 
-    <!-- Images -->
+    <!-- Images Section -->
     <div class="form-section">
       <h2>Images</h2>
       <p class="form-hint">Upload up to 20 images (max 5MB each)</p>
@@ -184,7 +184,7 @@
       <div *ngIf="selectedImages.length > 0" class="images-preview">
         <h3>Selected Images ({{ selectedImages.length }})</h3>
         <div class="images-grid">
-          <div *ngFor="let image of selectedImages; let i = index" class="image-preview">
+          <div *ngFor="let image of selectedImagePreviews; let i = index" class="image-preview">
             <img [src]="image" alt="Preview" />
             <button type="button" (click)="removeImage(i)" class="btn-remove">×</button>
           </div>
@@ -203,6 +203,49 @@
       </div>
     </div>
 
+    <!-- Videos Section (NEW) -->
+    <div class="form-section">
+      <h2>Videos</h2>
+      <p class="form-hint">Upload up to 5 videos (max 100MB each, 5 minutes max duration)</p>
+      
+      <div class="file-upload">
+        <input
+          type="file"
+          id="videos"
+          accept="video/*"
+          multiple
+          (change)="onVideoSelect($event)"
+          #videoInput
+        />
+        <label for="videos" class="file-upload-label">
+          🎥 Choose Videos
+        </label>
+      </div>
+
+      <!-- Selected Videos Preview -->
+      <div *ngIf="selectedVideos.length > 0" class="videos-preview">
+        <h3>Selected Videos ({{ selectedVideos.length }})</h3>
+        <div class="videos-grid">
+          <div *ngFor="let video of selectedVideos; let i = index" class="video-preview">
+            <video [src]="videoPreviewUrls[i]" controls></video>
+            <p class="video-name">{{ video.name }}</p>
+            <button type="button" (click)="removeVideo(i)" class="btn-remove">×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Uploaded Videos -->
+      <div *ngIf="uploadedVideoUrls.length > 0" class="videos-preview">
+        <h3>Uploaded Videos ({{ uploadedVideoUrls.length }})</h3>
+        <div class="videos-grid">
+          <div *ngFor="let url of uploadedVideoUrls; let i = index" class="video-preview">
+            <video [src]="url" controls></video>
+            <button type="button" (click)="removeUploadedVideo(i)" class="btn-remove">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Form Actions -->
     <div class="form-actions">
       <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="isLoading || isUploading">
@@ -214,7 +257,7 @@
         [disabled]="!propertyForm.valid || isLoading || isUploading"
       >
         <span *ngIf="!isLoading && !isUploading">Create Property</span>
-        <span *ngIf="isUploading">Uploading Images...</span>
+        <span *ngIf="isUploading">Uploading Media...</span>
         <span *ngIf="isLoading && !isUploading">Creating Property...</span>
       </button>
     </div>

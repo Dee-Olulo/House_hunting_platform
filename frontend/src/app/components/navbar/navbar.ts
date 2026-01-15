@@ -7,7 +7,7 @@ import { NotificationBellComponent } from '../../shared/notification-bell/notifi
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, NotificationBellComponent],
+  imports: [CommonModule, RouterLink, NotificationBellComponent, RouterLinkActive],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css'],
 })

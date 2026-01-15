@@ -1,225 +1,3 @@
-// import { Component, OnInit } from '@angular/core';
-// import { CommonModule } from '@angular/common';
-// import { ActivatedRoute, Router, RouterLink, RouterModule } from '@angular/router';
-// import { PropertyService, Property } from '../services/property.service';
-// import { AuthService } from '../services/auth';
-// import { LocationService } from '../shared/services/location.service';
-// import { MapComponent } from '../shared/components/map/map.component';
-
-// @Component({
-//   selector: 'app-property-details',
-//   standalone: true,
-//   imports: [CommonModule, RouterModule, MapComponent],
-//   templateUrl: './property-details.html',
-//   styleUrls: ['./property-details.css']
-// })
-// export class PropertyDetailsComponent implements OnInit {
-//   property: Property | null = null;
-//   propertyId: string = '';
-//   currentImageIndex = 0;
-//   isLoading = true;
-//   errorMessage = '';
-//   isLoggedIn = false;
-//   userRole: string | null = null;
-
-//    // User location for distance calculation
-//   userLocation: { latitude: number; longitude: number } | null = null;
-//   distanceToProperty: number | null = null
-
-//   constructor(
-//     private route: ActivatedRoute,
-//     private router: Router,
-//     private propertyService: PropertyService,
-//     private authService: AuthService,
-//     private locationService: LocationService
-//   ) {}
-
-//   ngOnInit(): void {
-//     this.propertyId = this.route.snapshot.params['id'];
-//     this.isLoggedIn = this.authService.isLoggedIn();
-//     this.userRole = this.authService.getUserRole();
-    
-//     console.log('Loading property:', this.propertyId);
-//     console.log('User logged in:', this.isLoggedIn);
-//     console.log('User role:', this.userRole);
-    
-//     this.loadProperty();
-//     this.getUserLocation();
-//   }
-
-//   loadProperty(): void {
-//     this.isLoading = true;
-//     this.errorMessage = '';
-    
-//     this.propertyService.getProperty(this.propertyId).subscribe({
-//       next: (property) => {
-//         console.log('✅ Property loaded:', property);
-//         this.property = property;
-//         this.isLoading = false;
-
-//         // Initialize map with property location after property is loaded
-//         if (this.property.latitude && this.property.longitude) {
-//           setTimeout(() => {
-//             this.initializeMap();
-//           }, 100);
-//         }
-//       },
-//       error: (error) => {
-//         console.error('❌ Error loading property:', error);
-//         this.errorMessage = 'Property not found or failed to load';
-//         this.isLoading = false;
-//       }
-//     });
-//   }
-// /**
-//    * Initialize map with property location
-//    */
-//   initializeMap(): void {
-//     if (this.mapComponent && this.property?.latitude && this.property?.longitude) {
-//       const marker = {
-//         id: this.property._id || '',
-//         latitude: this.property.latitude,
-//         longitude: this.property.longitude,
-//         title: this.property.title,
-//         price: this.property.price,
-//         popup: `
-//           <div style="text-align: center;">
-//             <h3 style="margin: 0 0 8px 0;">${this.property.title}</h3>
-//             <p style="margin: 4px 0; color: #27ae60; font-weight: 600;">
-//               KES ${this.property.price.toLocaleString()}/month
-//             </p>
-//             <p style="margin: 4px 0;">${this.property.address}</p>
-//           </div>
-//         `
-//       };
-      
-//       this.mapComponent.addMarkers([marker]);
-//     }
-//   }
-
-//   /**
-//    * Get user's current location
-//    */
-//   getUserLocation(): void {
-//     this.locationService.getCurrentLocation().subscribe({
-//       next: (location) => {
-//         this.userLocation = location;
-//         this.calculateDistance();
-//       },
-//       error: (error) => {
-//         console.log('Could not get user location:', error.message);
-//         // It's okay if we can't get location
-//       }
-//     });
-//   }
-
-//   /**
-//    * Calculate distance from user to property
-//    */
-//   calculateDistance(): void {
-//     if (this.userLocation && this.property?.latitude && this.property?.longitude) {
-//       this.distanceToProperty = this.locationService.calculateDistance(
-//         this.userLocation.latitude,
-//         this.userLocation.longitude,
-//         this.property.latitude,
-//         this.property.longitude
-//       );
-//     }
-//   }
-
-//   /**
-//    * Open navigation to property
-//    */
-//   getDirections(): void {
-//     if (this.property?.latitude && this.property?.longitude) {
-//       this.locationService.openInMaps(
-//         this.property.latitude,
-//         this.property.longitude,
-//         this.property.title
-//       );
-//     }
-//   }
-
-//   /**
-//    * Format distance for display
-//    */
-//   formatDistance(distanceKm: number): string {
-//     return this.locationService.formatDistance(distanceKm);
-//   }
-
-//   getImageUrl(imagePath: string): string {
-//     if (!imagePath) return '';
-//     return this.propertyService.getImageUrl(imagePath);
-//   }
-
-//   hasImages(): boolean {
-//     return !!(this.property?.images && this.property.images.length > 0);
-//   }
-
-//   nextImage(): void {
-//     if (this.property && this.property.images && this.property.images.length > 0) {
-//       this.currentImageIndex = (this.currentImageIndex + 1) % this.property.images.length;
-//     }
-//   }
-
-//   previousImage(): void {
-//     if (this.property && this.property.images && this.property.images.length > 0) {
-//       this.currentImageIndex = this.currentImageIndex === 0 
-//         ? this.property.images.length - 1 
-//         : this.currentImageIndex - 1;
-//     }
-//   }
-
-//   selectImage(index: number): void {
-//     this.currentImageIndex = index;
-//   }
-
-//   contactLandlord(): void {
-//     if (!this.isLoggedIn) {
-//       alert('Please login to contact the landlord');
-//       this.router.navigate(['/login'], { 
-//         queryParams: { returnUrl: `/properties/${this.propertyId}` }
-//       });
-//       return;
-//     }
-//     // TODO: Implement contact/messaging functionality
-//     alert('Contact functionality will be implemented in the messaging system.\n\nFor now, you can reach out to the property owner through the booking system.');
-//   }
-
-//   bookViewing(): void {
-//     if (!this.isLoggedIn) {
-//       alert('Please login to book a viewing');
-//       this.router.navigate(['/login'], { 
-//         queryParams: { returnUrl: `/properties/${this.propertyId}` }
-//       });
-//       return;
-//     }
-//     if (this.userRole !== 'tenant') {
-//       alert('Only tenants can book property viewings');
-//       return;
-//     }
-//     // TODO: Navigate to booking page
-//     alert('Booking system coming soon!\n\nYou will be able to:\n• Schedule property viewings\n• Choose time slots\n• Get confirmation from landlord');
-//     // Future: this.router.navigate(['/tenant/book-viewing', this.propertyId]);
-//   }
-
-//   goBack(): void {
-//      window.history.back();
-//   }
-
-//   editProperty(): void {
-//     this.router.navigate(['/landlord/properties/edit', this.propertyId]);
-//   }
-
-//   isOwner(): boolean {
-//     // Check if current user is the landlord who owns this property
-//     if (!this.isLoggedIn || !this.property) return false;
-//     const currentUser = this.authService.getCurrentUser;
-//     // This would need the landlord_id comparison - simplified for now
-//     return this.userRole === 'landlord';
-//   }
-// }
-
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -242,6 +20,7 @@ export class PropertyDetailsComponent implements OnInit {
   property: Property | null = null;
   propertyId: string = '';
   currentImageIndex = 0;
+  currentVideoIndex = 0;
   isLoading = true;
   errorMessage = '';
   isLoggedIn = false;
@@ -414,6 +193,10 @@ export class PropertyDetailsComponent implements OnInit {
     return this.locationService.formatDistance(distanceKm);
   }
 
+  // ==========================================
+  // IMAGE GALLERY METHODS
+  // ==========================================
+
   getImageUrl(imagePath: string): string {
     if (!imagePath) {
       return 'https://placehold.co/800x600?text=No+Image';
@@ -447,6 +230,66 @@ export class PropertyDetailsComponent implements OnInit {
       console.log('Selected image:', this.currentImageIndex);
     }
   }
+   
+
+  /**
+   * Open image in modal (new tab for now)
+   */
+  openImageModal(index: number): void {
+    if (this.property?.images && this.property.images[index]) {
+      window.open(this.getImageUrl(this.property.images[index]), '_blank');
+    }
+  }
+  // ==========================================
+  // VIDEO GALLERY METHODS
+  // ==========================================
+  hasVideos(): boolean {
+    return !!(this.property?.videos && this.property.videos.length > 0);
+  }
+
+  /**
+   * Get video URL (Cloudinary URLs are already complete)
+   */
+  getVideoUrl(videoPath: string): string {
+    if (!videoPath) return '';
+    // Cloudinary URLs are already complete, just return them
+    return videoPath;
+  }
+
+  /**
+   * Get poster image for video
+   * Uses first property image as fallback
+   */
+  getVideoPoster(videoUrl: string): string {
+    if (this.property?.images && this.property.images.length > 0) {
+      return this.getImageUrl(this.property.images[0]);
+    }
+    return '';
+  }
+
+  nextVideo(): void {
+    if (this.property && this.property.videos && this.property.videos.length > 0) {
+      this.currentVideoIndex = (this.currentVideoIndex + 1) % this.property.videos.length;
+      console.log('Next video:', this.currentVideoIndex);
+    }
+  }
+
+  previousVideo(): void {
+    if (this.property && this.property.videos && this.property.videos.length > 0) {
+      this.currentVideoIndex = this.currentVideoIndex === 0 
+        ? this.property.videos.length - 1 
+        : this.currentVideoIndex - 1;
+      console.log('Previous video:', this.currentVideoIndex);
+    }
+  }
+
+  selectVideo(index: number): void {
+    if (index >= 0 && this.property?.videos && index < this.property.videos.length) {
+      this.currentVideoIndex = index;
+      console.log('Selected video:', this.currentVideoIndex);
+    }
+  }
+
 
   contactLandlord(): void {
     console.log('Contact landlord clicked');

@@ -1,3 +1,5 @@
+/* src/app/landlord/add-property/add-property.css */
+
 .add-property-container {
   max-width: 900px;
   margin: 0 auto;
@@ -19,6 +21,7 @@
   margin: 0;
 }
 
+/* Alert Messages */
 .alert-error {
   background: #f8d7da;
   color: #721c24;
@@ -28,6 +31,16 @@
   margin-bottom: 20px;
 }
 
+.alert-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* Form Sections */
 .form-section {
   background: white;
   padding: 24px;
@@ -50,6 +63,7 @@
   margin: 0 0 16px 0;
 }
 
+/* Form Layout */
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -203,6 +217,7 @@ textarea.form-input {
   align-items: center;
   justify-content: center;
   transition: background 0.3s;
+  z-index: 10;
 }
 
 .btn-remove:hover {
@@ -221,6 +236,54 @@ textarea.form-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Videos Preview (NEW) */
+.videos-preview {
+  margin-top: 20px;
+}
+
+.videos-preview h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.video-preview {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #ddd;
+  background: #000;
+}
+
+.video-preview video {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.video-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
 }
 
 /* Form Actions */
@@ -266,8 +329,16 @@ textarea.form-input {
   cursor: not-allowed;
 }
 
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
+  .add-property-container {
+    padding: 15px;
+  }
+
+  .form-section {
+    padding: 20px;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }
@@ -280,6 +351,14 @@ textarea.form-input {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 
+  .videos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .video-preview video {
+    height: 180px;
+  }
+
   .form-actions {
     flex-direction: column-reverse;
   }
@@ -287,5 +366,19 @@ textarea.form-input {
   .btn-cancel,
   .btn-submit {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-header h1 {
+    font-size: 24px;
+  }
+
+  .images-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .video-preview video {
+    height: 150px;
   }
 }

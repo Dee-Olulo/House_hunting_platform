@@ -1,0 +1,317 @@
+.payment-details-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Loading & Error States */
+.loading-container,
+.error-container {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: white;
+  border-radius: 12px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 1rem;
+  border: 4px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-container h3 {
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+}
+
+.error-container p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+/* Header */
+.details-header {
+  margin-bottom: 2rem;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #2563eb;
+}
+
+.details-header h1 {
+  margin: 0;
+  color: #1a202c;
+  font-size: 2rem;
+}
+
+/* Status Card */
+.status-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.status-icon {
+  font-size: 3rem;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.status-completed .status-icon {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.status-pending .status-icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.status-processing .status-icon {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.status-failed .status-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.status-refunded .status-icon {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.status-content h2 {
+  margin: 0 0 0.5rem 0;
+  color: #1a202c;
+  font-size: 1.5rem;
+  text-transform: capitalize;
+}
+
+.status-content p {
+  margin: 0;
+  color: #6b7280;
+}
+
+/* Details Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.details-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.details-section h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1a202c;
+  font-size: 1.125rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  gap: 1rem;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row .label {
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.detail-row .value {
+  color: #1a202c;
+  text-align: right;
+  flex: 1;
+}
+
+.detail-row strong.value {
+  font-size: 1.125rem;
+  color: #3b82f6;
+}
+
+.value-with-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.value-with-copy code {
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #1a202c;
+  font-family: 'Courier New', monospace;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: transform 0.2s;
+}
+
+.copy-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Actions */
+.actions-section {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-secondary:hover {
+  background: #d1d5db;
+}
+
+/* Print Styles */
+@media print {
+  .back-btn,
+  .actions-section {
+    display: none;
+  }
+
+  .payment-details-container {
+    max-width: 100%;
+  }
+
+  .status-card,
+  .details-section {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+    break-inside: avoid;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payment-details-container {
+    margin: 1rem auto;
+  }
+
+  .details-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .status-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .status-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-row .label {
+    min-width: auto;
+  }
+
+  .detail-row .value,
+  .value-with-copy {
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  .actions-section {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

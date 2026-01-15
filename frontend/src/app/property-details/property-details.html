@@ -1,252 +1,177 @@
-<div class="property-details-container">
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Loading property details...</p>
+<!-- Loading State -->
+<div *ngIf="isLoading" class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading property details...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="errorMessage && !isLoading" class="error-container">
+  <div class="error-icon">⚠️</div>
+  <h3>Error Loading Property</h3>
+  <p>{{ errorMessage }}</p>
+  <button class="btn btn-primary" (click)="goBack()">Go Back</button>
+</div>
+
+<!-- Property Details -->
+<div *ngIf="property && !isLoading" class="property-details-container">
+  
+  <!-- Header with Back Button -->
+  <div class="details-header">
+    <button class="back-btn" (click)="goBack()">
+      ← Back to Properties
+    </button>
+    <button *ngIf="isOwner()" class="edit-btn" (click)="editProperty()">
+      ✏️ Edit Property
+    </button>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="errorMessage && !isLoading" class="error-container">
-    <h2>{{ errorMessage }}</h2>
-    <button (click)="goBack()" class="btn-back">← Back to Properties</button>
-  </div>
-
-  <!-- Property Details -->
-  <div *ngIf="property && !isLoading" class="property-content">
-    <!-- Back Button -->
-    <button (click)="goBack()" class="btn-back">← Back to Properties</button>
-
-    <!-- Image Gallery -->
-    <div class="image-gallery">
-      <div class="main-image">
-        <!-- Has Images -->
-        <div *ngIf="property.images && property.images.length > 0">
-          <img 
-            [src]="getImageUrl(property.images[currentImageIndex])" 
-            [alt]="property.title"
-          />
-          
-          <!-- Navigation Arrows (only if multiple images) -->
-          <button 
-            *ngIf="property.images.length > 1"
-            (click)="previousImage()" 
-            class="nav-btn prev-btn"
-          >
-            ‹
-          </button>
-          <button 
-            *ngIf="property.images.length > 1"
-            (click)="nextImage()" 
-            class="nav-btn next-btn"
-          >
-            ›
-          </button>
-
-          <!-- Image Counter -->
-          <div *ngIf="property.images.length > 1" class="image-counter">
-            {{ currentImageIndex + 1 }} / {{ property.images.length }}
-          </div>
-        </div>
-
-        <!-- No Images -->
-        <div *ngIf="!property.images || property.images.length === 0" class="no-image-placeholder">
-          <div class="placeholder-content">
-            <span class="placeholder-icon">🏠</span>
-            <p>No images available</p>
-          </div>
-        </div>
+  <!-- Main Image Carousel -->
+  <div class="image-carousel" *ngIf="hasImages()">
+    <div class="carousel-main">
+      <img [src]="getCurrentImage()" [alt]="property.title">
+      
+      <!-- Navigation Arrows -->
+      <button class="carousel-btn prev" (click)="previousImage()" *ngIf="property.images && property.images.length > 1">
+        ‹
+      </button>
+      <button class="carousel-btn next" (click)="nextImage()" *ngIf="property.images && property.images.length > 1">
+        ›
+      </button>
+      
+      <!-- Image Counter -->
+      <div class="image-counter" *ngIf="property.images && property.images.length > 1">
+        {{ currentImageIndex + 1 }} / {{ property.images.length }}
       </div>
+    </div>
+    
+    <!-- Thumbnail Navigation -->
+    <div class="carousel-thumbnails" *ngIf="property.images && property.images.length > 1">
+      <img 
+        *ngFor="let image of property.images; let i = index"
+        [src]="getImageUrl(image)"
+        [alt]="'Thumbnail ' + (i + 1)"
+        [class.active]="i === currentImageIndex"
+        (click)="selectImage(i)">
+    </div>
+  </div>
 
-      <!-- Thumbnail Strip (only if multiple images) -->
-      <div *ngIf="property.images && property.images.length > 1" class="thumbnails">
-        <div 
-          *ngFor="let image of property.images; let i = index"
-          [class.active]="i === currentImageIndex"
-          (click)="selectImage(i)"
-          class="thumbnail"
-        >
-          <img [src]="getImageUrl(image)" [alt]="'Image ' + (i + 1)">
+  <!-- Placeholder if no images -->
+  <div class="no-image-placeholder" *ngIf="!hasImages()">
+    <div class="placeholder-icon">🏠</div>
+    <p>No images available</p>
+  </div>
+   <!-- Video Gallery -->
+    <div class="property-section video-section" *ngIf="hasVideos()">
+      <h2>🎥 Property Videos</h2>
+      <div class="video-gallery">
+        <div class="video-grid">
+          <div *ngFor="let video of property.videos; let i = index" class="video-item">
+            <video 
+              [src]="getVideoUrl(video)" 
+              controls
+              preload="metadata"
+              [poster]="getVideoPoster(video)"
+              class="property-video"
+              playsinline>
+              Your browser does not support the video tag.
+            </video>
+            <div class="video-info">
+              <span>Video {{ i + 1 }} of {{ property.videos }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Property Info -->
-    <div class="property-info-section">
-      <!-- Main Info -->
-      <div class="main-info">
-        <div class="property-header">
-          <h1>{{ property.title }}</h1>
-          <div class="property-price">
-            KES {{ property.price | number }}
-            <span class="price-period">/month</span>
-          </div>
-        </div>
-
-        <p class="property-location">
-          📍 {{ property.address }}, {{ property.city }}, {{ property.state }}
+  <!-- Property Information -->
+  <div class="property-info">
+    <div class="info-header">AC
+      <div>
+        <h1>{{ property.title }}</h1>
+        <p class="location">
+          📍 {{ property.address }}, {{ property.city }}
+          <span *ngIf="distanceToProperty !== null" class="distance-badge">
+            • {{ formatDistance(distanceToProperty) }} away
+          </span>
         </p>
-        <!-- Distance indicator -->
-        <div *ngIf="distanceToProperty" class="distance-badge">
-          <i class="fas fa-location-arrow"></i>
-          {{ formatDistance(distanceToProperty) }} from you
-        </div>
+      </div>
+      <div class="price-tag">
+        <span class="price">KES {{ property.price.toLocaleString() }}</span>
+        <span class="period">/month</span>
+      </div>
+    </div>
 
-        <div class="property-specs">
-          <div class="spec-item">
-            <span class="spec-icon">🛏️</span>
-            <span class="spec-label">{{ property.bedrooms }} Bedrooms</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-icon">🚿</span>
-            <span class="spec-label">{{ property.bathrooms }} Bathrooms</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-icon">📐</span>
-            <span class="spec-label">{{ property.area_sqft }} sqft</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-icon">🏠</span>
-            <span class="spec-label">{{ property.property_type | titlecase }}</span>
-          </div>
-        </div>
+    <!-- Quick Stats -->
+    <div class="property-stats">
+      <div class="stat-item">
+        <span class="stat-icon">🛏️</span>
+        <span class="stat-value">{{ property.bedrooms }}</span>
+        <span class="stat-label">Bedrooms</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">🚿</span>
+        <span class="stat-value">{{ property.bathrooms }}</span>
+        <span class="stat-label">Bathrooms</span>
+      </div>
+      <div class="stat-item" *ngIf="property.area_sqft">
+        <span class="stat-icon">📏</span>
+        <span class="stat-value">{{ property.area_sqft }}</span>
+        <span class="stat-label">Sq Ft</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">🏢</span>
+        <span class="stat-value">{{ property.property_type }}</span>
+        <span class="stat-label">Type</span>
+      </div>
+    </div>
 
-        <div class="action-buttons">
-          <button (click)="bookViewing()" class="btn-primary">
-            📅 Book Viewing
-          </button>
-          <button (click)="contactLandlord()" class="btn-secondary">
-            💬 Contact Landlord
-          </button>
-          <button 
-            *ngIf="property.latitude && property.longitude"
-            (click)="getDirections()" 
-            class="btn-directions"
-          >
-            <i class="fas fa-directions"></i>
-            Get Directions
-          </button>
-        </div>
+    <!-- Description -->
+    <div class="property-section">
+      <h2>📝 Description</h2>
+      <p class="description">{{ property.description }}</p>
+    </div>
 
-        <!-- Description -->
-        <div class="description-section">
-          <h2>Description</h2>
-          <p>{{ property.description }}</p>
-        </div>
-
-        <!-- Amenities -->
-        <div *ngIf="property.amenities && property.amenities.length > 0" class="amenities-section">
-          <h2>Amenities</h2>
-          <div class="amenities-list">
-            <div *ngFor="let amenity of property.amenities" class="amenity-badge">
-              ✓ {{ amenity | titlecase }}
-            </div>
-          </div>
-        </div>
-
-        <!-- Property Details -->
-        <div class="details-section">
-          <h2>Property Details</h2>
-          <div class="details-grid">
-            <div class="detail-item">
-              <span class="detail-label">Type:</span>
-              <span class="detail-value">{{ property.property_type | titlecase }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Bedrooms:</span>
-              <span class="detail-value">{{ property.bedrooms }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Bathrooms:</span>
-              <span class="detail-value">{{ property.bathrooms }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Area:</span>
-              <span class="detail-value">{{ property.area_sqft }} sqft</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">City:</span>
-              <span class="detail-value">{{ property.city }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">State:</span>
-              <span class="detail-value">{{ property.state }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Zip Code:</span>
-              <span class="detail-value">{{ property.zip_code }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Status:</span>
-              <span class="detail-value status-badge">{{ property.status || 'active' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Location  with map-->
-        <div class="location-section">
-          <h2>Location</h2>
-          <p class="full-address">
-            {{ property.address }}<br>
-            {{ property.city }}, {{ property.state }} {{ property.zip_code }}<br>
-            {{ property.country }}
-          </p>
-           <!-- Interactive Map -->
-          <div *ngIf="property.latitude && property.longitude" class="map-container">
-            <app-map
-              #mapComponent
-              [height]="'400px'"
-              [centerLat]="property.latitude"
-              [centerLng]="property.longitude"
-              [zoom]="15"
-            ></app-map>
-          </div>
-
-          <!-- No coordinates message -->
-          <div *ngIf="!property.latitude || !property.longitude" class="no-location-message">
-            <i class="fas fa-map-marked-alt"></i>
-            <p>Location coordinates not available for this property</p>
-            <p class="location-text">{{ property.address }}, {{ property.city }}</p>
-          </div>
+    <!-- Amenities -->
+    <div class="property-section" *ngIf="property.amenities && property.amenities.length > 0">
+      <h2>✨ Amenities</h2>
+      <div class="amenities-grid">
+        <div class="amenity-item" *ngFor="let amenity of property.amenities">
+          <span class="amenity-icon">✓</span>
+          <span>{{ amenity }}</span>
         </div>
       </div>
+    </div>
 
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <div class="contact-card">
-          <h3>Interested in this property?</h3>
-          <p>Contact the landlord to schedule a viewing or get more information.</p>
-          <button (click)="contactLandlord()" class="btn-contact-full">
-            💬 Send Message
-          </button>
-          <button (click)="bookViewing()" class="btn-book-full">
-            📅 Book Viewing
-          </button>
-          <button 
-            *ngIf="property.latitude && property.longitude"
-            (click)="getDirections()" 
-            class="btn-directions-full"
-          >
-            <i class="fas fa-directions"></i>
-            Get Directions
-          </button>
-        </div>
+   
 
-        <div class="stats-card">
-          <h3>Property Stats</h3>
-          <div class="stat-row">
-            <span>Views:</span>
-            <span>{{ property.views || 0 }}</span>
-          </div>
-          <div class="stat-row">
-            <span>Listed:</span>
-            <span>{{ property.created_at | date:'mediumDate' }}</span>
-          </div>
-          <div class="stat-row">
-            <span>Updated:</span>
-            <span>{{ property.updated_at | date:'mediumDate' }}</span>
-          </div>
-        </div>
+    <!-- Location & Map -->
+    <div class="property-section" *ngIf="property.latitude && property.longitude">
+      <h2>📍 Location</h2>
+      <div class="location-info">
+        <p>
+          <strong>Address:</strong> {{ property.address }}<br>
+          <strong>City:</strong> {{ property.city }}<br>
+          <strong>State:</strong> {{ property.state }}<br>
+          <strong>Country:</strong> {{ property.country }}
+        </p>
+        <button *ngIf="distanceToProperty !== null" class="btn btn-secondary" (click)="getDirections()">
+          🧭 Get Directions
+        </button>
       </div>
+      
+      <div class="map-container">
+        <app-map [height]="'400px'"></app-map>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="btn btn-primary btn-large" (click)="bookViewing()" *ngIf="!isOwner()">
+        📅 Book a Viewing
+      </button>
+      <button class="btn btn-secondary btn-large" (click)="contactLandlord()" *ngIf="!isOwner()">
+        💬 Contact Landlord
+      </button>
     </div>
   </div>
 </div>
