@@ -192,8 +192,28 @@
               [alt]="property.title"
             />
             <span class="property-badge" *ngIf="property.is_featured">Featured</span>
-            <button class="favorite-btn">
+            <!-- <button class="favorite-btn">
               <i class="far fa-heart"></i>
+            </button> -->
+            <!-- Update the favorite button in your property card -->
+            <!-- In your property card, update the save button -->
+            <button 
+              class="favorite-btn" 
+              (click)="toggleFavourite(property, $event)"
+              [class.is-favourite]="isFavourite(property._id || '')"
+              [class.saving]="isSavingFavourite(property._id || '')"
+              [disabled]="isSavingFavourite(property._id || '')"
+              type="button"
+              title="{{ isFavourite(property._id || '') ? 'Remove from favourites' : 'Add to favourites' }}">
+              
+              <!-- Show spinner when saving -->
+              <i *ngIf="!isSavingFavourite(property._id || '')" 
+                [class]="isFavourite(property._id || '') ? 'fas fa-heart' : 'far fa-heart'">
+              </i>
+              
+              <i *ngIf="isSavingFavourite(property._id || '')" 
+                class="fas fa-spinner fa-spin">
+              </i>
             </button>
           </div>
 

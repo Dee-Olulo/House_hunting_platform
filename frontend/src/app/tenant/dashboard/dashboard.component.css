@@ -399,24 +399,33 @@
 
 .favorite-btn {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: white;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
   border: none;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .favorite-btn:hover {
   background: #e74c3c;
   color: white;
+   transform: scale(1.1);
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.favorite-btn-list.is-favourite {
+  background: #ffe5e5;
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
 
 .property-info {
@@ -804,7 +813,10 @@
     width: 100%;
   }
 
-  .favorite-btn-list,
+  .favorite-btn-list i {
+  font-size: 16px;
+}
+
   .view-details-btn-list {
     width: 100%;
   }

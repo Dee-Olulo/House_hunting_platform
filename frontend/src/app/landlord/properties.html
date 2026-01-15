@@ -77,13 +77,13 @@
           <button (click)="viewProperty(property._id!)" class="btn-view" title="View">
             👁️ View
           </button>
-          <button (click)="editProperty(property._id!)" class="btn-edit" title="Edit">
+          <button (click)="editProperty(property._id!, $event)" class="btn-edit" title="Edit">
             ✏️ Edit
           </button>
-          <button (click)="confirmProperty(property._id!)" class="btn-confirm" title="Confirm Listing">
+          <button (click)="confirmProperty(property._id!, $event)" class="btn-confirm" title="Confirm Listing">
             ✓ Confirm
           </button>
-          <button (click)="deleteProperty(property._id!, property.title)" class="btn-delete" title="Delete">
+          <button (click)="deleteProperty(property._id!, property.title, $event)" class="btn-delete" title="Delete">
             🗑️ Delete
           </button>
         </div>

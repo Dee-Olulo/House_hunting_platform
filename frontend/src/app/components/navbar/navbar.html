@@ -1,60 +1,142 @@
 <nav class="navbar">
   <div class="navbar-container">
     <!-- Logo/Brand -->
-    <a routerLink="/" class="navbar-brand">
+    <a [routerLink]="getHomeRoute()" class="navbar-brand">
+      <span class="logo-icon">🏠</span>
       <h1>House Hunting</h1>
     </a>
 
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" *ngIf="isLoggedIn">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+
     <!-- Navigation Links -->
-    <ul class="navbar-menu">
-      <!-- Notification Bell - Shows for both landlord and tenant -->
+    <ul class="navbar-menu" [class.mobile-open]="isMobileMenuOpen">
+      
+      <!-- Tenant Links -->
+      <ng-container *ngIf="isLoggedIn && userRole === 'tenant'">
+        <li>
+          <a routerLink="/tenant/dashboard" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/properties" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">Browse Properties</span>
+          </a>
+        </li>
+        
+        <li>
+          <a routerLink="/tenant/favourites" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">❤️</span>
+            <span class="nav-text">Saved</span>
+            <!-- <span class="badge" *ngIf="favouritesCount > 0">{{ favouritesCount }}</span> -->
+          </a>
+        </li>
+        <li>
+          <a routerLink="/tenant/bookings" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">📅</span>
+            <span class="nav-text">My Bookings</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/tenant/payments/history" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">💳</span>
+            <span class="nav-text">Payments</span>
+          </a>
+        </li>
+      </ng-container>
+     
+      <!-- Landlord Links -->
+      <ng-container *ngIf="isLoggedIn && userRole === 'landlord'">
+        <li>
+          <a routerLink="/landlord/properties" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">My Properties</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/landlord/properties/add" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">➕</span>
+            <span class="nav-text">Add Property</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/landlord/bookings" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Bookings</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/landlord/payments" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">Payments</span>
+          </a>
+        </li>
+      </ng-container>
+      
+      <!-- Admin Links -->
+      <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
+        <li>
+          <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Admin Dashboard</span>
+          </a>
+        </li>
+      </ng-container>
+
+      <!-- Notification Bell - Shows for landlord and tenant -->
       <li *ngIf="isLoggedIn && (userRole === 'landlord' || userRole === 'tenant')" class="notification-item">
         <app-notification-bell></app-notification-bell>
       </li>
-      <!-- Tenant Links -->
-      <li *ngIf="isLoggedIn && userRole === 'tenant'">
-        <a routerLink="/shared/notifications" routerLinkActive="active">Notifications</a>
-        <a routerLink="/tenant/payments/history" routerLinkActive="active">💳 Payments</a>
-        <a routerLink="/tenant/bookings" routerLinkActive="active">My Bookings</a>
-        <a routerLink="/tenant/create-booking" routerLinkActive="active">Create Booking</a>
-        <a routerLink="/properties" routerLinkActive="active">View Properties</a>
-      
 
-      </li>
-     
-      <!-- Landlord Links -->
-      <li *ngIf="isLoggedIn && userRole === 'landlord'">
-        <a routerLink="/shared/notifications" routerLinkActive="active">Notifications</a>
-        <a routerLink="/landlord/payments" routerLinkActive="active">💳 Payments</a>
-        <a routerLink="/landlord/properties/edit" routerLinkActive="active">Edit Property</a>
-        <a routerLink="/landlord/properties/add" routerLinkActive="active">Add Property</a>
-        <a routerLink="/landlord/properties" routerLinkActive="active">My Properties</a>
-        <a routerLink="/landlord/bookings" routerLinkActive="active">Bookings</a>
+      <!-- User Profile Section -->
+      <li *ngIf="isLoggedIn" class="user-profile-dropdown">
+        <button class="user-profile-btn" (click)="toggleUserMenu()">
+          <span class="user-avatar">{{ getUserInitials() }}</span>
+          <span class="user-info">
+            <span class="user-email-display">{{ userEmail }}</span>
+            <span class="user-role-badge">{{ userRole }}</span>
+          </span>
+          <span class="dropdown-arrow">▼</span>
+        </button>
         
-      </li> 
-      
-      <!-- Admin Links -->
-      <li *ngIf="isLoggedIn && userRole === 'admin'">
-        <a routerLink="/admin/dashboard" routerLinkActive="active">Admin Dashboard</a>
+        <!-- Dropdown Menu -->
+        <div class="user-dropdown-menu" [class.show]="isUserMenuOpen">
+          <a routerLink="/{{ userRole }}/notifications" class="dropdown-item" (click)="closeUserMenu()">
+            <span class="dropdown-icon">🔔</span>
+            Notifications
+          </a>
+          <a routerLink="/profile" class="dropdown-item" (click)="closeUserMenu()">
+            <span class="dropdown-icon">👤</span>
+            Profile Settings
+          </a>
+          <div class="dropdown-divider"></div>
+          <button (click)="logout()" class="dropdown-item logout-item">
+            <span class="dropdown-icon">🚪</span>
+            Logout
+          </button>
+        </div>
       </li>
 
-      
-
-      <!-- User Email Display -->
-      <li *ngIf="isLoggedIn" class="user-email">
-        <span>{{ userEmail }}</span>
-      </li>
-
-      <!-- Auth Links -->
-      <li *ngIf="!isLoggedIn">
-        <a routerLink="/login" routerLinkActive="active" class="auth-link">Login</a>
-      </li>
-      <li *ngIf="!isLoggedIn">
-        <a routerLink="/register" routerLinkActive="active" class="auth-link">Register</a>
-      </li>
-      <li *ngIf="isLoggedIn">
-        <button (click)="logout()" class="logout-btn">Logout</button>
-      </li>
+      <!-- Auth Links (Not Logged In) -->
+      <ng-container *ngIf="!isLoggedIn">
+        <li>
+          <a routerLink="/login" routerLinkActive="active" class="auth-link login-link">
+            Login
+          </a>
+        </li>
+        <li>
+          <a routerLink="/register" routerLinkActive="active" class="auth-link register-link">
+            Register
+          </a>
+        </li>
+      </ng-container>
     </ul>
   </div>
 </nav>

@@ -263,18 +263,21 @@
       </div>
     </div>
     <!-- Form Actions -->
-    <div class="form-actions">
-      <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="isLoading">
-        Cancel
-      </button>
-      <button
-        type="submit"
-        class="btn-submit"
-        [disabled]="!propertyForm.valid || isLoading"
-      >
-        <span *ngIf="!isLoading">Update Property</span>
-        <span *ngIf="isLoading">Updating...</span>
-      </button>
-    </div>
+    <!-- Form Actions -->
+<div class="form-actions">
+  <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="isLoading">
+    Cancel
+  </button>
+  <button
+    type="submit"
+    class="btn-submit"
+    [disabled]="!propertyForm.valid || isLoading"
+  >
+    <span *ngIf="!isLoading">Update Property</span>
+    <span *ngIf="isLoading">
+      <span class="spinner-small"></span> Updating...
+    </span>
+  </button>
+</div>
   </form>
 </div>
