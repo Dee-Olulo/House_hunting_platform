@@ -29,6 +29,16 @@ export interface Property {
   created_at?: string;
   updated_at?: string;
   last_confirmed_at?: string;
+
+    // Moderation fields (NEW)
+  moderation_status?: string;      // 'approved', 'pending_review', 'rejected'
+  moderation_score?: number;       // 0-100
+  moderation_issues?: string[];    // List of issues
+  moderation_notes?: string;       // Human-readable notes
+  moderated_at?: string;           // ISO date string
+  moderated_by?: string;   
+  
+  
 }
 
 export interface PropertyResponse {
@@ -36,10 +46,10 @@ export interface PropertyResponse {
   count: number;
 }
 
-export interface CreatePropertyResponse {
-  message: string;
-  property_id: string;
-}
+// export interface CreatePropertyResponse {
+//   message: string;
+//   property_id: string;
+// }
 
 export interface PropertyFilters {
   city?: string;
@@ -48,6 +58,32 @@ export interface PropertyFilters {
   bedrooms?: number;
   property_type?: string;
   status?: string;
+}
+export interface ModerationStatus {
+  status: string;  // 'approved', 'pending_review', 'rejected'
+  score: number;
+  message: string;
+  action_required: boolean;
+  issues: string[];
+  moderated_at?: string;
+}
+
+export interface CreatePropertyResponse {
+  message: string;
+  property_id: string;
+  status: string;
+  moderation: ModerationStatus;
+  coordinates_added: boolean;
+}
+
+export interface ModerationDetails {
+  property_id: string;
+  moderation_status: string;
+  moderation_score: number;
+  moderation_issues: string[];
+  moderation_notes: string;
+  moderated_at?: string;
+  status: string;
 }
 
 @Injectable({
@@ -62,6 +98,22 @@ export class PropertyService {
   createProperty(property: Property): Observable<CreatePropertyResponse> {
     return this.http.post<CreatePropertyResponse>(`${this.API_URL}/`, property);
   }
+  /**
+ * Get moderation details for a property
+ */
+getModerationStatus(propertyId: string): Observable<ModerationDetails> {
+  return this.http.get<ModerationDetails>(`${this.API_URL}/${propertyId}/moderation`);
+}
+
+/**
+ * Re-run moderation after making changes
+ */
+remoderateProperty(propertyId: string): Observable<{message: string; moderation: ModerationStatus; status: string}> {
+  return this.http.post<{message: string; moderation: ModerationStatus; status: string}>(
+    `${this.API_URL}/${propertyId}/remoderate`,
+    {}
+  );
+}
 
   // Get all properties with optional filters
   getAllProperties(filters?: PropertyFilters): Observable<PropertyResponse> {

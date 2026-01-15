@@ -172,6 +172,47 @@
       <button class="btn btn-secondary btn-large" (click)="contactLandlord()" *ngIf="!isOwner()">
         💬 Contact Landlord
       </button>
+    </div> 
+    <div *ngIf="isOwner() && property.moderation_status" class="moderation-panel">
+  <h3>📋 Moderation Status</h3>
+  
+  <div class="moderation-info">
+    <div class="info-row">
+      <span class="label">Status:</span>
+      <span class="badge" [ngClass]="getModerationClass(property.moderation_status)">
+        {{ getModerationLabel(property.moderation_status) }}
+      </span>
+    </div>
+    
+    <div class="info-row" *ngIf="property.moderation_score">
+      <span class="label">Quality Score:</span>
+      <span class="score" [ngClass]="getScoreClass(property.moderation_score)">
+        {{ property.moderation_score }}/100
+      </span>
+    </div>
+    
+    <div class="info-row" *ngIf="property.moderation_notes">
+      <span class="label">Notes:</span>
+      <span>{{ property.moderation_notes }}</span>
+    </div>
+    
+    <!-- Show issues if any -->
+    <div *ngIf="property.moderation_issues && property.moderation_issues.length > 0" class="issues-list">
+      <h4>Issues to Address:</h4>
+      <ul>
+        <li *ngFor="let issue of property.moderation_issues">{{ issue }}</li>
+      </ul>
+      
+      <!-- Button to request re-moderation -->
+      <button *ngIf="property.moderation_status !== 'approved'" 
+              class="btn btn-primary"
+              (click)="requestRemoderation()">
+        🔄 Request Re-Review
+      </button>
     </div>
   </div>
 </div>
+
+  </div>
+</div>
+ 

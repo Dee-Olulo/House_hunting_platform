@@ -549,4 +549,63 @@
     height: 36px;
     font-size: 13px;
   }
+  .moderation-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.moderation-approved {
+  background: #27ae60;
+  color: white;
+}
+
+.moderation-pending {
+  background: #f39c12;
+  color: white;
+}
+
+.moderation-rejected {
+  background: #e74c3c;
+  color: white;
+}
+
+.moderation-unknown {
+  background: #95a5a6;
+  color: white;
+}
+
+/* Moderation score indicator */
+.moderation-score {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #ecf0f1;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.score-high {
+  background: #d4edda;
+  color: #155724;
+}
+
+.score-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.score-low {
+  background: #f8d7da;
+  color: #721c24;
+}
 }

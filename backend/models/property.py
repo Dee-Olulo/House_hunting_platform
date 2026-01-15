@@ -1,3 +1,121 @@
+# from datetime import datetime
+# from bson import ObjectId
+
+# class Property:
+#     def __init__(
+#         self,
+#         landlord_id,
+#         title,
+#         description,
+#         property_type,
+#         address,
+#         city,
+#         state,
+#         zip_code,
+#         country,
+#         latitude,
+#         longitude,
+#         price,
+#         bedrooms,
+#         bathrooms,
+#         area_sqft,
+#         images=[],
+#         videos=[],
+#         amenities=[],
+#         status="active",
+#         is_featured=False,
+#         views=0,
+#         created_at=None,
+#         updated_at=None,
+#         last_confirmed_at=None,
+#         _id=None
+#     ):
+#         self._id = _id or ObjectId()
+#         self.landlord_id = landlord_id
+#         self.title = title
+#         self.description = description
+#         self.property_type = property_type  # apartment, house, studio, etc.
+#         self.address = address
+#         self.city = city
+#         self.state = state
+#         self.zip_code = zip_code
+#         self.country = country
+#         self.latitude = latitude
+#         self.longitude = longitude
+#         self.price = price
+#         self.bedrooms = bedrooms
+#         self.bathrooms = bathrooms
+#         self.area_sqft = area_sqft
+#         self.images = images  # List of image URLs
+#         self.videos = videos  # List of video URLs
+#         self.amenities = amenities  # List of amenities
+#         self.status = status  # active, inactive, pending, expired
+#         self.is_featured = is_featured
+#         self.views = views
+#         self.created_at = created_at or datetime.utcnow()
+#         self.updated_at = updated_at or datetime.utcnow()
+#         self.last_confirmed_at = last_confirmed_at or datetime.utcnow()
+
+#     def to_dict(self):
+#         return {
+#             "_id": self._id,
+#             "landlord_id": self.landlord_id,
+#             "title": self.title,
+#             "description": self.description,
+#             "property_type": self.property_type,
+#             "address": self.address,
+#             "city": self.city,
+#             "state": self.state,
+#             "zip_code": self.zip_code,
+#             "country": self.country,
+#             "latitude": self.latitude,
+#             "longitude": self.longitude,
+#             "price": self.price,
+#             "bedrooms": self.bedrooms,
+#             "bathrooms": self.bathrooms,
+#             "area_sqft": self.area_sqft,
+#             "images": self.images,
+#             "videos": self.videos,
+#             "amenities": self.amenities,
+#             "status": self.status,
+#             "is_featured": self.is_featured,
+#             "views": self.views,
+#             "created_at": self.created_at,
+#             "updated_at": self.updated_at,
+#             "last_confirmed_at": self.last_confirmed_at
+#         }
+
+#     @staticmethod
+#     def from_dict(data):
+#         return Property(
+#             landlord_id=data.get("landlord_id"),
+#             title=data.get("title"),
+#             description=data.get("description"),
+#             property_type=data.get("property_type"),
+#             address=data.get("address"),
+#             city=data.get("city"),
+#             state=data.get("state"),
+#             zip_code=data.get("zip_code"),
+#             country=data.get("country"),
+#             latitude=data.get("latitude"),
+#             longitude=data.get("longitude"),
+#             price=data.get("price"),
+#             bedrooms=data.get("bedrooms"),
+#             bathrooms=data.get("bathrooms"),
+#             area_sqft=data.get("area_sqft"),
+#             images=data.get("images", []),
+#             videos=data.get("videos", []),
+#             amenities=data.get("amenities", []),
+#             status=data.get("status", "active"),
+#             is_featured=data.get("is_featured", False),
+#             views=data.get("views", 0),
+#             created_at=data.get("created_at"),
+#             updated_at=data.get("updated_at"),
+#             last_confirmed_at=data.get("last_confirmed_at"),
+#             _id=data.get("_id")
+#         )
+
+
 from datetime import datetime
 from bson import ObjectId
 
@@ -22,9 +140,17 @@ class Property:
         images=[],
         videos=[],
         amenities=[],
-        status="active",
+        status="pending",  # Changed default to "pending"
         is_featured=False,
         views=0,
+        # NEW MODERATION FIELDS
+        moderation_status="pending",  # 'approved', 'pending_review', 'rejected'
+        moderation_score=0,
+        moderation_issues=[],
+        moderation_notes="",
+        moderated_at=None,
+        moderated_by=None,  # For manual reviews
+        # END NEW FIELDS
         created_at=None,
         updated_at=None,
         last_confirmed_at=None,
@@ -34,7 +160,7 @@ class Property:
         self.landlord_id = landlord_id
         self.title = title
         self.description = description
-        self.property_type = property_type  # apartment, house, studio, etc.
+        self.property_type = property_type
         self.address = address
         self.city = city
         self.state = state
@@ -46,12 +172,21 @@ class Property:
         self.bedrooms = bedrooms
         self.bathrooms = bathrooms
         self.area_sqft = area_sqft
-        self.images = images  # List of image URLs
-        self.videos = videos  # List of video URLs
-        self.amenities = amenities  # List of amenities
-        self.status = status  # active, inactive, pending, expired
+        self.images = images
+        self.videos = videos
+        self.amenities = amenities
+        self.status = status
         self.is_featured = is_featured
         self.views = views
+        
+        # Moderation fields
+        self.moderation_status = moderation_status
+        self.moderation_score = moderation_score
+        self.moderation_issues = moderation_issues
+        self.moderation_notes = moderation_notes
+        self.moderated_at = moderated_at
+        self.moderated_by = moderated_by
+        
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
         self.last_confirmed_at = last_confirmed_at or datetime.utcnow()
@@ -80,6 +215,14 @@ class Property:
             "status": self.status,
             "is_featured": self.is_featured,
             "views": self.views,
+            # Moderation fields
+            "moderation_status": self.moderation_status,
+            "moderation_score": self.moderation_score,
+            "moderation_issues": self.moderation_issues,
+            "moderation_notes": self.moderation_notes,
+            "moderated_at": self.moderated_at,
+            "moderated_by": self.moderated_by,
+            # Timestamps
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "last_confirmed_at": self.last_confirmed_at
@@ -106,9 +249,17 @@ class Property:
             images=data.get("images", []),
             videos=data.get("videos", []),
             amenities=data.get("amenities", []),
-            status=data.get("status", "active"),
+            status=data.get("status", "pending"),
             is_featured=data.get("is_featured", False),
             views=data.get("views", 0),
+            # Moderation fields
+            moderation_status=data.get("moderation_status", "pending"),
+            moderation_score=data.get("moderation_score", 0),
+            moderation_issues=data.get("moderation_issues", []),
+            moderation_notes=data.get("moderation_notes", ""),
+            moderated_at=data.get("moderated_at"),
+            moderated_by=data.get("moderated_by"),
+            # Timestamps
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
             last_confirmed_at=data.get("last_confirmed_at"),

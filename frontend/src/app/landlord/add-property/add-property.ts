@@ -361,28 +361,65 @@ export class AddPropertyComponent {
 
       console.log('Creating property with data:', propertyData);
 
-      // Create property
-      this.propertyService.createProperty(propertyData).subscribe({
-        next: (response) => {
-          console.log('✅ Property created:', response);
-          this.isLoading = false;
-          this.successMessage = 'Property created successfully!';
+      // // Create property
+      // this.propertyService.createProperty(propertyData).subscribe({
+      //   next: (response) => {
+      //     console.log('✅ Property created:', response);
+      //     this.isLoading = false;
+      //     this.successMessage = 'Property created successfully!';
           
-          // Redirect after 1.5 seconds
-          setTimeout(() => {
-            this.router.navigate(['/landlord-dashboard']).catch(() => {
-              this.router.navigate(['/landlord/properties']).catch(() => {
-                this.router.navigate(['/']);
-              });
-            });
-          }, 1500);
-        },
-        error: (error) => {
-          console.error('❌ Error creating property:', error);
-          this.isLoading = false;
-          this.errorMessage = error.error?.error || error.error?.message || 'Failed to create property';
+      //     // Redirect after 1.5 seconds
+      //     setTimeout(() => {
+      //       this.router.navigate(['/landlord-dashboard']).catch(() => {
+      //         this.router.navigate(['/landlord/properties']).catch(() => {
+      //           this.router.navigate(['/']);
+      //         });
+      //       });
+      //     }, 1500);
+      //   },
+      //   error: (error) => {
+      //     console.error('❌ Error creating property:', error);
+      //     this.isLoading = false;
+      //     this.errorMessage = error.error?.error || error.error?.message || 'Failed to create property';
+      //   }
+      // });
+       this.propertyService.createProperty(propertyData).subscribe({
+      next: (response: any) => {
+        console.log('✅ Property created:', response);
+        this.isLoading = false;
+        
+        // Handle moderation response
+        const moderation = response.moderation;
+        
+        if (moderation.status === 'approved') {
+          this.successMessage = '✅ Property approved and published successfully!';
+        } else if (moderation.status === 'pending_review') {
+          this.successMessage = '⏳ Property submitted for review. We\'ll notify you once it\'s approved.';
+        } else {
+          this.errorMessage = `⚠️ Property needs improvement: ${moderation.issues.slice(0, 3).join(', ')}`;
+          return;  // Don't redirect if rejected
         }
-      });
+        
+        // Show issues if any (even for approved)
+        if (moderation.issues && moderation.issues.length > 0) {
+          console.log('⚠️ Moderation issues:', moderation.issues);
+        }
+        
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          this.router.navigate(['/landlord-dashboard']).catch(() => {
+            this.router.navigate(['/landlord/properties']).catch(() => {
+              this.router.navigate(['/']);
+            });
+          });
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('❌ Error creating property:', error);
+        this.isLoading = false;
+        this.errorMessage = error.error?.error || error.error?.message || 'Failed to create property';
+      }
+    });
 
     } catch (error: any) {
       console.error('❌ Error in form submission:', error);

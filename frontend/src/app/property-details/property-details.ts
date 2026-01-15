@@ -415,6 +415,7 @@ export class PropertyDetailsComponent implements OnInit {
     private authService: AuthService,
     private locationService: LocationService
   ) {}
+  
 
   ngOnInit(): void {
     this.propertyId = this.route.snapshot.params['id'];
@@ -760,6 +761,73 @@ export class PropertyDetailsComponent implements OnInit {
     
     return isPropertyOwner && this.userRole === 'landlord';
   }
+  getModerationClass(status?: string): string {
+  switch (status) {
+    case 'approved':
+      return 'moderation-approved';
+    case 'pending_review':
+      return 'moderation-pending';
+    case 'rejected':
+      return 'moderation-rejected';
+    default:
+      return 'moderation-unknown';
+  }
+}
+
+/**
+ * Get human-readable label for moderation status
+ */
+getModerationLabel(status?: string): string {
+  switch (status) {
+    case 'approved':
+      return '✓ Approved';
+    case 'pending_review':
+      return '⏳ Under Review';
+    case 'rejected':
+      return '✗ Needs Improvement';
+    default:
+      return 'Unknown';
+  }
+}
+
+/**
+ * Get CSS class for quality score
+ */
+getScoreClass(score?: number): string {
+  if (!score) return 'score-unknown';
+  
+  if (score >= 80) return 'score-high';
+  if (score >= 50) return 'score-medium';
+  return 'score-low';
+}
+
+/**
+ * Request re-moderation after fixes
+ */
+requestRemoderation(): void {
+  if (!this.propertyId) {
+    console.error('No property ID available');
+    return;
+  }
+
+  if (confirm('Request re-moderation? Make sure you\'ve fixed all issues first.')) {
+    console.log('Requesting re-moderation for property:', this.propertyId);
+    
+    this.propertyService.remoderateProperty(this.propertyId).subscribe({
+      next: (response) => {
+        console.log('✅ Re-moderation complete:', response);
+        alert(response.moderation.message);
+        
+        // Reload property to show updated status
+        this.loadProperty();
+      },
+      error: (error) => {
+        console.error('❌ Error re-moderating:', error);
+        alert('Failed to remoderate property. Please try again.');
+      }
+    });
+  }
+}
 
   // ==========================================
   // HELPER METHODS
@@ -780,5 +848,5 @@ export class PropertyDetailsComponent implements OnInit {
    */
   hasAmenity(amenity: string): boolean {
     return !!(this.property?.amenities?.includes(amenity));
-  }
+  } 
 }

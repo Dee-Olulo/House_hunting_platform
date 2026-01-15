@@ -167,7 +167,10 @@
         <div class="property-type-badge">
           {{ property.property_type | titlecase }}
         </div>
-        
+        <!-- Moderation Status Badge (NEW) -->
+        <div class="moderation-badge" [ngClass]="getModerationClass(property.moderation_status)">
+          {{ getModerationLabel(property.moderation_status) }}
+        </div>
         <h3 class="property-title">{{ property.title }}</h3>
         
         <p class="property-location">

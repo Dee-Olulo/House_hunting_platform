@@ -236,4 +236,73 @@ export class PropertiesListComponent implements OnInit {
         return 'status-unknown';
     }
   }
+  getModerationClass(status?: string): string {
+  switch (status) {
+    case 'approved':
+      return 'moderation-approved';
+    case 'pending_review':
+      return 'moderation-pending';
+    case 'rejected':
+      return 'moderation-rejected';
+    default:
+      return 'moderation-unknown';
+  }
+}
+
+/**
+ * Get human-readable label for moderation status
+ */
+getModerationLabel(status?: string): string {
+  switch (status) {
+    case 'approved':
+      return '✓ Approved';
+    case 'pending_review':
+      return '⏳ Under Review';
+    case 'rejected':
+      return '✗ Needs Improvement';
+    default:
+      return 'Unknown';
+  }
+}
+
+/**
+ * View moderation details
+ */
+viewModerationDetails(propertyId: string): void {
+  this.propertyService.getModerationStatus(propertyId).subscribe({
+    next: (details) => {
+      console.log('Moderation details:', details);
+      
+      // Show in alert (or create a modal)
+      let message = `Status: ${details.moderation_status}\n`;
+      message += `Score: ${details.moderation_score}/100\n`;
+      if (details.moderation_issues.length > 0) {
+        message += `\nIssues:\n${details.moderation_issues.join('\n')}`;
+      }
+      alert(message);
+    },
+    error: (error) => {
+      console.error('Error fetching moderation details:', error);
+    }
+  });
+}
+
+/**
+ * Request re-moderation after fixes
+ */
+requestRemoderation(propertyId: string): void {
+  if (confirm('Request re-moderation? Make sure you\'ve fixed all issues first.')) {
+    this.propertyService.remoderateProperty(propertyId).subscribe({
+      next: (response) => {
+        alert(response.moderation.message);
+        this.loadProperties();  // Refresh list
+      },
+      error: (error) => {
+        console.error('Error re-moderating:', error);
+        alert('Failed to remoderate property');
+      }
+    });
+  }
+}
+
 }

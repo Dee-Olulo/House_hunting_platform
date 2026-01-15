@@ -5,49 +5,178 @@ from extensions import mongo
 from models.property import Property
 from utils.decorators import landlord_only
 from utils.validators import validate_property_data
+from utils.property_moderation import PropertyModerator
+from config.moderation_config import ModerationConfig
 from bson import ObjectId
 from datetime import datetime
 import os
 
 property_bp = Blueprint("property", __name__)
+# Initialize moderator
+moderator = PropertyModerator()
 
     
     #  ---------------------------
 # VALIDATE AND AUTO-GEOCODE ON PROPERTY CREATION
 # ---------------------------
-# Modify the create_property endpoint to auto-geocode if coordinates not provided
+# # Modify the create_property endpoint to auto-geocode if coordinates not provided
+# @property_bp.route("/", methods=["POST"])
+# @jwt_required()
+# @landlord_only
+# def create_property():
+#     try:
+#         user_id = get_jwt_identity()
+#         data = request.get_json()
+        
+#         # Validate property data
+#         is_valid, errors = validate_property_data(data)
+#         if not is_valid:
+#             return jsonify({"error": errors}), 400
+        
+#         # Auto-geocode if coordinates not provided
+#         if not data.get("latitude") or not data.get("longitude"):
+#             print("⚠️ No coordinates provided. Attempting to geocode address...")
+            
+#             geocode_result = geocode_address(
+#                 data.get("address"),
+#                 data.get("city"),
+#                 data.get("state"),
+#                 data.get("country")
+#             )
+            
+#             if geocode_result:
+#                 data["latitude"] = geocode_result["latitude"]
+#                 data["longitude"] = geocode_result["longitude"]
+#                 print(f"✅ Auto-geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
+#             else:
+#                 print("⚠️ Auto-geocoding failed. Property will be created without coordinates.")
+        
+#         # Create property object
+#         property_obj = Property(
+#             landlord_id=user_id,
+#             title=data.get("title"),
+#             description=data.get("description"),
+#             property_type=data.get("property_type"),
+#             address=data.get("address"),
+#             city=data.get("city"),
+#             state=data.get("state"),
+#             zip_code=data.get("zip_code"),
+#             country=data.get("country"),
+#             latitude=data.get("latitude"),
+#             longitude=data.get("longitude"),
+#             price=data.get("price"),
+#             bedrooms=data.get("bedrooms"),
+#             bathrooms=data.get("bathrooms"),
+#             area_sqft=data.get("area_sqft"),
+#             images=data.get("images", []),
+#             videos=data.get("videos", []),
+#             amenities=data.get("amenities", []),
+#             is_featured=data.get("is_featured", False)
+#         )
+        
+#         # Insert into database
+#         result = mongo.db.properties.insert_one(property_obj.to_dict())
+        
+#         return jsonify({
+#             "message": "Property created successfully",
+#             "property_id": str(result.inserted_id),
+#             "coordinates_added": bool(data.get("latitude") and data.get("longitude"))
+#         }), 201
+        
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to create property: {str(e)}"}), 500
+# Initialize moderator
+moderator = PropertyModerator()
+
 @property_bp.route("/", methods=["POST"])
 @jwt_required()
 @landlord_only
 def create_property():
+    """
+    Create property with automatic moderation
+    """
     try:
         user_id = get_jwt_identity()
         data = request.get_json()
         
-        # Validate property data
+        print("\n" + "="*60)
+        print("🏠 CREATE PROPERTY - AUTO-MODERATION ENABLED")
+        print("="*60)
+        print(f"User ID: {user_id}")
+        print(f"Property Title: {data.get('title')}")
+        
+        # Step 1: Validate property data (existing validation)
         is_valid, errors = validate_property_data(data)
         if not is_valid:
+            print(f"❌ Validation failed: {errors}")
             return jsonify({"error": errors}), 400
         
-        # Auto-geocode if coordinates not provided
-        if not data.get("latitude") or not data.get("longitude"):
-            print("⚠️ No coordinates provided. Attempting to geocode address...")
+        print("✅ Basic validation passed")
+        
+        # Step 2: Auto-moderation (NEW)
+        if ModerationConfig.AUTO_MODERATION_ENABLED:
+            print("\n🤖 Running auto-moderation...")
             
-            geocode_result = geocode_address(
-                data.get("address"),
-                data.get("city"),
-                data.get("state"),
-                data.get("country")
+            moderation_status, moderation_score, moderation_issues = moderator.moderate_property(data)
+            moderation_summary = moderator.get_moderation_summary(
+                moderation_status, 
+                moderation_score, 
+                moderation_issues
             )
             
-            if geocode_result:
-                data["latitude"] = geocode_result["latitude"]
-                data["longitude"] = geocode_result["longitude"]
-                print(f"✅ Auto-geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
-            else:
-                print("⚠️ Auto-geocoding failed. Property will be created without coordinates.")
+            print(f"   Status: {moderation_status}")
+            print(f"   Score: {moderation_score}/100")
+            print(f"   Issues: {len(moderation_issues)}")
+            
+            if moderation_issues:
+                for issue in moderation_issues[:5]:  # Show first 5
+                    print(f"      - {issue}")
+        else:
+            # If moderation disabled, approve by default
+            moderation_status = 'approved'
+            moderation_score = 100
+            moderation_issues = []
+            moderation_summary = {
+                'status': 'approved',
+                'score': 100,
+                'message': 'Auto-moderation disabled',
+                'issues': []
+            }
+            print("⚠️ Auto-moderation is disabled - approving by default")
         
-        # Create property object
+        # Step 3: Auto-geocode if coordinates not provided
+        if not data.get("latitude") or not data.get("longitude"):
+            print("\n🗺️ No coordinates provided. Attempting to geocode...")
+            
+            try:
+                from utils.location_utils import geocode_address
+                geocode_result = geocode_address(
+                    data.get("address"),
+                    data.get("city"),
+                    data.get("state"),
+                    data.get("country")
+                )
+                
+                if geocode_result:
+                    data["latitude"] = geocode_result["latitude"]
+                    data["longitude"] = geocode_result["longitude"]
+                    print(f"   ✅ Geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
+                else:
+                    print("   ⚠️ Geocoding failed. Property will be created without coordinates.")
+            except Exception as e:
+                print(f"   ⚠️ Geocoding error: {str(e)}")
+        
+        # Step 4: Determine property status based on moderation
+        if moderation_status == 'approved':
+            property_status = 'active'  # Immediately active
+        elif moderation_status == 'pending_review':
+            property_status = 'pending'  # Pending admin review
+        else:  # rejected
+            property_status = 'inactive'  # Not visible
+        
+        print(f"\n📋 Property status will be: {property_status}")
+        
+        # Step 5: Create property object with moderation data
         property_obj = Property(
             landlord_id=user_id,
             title=data.get("title"),
@@ -67,20 +196,159 @@ def create_property():
             images=data.get("images", []),
             videos=data.get("videos", []),
             amenities=data.get("amenities", []),
-            is_featured=data.get("is_featured", False)
+            is_featured=data.get("is_featured", False),
+            # Property status
+            status=property_status,
+            # Moderation data (NEW)
+            moderation_status=moderation_status,
+            moderation_score=moderation_score,
+            moderation_issues=moderation_issues,
+            moderation_notes=moderation_summary['message'],
+            moderated_at=datetime.utcnow()
         )
         
-        # Insert into database
+        # Step 6: Insert into database
         result = mongo.db.properties.insert_one(property_obj.to_dict())
+        property_id = str(result.inserted_id)
         
-        return jsonify({
+        print(f"\n✅ Property created with ID: {property_id}")
+        print("="*60 + "\n")
+        
+        # Step 7: Prepare response
+        response = {
             "message": "Property created successfully",
-            "property_id": str(result.inserted_id),
+            "property_id": property_id,
+            "status": property_status,
+            "moderation": moderation_summary,
             "coordinates_added": bool(data.get("latitude") and data.get("longitude"))
-        }), 201
+        }
+        
+        # Step 8: Send notifications based on moderation result
+        # TODO: Implement notification sending
+        # if moderation_status == 'approved':
+        #     send_notification(user_id, "Property approved and listed!")
+        # elif moderation_status == 'pending_review':
+        #     send_notification(user_id, "Property submitted for review")
+        #     notify_admin(property_id, "New property needs review")
+        # else:  # rejected
+        #     send_notification(user_id, f"Property needs improvement: {', '.join(moderation_issues[:3])}")
+        
+        return jsonify(response), 201
         
     except Exception as e:
+        print(f"\n❌ Error creating property: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": f"Failed to create property: {str(e)}"}), 500
+
+
+# ============================================================================
+# NEW ENDPOINT: Get property moderation status
+# ============================================================================
+
+@property_bp.route("/<property_id>/moderation", methods=["GET"])
+@jwt_required()
+def get_property_moderation(property_id):
+    """Get moderation details for a property"""
+    try:
+        user_id = get_jwt_identity()
+        
+        # Validate property ID
+        if not ObjectId.is_valid(property_id):
+            return jsonify({"error": "Invalid property ID"}), 400
+        
+        # Get property
+        property_data = mongo.db.properties.find_one({"_id": ObjectId(property_id)})
+        
+        if not property_data:
+            return jsonify({"error": "Property not found"}), 404
+        
+        # Check if user owns the property or is admin
+        if str(property_data["landlord_id"]) != user_id:
+            # TODO: Add admin check here
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        # Extract moderation data
+        moderation_data = {
+            "property_id": property_id,
+            "moderation_status": property_data.get("moderation_status", "unknown"),
+            "moderation_score": property_data.get("moderation_score", 0),
+            "moderation_issues": property_data.get("moderation_issues", []),
+            "moderation_notes": property_data.get("moderation_notes", ""),
+            "moderated_at": property_data.get("moderated_at"),
+            "status": property_data.get("status")
+        }
+        
+        return jsonify(moderation_data), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to get moderation data: {str(e)}"}), 500
+
+
+# ============================================================================
+# NEW ENDPOINT: Re-moderate property (after landlord makes changes)
+# ============================================================================
+
+@property_bp.route("/<property_id>/remoderate", methods=["POST"])
+@jwt_required()
+@landlord_only
+def remoderate_property(property_id):
+    """Re-run moderation after property updates"""
+    try:
+        user_id = get_jwt_identity()
+        
+        # Validate property ID
+        if not ObjectId.is_valid(property_id):
+            return jsonify({"error": "Invalid property ID"}), 400
+        
+        # Get property
+        property_data = mongo.db.properties.find_one({"_id": ObjectId(property_id)})
+        
+        if not property_data:
+            return jsonify({"error": "Property not found"}), 404
+        
+        # Check ownership
+        if str(property_data["landlord_id"]) != user_id:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        # Run moderation
+        moderation_status, moderation_score, moderation_issues = moderator.moderate_property(property_data)
+        moderation_summary = moderator.get_moderation_summary(
+            moderation_status, 
+            moderation_score, 
+            moderation_issues
+        )
+        
+        # Determine new status
+        if moderation_status == 'approved':
+            new_status = 'active'
+        elif moderation_status == 'pending_review':
+            new_status = 'pending'
+        else:
+            new_status = 'inactive'
+        
+        # Update property
+        mongo.db.properties.update_one(
+            {"_id": ObjectId(property_id)},
+            {"$set": {
+                "moderation_status": moderation_status,
+                "moderation_score": moderation_score,
+                "moderation_issues": moderation_issues,
+                "moderation_notes": moderation_summary['message'],
+                "moderated_at": datetime.utcnow(),
+                "status": new_status,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        return jsonify({
+            "message": "Property re-moderated successfully",
+            "moderation": moderation_summary,
+            "status": new_status
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to remoderate property: {str(e)}"}), 500
 
 # GET ALL PROPERTIES (PUBLIC)
 # ---------------------------
