@@ -13,6 +13,7 @@ from routes.booking_routes import booking_bp
 from routes.notification_routes import notification_bp
 from routes.payment_routes import payment_bp 
 from routes.favourite_routes import favourite_bp
+from routes.admin_routes import admin_bp
 
 def create_app():
     app = Flask(__name__)
@@ -57,7 +58,8 @@ def create_app():
     app.register_blueprint(booking_bp, url_prefix="/bookings")  
     app.register_blueprint(notification_bp, url_prefix="/notifications") 
     app.register_blueprint(payment_bp, url_prefix="/payments")   
-    app.register_blueprint(favourite_bp, url_prefix="/favourites")    
+    app.register_blueprint(favourite_bp, url_prefix="/favourites")   
+    app.register_blueprint(admin_bp, url_prefix="/admin") 
     # Health check endpoint
     @app.route("/health", methods=["GET"])
     def health_check():

@@ -192,11 +192,6 @@
               [alt]="property.title"
             />
             <span class="property-badge" *ngIf="property.is_featured">Featured</span>
-            <!-- <button class="favorite-btn">
-              <i class="far fa-heart"></i>
-            </button> -->
-            <!-- Update the favorite button in your property card -->
-            <!-- In your property card, update the save button -->
             <button 
               class="favorite-btn" 
               (click)="toggleFavourite(property, $event)"

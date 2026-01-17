@@ -12,6 +12,7 @@ import { roleGuard } from './guards/role.guard';
 import { CreateBookingComponent } from './tenant/create-booking/create-booking.component';
 import { TenantBookingsComponent } from './tenant/bookings/bookings.component';
 import { LandlordBookingsComponent } from './landlord/bookings/bookings.component';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   // Auth routes
@@ -178,10 +179,42 @@ export const routes: Routes = [
       }
     ]
   },
+  // Admin routes
+{
+    path: 'admin',
+    canActivate: [adminGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./admin/admin-dashboard/admin-dashboard')
+          .then(m => m.AdminDashboardComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./admin/user-management/user-management')
+          .then(m => m.UserManagementComponent)
+      },
+      {
+        path: 'moderation',
+        loadComponent: () => import('./admin/moderation-queue/moderation-queue')
+          .then(m => m.ModerationQueueComponent)
+      },
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      }
+    
+  
+  ],
+},
+
 
   // Default route
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
   // Catch-all route
   { path: '**', redirectTo: 'login' }
+
+
 ];

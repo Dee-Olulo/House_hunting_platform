@@ -1,4 +1,4 @@
-// // src/app/tenant/dashboard/dashboard.component.ts
+// // src/app/tenant/dashboard/dashboard.component.ts (UPDATED WITH FAVOURITES)
 
 // import { Component, OnInit } from '@angular/core';
 // import { PropertySearchService } from '../services/property-search.service';
@@ -58,16 +58,17 @@
 //     { value: 'bedrooms', label: 'Most Bedrooms' }
 //   ];
 
-//   constructor(private propertySearchService: PropertySearchService,
-//     private favouriteService: FavouriteService 
+//   constructor(
+//     private propertySearchService: PropertySearchService,
+//     private favouriteService: FavouriteService // ✨ INJECT FAVOURITE SERVICE
 //   ) {}
 
 //   ngOnInit(): void {
 //     this.loadFilterOptions();
 //     this.searchProperties();
-//     this.loadFavouriteIds(); 
+//     this.loadFavouriteIds(); // ✨ LOAD FAVOURITES
 //   }
-  
+
 //   /**
 //    * ✨ Load favourite property IDs
 //    */
@@ -93,24 +94,61 @@
 //     event.stopPropagation(); // Prevent card click
 //     event.preventDefault();
     
-//     if (!property._id) return;
+//     console.log('🔘 Save button clicked!');
+//     console.log('📍 Property ID:', property._id);
+//     console.log('📍 Property Title:', property.title);
+    
+//     if (!property._id) {
+//       console.error('❌ No property ID found!');
+//       alert('Error: Property ID is missing');
+//       return;
+//     }
     
 //     const propertyId = property._id;
+//     const isFav = this.isFavourite(propertyId);
+    
+//     console.log(`${isFav ? '➖' : '➕'} ${isFav ? 'Removing from' : 'Adding to'} favourites...`);
     
 //     // Mark as saving
 //     this.savingFavourite.add(propertyId);
     
 //     this.favouriteService.toggleFavourite(propertyId).subscribe({
 //       next: (response) => {
-//         console.log('✅ Favourite toggled:', response);
+//         console.log('✅ Favourite toggled successfully:', response);
 //         this.savingFavourite.delete(propertyId);
+        
+//         // Show success message
+//         const message = isFav ? 'Removed from favourites' : 'Added to favourites';
+//         this.showToast(message, 'success');
 //       },
 //       error: (error) => {
 //         console.error('❌ Error toggling favourite:', error);
+//         console.error('❌ Error details:', error.error);
+//         console.error('❌ Error status:', error.status);
+        
 //         this.savingFavourite.delete(propertyId);
-//         alert(error.error?.error || 'Failed to update favourites');
+        
+//         // Show error message
+//         let errorMessage = 'Failed to update favourites';
+//         if (error.status === 401) {
+//           errorMessage = 'Please login to save properties';
+//         } else if (error.status === 403) {
+//           errorMessage = 'Only tenants can save properties';
+//         } else if (error.error?.error) {
+//           errorMessage = error.error.error;
+//         }
+        
+//         this.showToast(errorMessage, 'error');
 //       }
 //     });
+//   }
+
+//   /**
+//    * ✨ Show toast notification
+//    */
+//   showToast(message: string, type: 'success' | 'error'): void {
+//     // Simple alert for now, can be replaced with a toast library
+//     alert(message);
 //   }
 
 //   /**
@@ -182,24 +220,6 @@
 //   }
 
 //   /**
-//    * Change sort order
-//    */
-//   onSortChange(sortBy: string): void {
-//     this.searchFilters.sort_by = sortBy as any;
-//     this.currentPage = 1;
-//     this.searchProperties();
-//   }
-
-//   /**
-//    * Search by text
-//    */
-//   onSearchTextChange(searchText: string): void {
-//     this.searchFilters.search = searchText || undefined;
-//     this.currentPage = 1;
-//     this.searchProperties();
-//   }
-
-//   /**
 //    * Pagination
 //    */
 //   goToPage(page: number): void {
@@ -223,13 +243,6 @@
 //    */
 //   toggleFilters(): void {
 //     this.showFilters = !this.showFilters;
-//   }
-
-//   /**
-//    * Toggle view mode
-//    */
-//   toggleViewMode(): void {
-//     this.viewMode = this.viewMode === 'grid' ? 'list' : 'grid';
 //   }
 
 //   /**
@@ -264,9 +277,9 @@
 //   }
 // }
 
-// src/app/tenant/dashboard/dashboard.component.ts (UPDATED WITH FAVOURITES)
+// src/app/tenant/dashboard/dashboard.component.ts (FIXED WITH OnPush)
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { PropertySearchService } from '../services/property-search.service';
 import { FavouriteService } from '../../services/favourite.service';
 import {
@@ -276,14 +289,15 @@ import {
 } from '../models/property.interface';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['./dashboard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush // Added OnPush strategy
 })
 export class DashboardComponent implements OnInit {
   // Properties data
@@ -312,9 +326,12 @@ export class DashboardComponent implements OnInit {
   showFilters: boolean = false;
   viewMode: 'grid' | 'list' = 'grid';
 
-  // ✨ FAVOURITE STATES
+  // Favourite states
   favouritePropertyIds: Set<string> = new Set();
-  savingFavourite: Set<string> = new Set(); // Track which properties are being saved/unsaved
+  savingFavourite: Set<string> = new Set();
+
+  // Prevent double navigation
+  private isNavigating = false;
 
   // Sort options
   sortOptions = [
@@ -326,47 +343,49 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private propertySearchService: PropertySearchService,
-    private favouriteService: FavouriteService // ✨ INJECT FAVOURITE SERVICE
+    private favouriteService: FavouriteService,
+    private router: Router,
+    private cdr: ChangeDetectorRef // Added ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadFilterOptions();
     this.searchProperties();
-    this.loadFavouriteIds(); // ✨ LOAD FAVOURITES
+    this.loadFavouriteIds();
   }
 
   /**
-   * ✨ Load favourite property IDs
+   * Load favourite property IDs
    */
   loadFavouriteIds(): void {
     this.favouriteService.favouriteIds$.subscribe({
       next: (ids) => {
         this.favouritePropertyIds = ids;
+        this.cdr.markForCheck(); // Trigger change detection
       }
     });
   }
 
   /**
-   * ✨ Check if property is favourite
+   * Check if property is favourite
    */
   isFavourite(propertyId: string): boolean {
     return this.favouritePropertyIds.has(propertyId);
   }
 
   /**
-   * ✨ Toggle favourite status
+   * Toggle favourite status
    */
   toggleFavourite(property: Property, event: Event): void {
-    event.stopPropagation(); // Prevent card click
+    event.stopPropagation();
     event.preventDefault();
     
     console.log('🔘 Save button clicked!');
     console.log('📍 Property ID:', property._id);
-    console.log('📍 Property Title:', property.title);
     
     if (!property._id) {
       console.error('❌ No property ID found!');
-      alert('Error: Property ID is missing');
+      this.showToast('Error: Property ID is missing', 'error');
       return;
     }
     
@@ -377,24 +396,22 @@ export class DashboardComponent implements OnInit {
     
     // Mark as saving
     this.savingFavourite.add(propertyId);
+    this.cdr.markForCheck();
     
     this.favouriteService.toggleFavourite(propertyId).subscribe({
       next: (response) => {
         console.log('✅ Favourite toggled successfully:', response);
         this.savingFavourite.delete(propertyId);
+        this.cdr.markForCheck();
         
-        // Show success message
         const message = isFav ? 'Removed from favourites' : 'Added to favourites';
         this.showToast(message, 'success');
       },
       error: (error) => {
         console.error('❌ Error toggling favourite:', error);
-        console.error('❌ Error details:', error.error);
-        console.error('❌ Error status:', error.status);
-        
         this.savingFavourite.delete(propertyId);
+        this.cdr.markForCheck();
         
-        // Show error message
         let errorMessage = 'Failed to update favourites';
         if (error.status === 401) {
           errorMessage = 'Please login to save properties';
@@ -410,7 +427,7 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * ✨ Show toast notification
+   * Show toast notification
    */
   showToast(message: string, type: 'success' | 'error'): void {
     // Simple alert for now, can be replaced with a toast library
@@ -418,10 +435,40 @@ export class DashboardComponent implements OnInit {
   }
 
   /**
-   * ✨ Check if property is being saved/unsaved
+   * Check if property is being saved/unsaved
    */
   isSavingFavourite(propertyId: string): boolean {
     return this.savingFavourite.has(propertyId);
+  }
+
+  /**
+   * Navigate to property details (with double-click prevention)
+   */
+  viewPropertyDetails(propertyId: string, event?: MouseEvent): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (this.isNavigating) {
+      console.log('⚠️ Navigation already in progress');
+      return;
+    }
+
+    console.log('🔵 Viewing property:', propertyId);
+    this.isNavigating = true;
+
+    this.router.navigate(['/properties', propertyId]).then(success => {
+      if (success) {
+        console.log('✅ Navigation successful');
+      } else {
+        console.log('❌ Navigation failed');
+      }
+    }).finally(() => {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 500);
+    });
   }
 
   /**
@@ -429,14 +476,18 @@ export class DashboardComponent implements OnInit {
    */
   loadFilterOptions(): void {
     this.isLoadingFilters = true;
+    this.cdr.markForCheck();
+
     this.propertySearchService.getFilterOptions().subscribe({
       next: (options) => {
         this.filterOptions = options;
         this.isLoadingFilters = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading filter options:', error);
         this.isLoadingFilters = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -448,6 +499,7 @@ export class DashboardComponent implements OnInit {
     this.isLoading = true;
     this.searchFilters.page = this.currentPage;
     this.searchFilters.per_page = this.perPage;
+    this.cdr.markForCheck();
 
     this.propertySearchService.searchProperties(this.searchFilters).subscribe({
       next: (response) => {
@@ -455,10 +507,12 @@ export class DashboardComponent implements OnInit {
         this.totalProperties = response.total;
         this.totalPages = response.total_pages;
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error searching properties:', error);
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -509,6 +563,7 @@ export class DashboardComponent implements OnInit {
    */
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
+    this.cdr.markForCheck();
   }
 
   /**

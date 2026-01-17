@@ -1,0 +1,124 @@
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <h1>📊 Admin Dashboard</h1>
+    <p>System Overview & Management</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && stats" class="dashboard-content">
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <!-- Users Card -->
+      <div class="stat-card" (click)="navigateToUsers()">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+          <h3>Total Users</h3>
+          <p class="stat-number">{{ stats.users.total }}</p>
+          <div class="stat-breakdown">
+            <span>Landlords: {{ getRoleCount('landlord') }}</span>
+            <span>Tenants: {{ getRoleCount('tenant') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Properties Card -->
+      <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-content">
+          <h3>Total Properties</h3>
+          <p class="stat-number">{{ stats.properties.total }}</p>
+          <div class="stat-breakdown">
+            <span>Active: {{ getStatusCount('properties', 'active') }}</span>
+            <span>Pending: {{ getStatusCount('properties', 'pending') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Review -->
+      <div class="stat-card alert" (click)="navigateToModeration()">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-content">
+          <h3>Pending Review</h3>
+          <p class="stat-number">{{ stats.properties.pending_review }}</p>
+          <p class="stat-label">Properties need moderation</p>
+        </div>
+      </div>
+
+      <!-- Bookings Card -->
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-content">
+          <h3>Total Bookings</h3>
+          <p class="stat-number">{{ stats.bookings.total }}</p>
+          <div class="stat-breakdown">
+            <span>Confirmed: {{ getStatusCount('bookings', 'confirmed') }}</span>
+            <span>Pending: {{ getStatusCount('bookings', 'pending') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="actions-grid">
+        <button class="action-btn" (click)="navigateToUsers()">
+          👥 Manage Users
+        </button>
+        <button class="action-btn" (click)="navigateToModeration()">
+          ✅ Review Properties
+        </button>
+        <button class="action-btn" (click)="loadDashboard()">
+          🔄 Refresh Data
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div *ngIf="recentActivity" class="recent-activity">
+      <h2>Recent Activity</h2>
+      
+      <div class="activity-section">
+        <h3>New Users</h3>
+        <div class="activity-list">
+          <div *ngFor="let user of recentActivity.recent_users.slice(0, 5)" class="activity-item">
+            <span class="activity-icon">👤</span>
+            <div class="activity-content">
+              <strong>{{ user.email }}</strong>
+              <span class="activity-badge">{{ user.role }}</span>
+              <span class="activity-time">{{ user.created_at | date:'short' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-section">
+        <h3>Recent Properties</h3>
+        <div class="activity-list">
+          <div *ngFor="let prop of recentActivity.recent_properties.slice(0, 5)" class="activity-item">
+            <span class="activity-icon">🏠</span>
+            <div class="activity-content">
+              <strong>{{ prop.title }}</strong>
+              <span>{{ prop.city }} - KES {{ prop.price | number }}</span>
+              <span class="status-badge" [ngClass]="prop.moderation_status">
+                {{ prop.moderation_status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,14 +1,15 @@
-// src/app/tenant/favourites/favourites.component.ts
+// src/app/tenant/favourites/favourites.component.ts (FIXED)
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FavouriteService, Favourite } from '../../services/favourite.service';
 
 @Component({
   selector: 'app-favourites',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  changeDetection: ChangeDetectionStrategy.OnPush, // Added OnPush strategy
   template: `
     <div class="favourites-container">
       <div class="favourites-header">
@@ -19,7 +20,8 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
         <button 
           *ngIf="favourites.length > 0"
           (click)="clearAll()" 
-          class="clear-all-btn">
+          class="clear-all-btn"
+          type="button">
           <i class="fas fa-trash"></i> Clear All
         </button>
       </div>
@@ -35,7 +37,10 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
         <i class="far fa-heart"></i>
         <h3>No Saved Properties</h3>
         <p>Properties you save will appear here</p>
-        <button routerLink="/tenant/dashboard" class="browse-btn">
+        <button 
+          (click)="navigateToDashboard($event)" 
+          class="browse-btn"
+          type="button">
           <i class="fas fa-search"></i> Browse Properties
         </button>
       </div>
@@ -51,8 +56,10 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
             <button 
               class="remove-btn" 
               (click)="removeFavourite(favourite.property._id || '', $event)"
-              [disabled]="removing.has(favourite.property._id || '')">
-              <i class="fas fa-times"></i>
+              [disabled]="removing.has(favourite.property._id || '')"
+              type="button">
+              <i *ngIf="!removing.has(favourite.property._id || '')" class="fas fa-times"></i>
+              <i *ngIf="removing.has(favourite.property._id || '')" class="fas fa-spinner fa-spin"></i>
             </button>
           </div>
 
@@ -78,7 +85,8 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
               <div class="price">{{ formatPrice(favourite.property.price) }}<span>/month</span></div>
               <button 
                 class="view-btn" 
-                [routerLink]="['/tenant/property', favourite.property._id]">
+                (click)="viewPropertyDetails(favourite.property._id, $event)"
+                type="button">
                 View Details
               </button>
             </div>
@@ -90,7 +98,8 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
       <div *ngIf="!isLoading && favourites.length > 0 && totalPages > 1" class="pagination">
         <button
           [disabled]="currentPage === 1"
-          (click)="previousPage()">
+          (click)="previousPage()"
+          type="button">
           <i class="fas fa-chevron-left"></i> Previous
         </button>
 
@@ -98,14 +107,16 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
           <button
             *ngFor="let page of getPageNumbers()"
             [class.active]="page === currentPage"
-            (click)="goToPage(page)">
+            (click)="goToPage(page)"
+            type="button">
             {{ page }}
           </button>
         </div>
 
         <button
           [disabled]="currentPage === totalPages"
-          (click)="nextPage()">
+          (click)="nextPage()"
+          type="button">
           Next <i class="fas fa-chevron-right"></i>
         </button>
       </div>
@@ -148,13 +159,33 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
       transition: all 0.3s ease;
     }
 
-    .clear-all-btn:hover {
+    .clear-all-btn:hover:not(:disabled) {
       background: #c0392b;
+    }
+
+    .clear-all-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .loading-container, .empty-state {
       text-align: center;
       padding: 60px 20px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #6c5ce7;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .empty-state i {
@@ -233,11 +264,19 @@ import { FavouriteService, Favourite } from '../../services/favourite.service';
       height: 36px;
       cursor: pointer;
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .remove-btn:hover {
+    .remove-btn:hover:not(:disabled) {
       background: #c0392b;
       transform: scale(1.1);
+    }
+
+    .remove-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
 
     .property-info {
@@ -355,8 +394,15 @@ export class FavouritesComponent implements OnInit {
   totalPages: number = 0;
   isLoading: boolean = false;
   removing: Set<string> = new Set();
+  
+  // Prevent double navigation
+  private isNavigating = false;
 
-  constructor(private favouriteService: FavouriteService) {}
+  constructor(
+    private favouriteService: FavouriteService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadFavourites();
@@ -364,34 +410,42 @@ export class FavouritesComponent implements OnInit {
 
   loadFavourites(): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
+
     this.favouriteService.getFavourites(this.currentPage, this.perPage).subscribe({
       next: (response) => {
         this.favourites = response.favourites;
         this.totalFavourites = response.total;
         this.totalPages = response.total_pages;
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading favourites:', error);
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
 
   removeFavourite(propertyId: string, event: Event): void {
     event.stopPropagation();
+    event.preventDefault();
     
     if (confirm('Remove this property from your favourites?')) {
       this.removing.add(propertyId);
+      this.cdr.markForCheck();
       
       this.favouriteService.removeFromFavourites(propertyId).subscribe({
         next: () => {
           this.removing.delete(propertyId);
           this.loadFavourites(); // Reload list
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Error removing favourite:', error);
           this.removing.delete(propertyId);
+          this.cdr.markForCheck();
           alert('Failed to remove favourite');
         }
       });
@@ -401,6 +455,7 @@ export class FavouritesComponent implements OnInit {
   clearAll(): void {
     if (confirm('Are you sure you want to clear all saved properties?')) {
       this.isLoading = true;
+      this.cdr.markForCheck();
       
       this.favouriteService.clearAllFavourites().subscribe({
         next: () => {
@@ -409,10 +464,65 @@ export class FavouritesComponent implements OnInit {
         error: (error) => {
           console.error('Error clearing favourites:', error);
           this.isLoading = false;
+          this.cdr.markForCheck();
           alert('Failed to clear favourites');
         }
       });
     }
+  }
+
+  /**
+   * Navigate to property details with double-click prevention
+   */
+  viewPropertyDetails(propertyId: string | undefined, event?: MouseEvent): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (!propertyId) {
+      console.error('No property ID provided');
+      return;
+    }
+
+    if (this.isNavigating) {
+      console.log('⚠️ Navigation already in progress');
+      return;
+    }
+
+    console.log('🔵 Viewing property:', propertyId);
+    this.isNavigating = true;
+
+    this.router.navigate(['/tenant/property', propertyId]).then(success => {
+      if (success) {
+        console.log('✅ Navigation successful');
+      } else {
+        console.log('❌ Navigation failed');
+      }
+    }).finally(() => {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 500);
+    });
+  }
+
+  /**
+   * Navigate to dashboard with double-click prevention
+   */
+  navigateToDashboard(event?: MouseEvent): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (this.isNavigating) return;
+
+    this.isNavigating = true;
+    this.router.navigate(['/tenant/dashboard']).finally(() => {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 500);
+    });
   }
 
   goToPage(page: number): void {

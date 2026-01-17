@@ -1,5 +1,5 @@
-// src/app/tenant/tenant-bookings/tenant-bookings.component.ts
-import { Component, OnInit } from '@angular/core';
+// src/app/tenant/tenant-bookings/tenant-bookings.component.ts (FIXED)
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,7 +11,8 @@ import { Booking, BookingFilters } from '../../services/booking.interface';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './bookings.component.html',
-  styleUrls: ['./bookings.component.css']
+  styleUrls: ['./bookings.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush // Added OnPush strategy
 })
 export class TenantBookingsComponent implements OnInit {
   bookings: Booking[] = [];
@@ -49,9 +50,13 @@ export class TenantBookingsComponent implements OnInit {
     message: ''
   };
 
+  // Prevent double navigation
+  private isNavigating = false;
+
   constructor(
     private bookingService: BookingService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef // Added ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -63,6 +68,7 @@ export class TenantBookingsComponent implements OnInit {
   loadBookings(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     const filters: BookingFilters = {
       page: this.currentPage,
@@ -81,11 +87,13 @@ export class TenantBookingsComponent implements OnInit {
         this.totalBookings = response.total;
         this.totalPages = response.total_pages;
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading bookings:', error);
         this.errorMessage = error.error?.error || 'Failed to load bookings';
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -94,6 +102,7 @@ export class TenantBookingsComponent implements OnInit {
     this.bookingService.getTenantStatistics().subscribe({
       next: (stats) => {
         this.statistics = stats;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading statistics:', error);
@@ -105,6 +114,7 @@ export class TenantBookingsComponent implements OnInit {
     this.bookingService.getTenantUpcomingBookings().subscribe({
       next: (response) => {
         this.upcomingBookings = response.bookings;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading upcoming bookings:', error);
@@ -130,6 +140,7 @@ export class TenantBookingsComponent implements OnInit {
     this.selectedBooking = booking;
     this.cancellationReason = '';
     this.showCancelModal = true;
+    this.cdr.markForCheck();
   }
 
   cancelBooking(): void {
@@ -144,11 +155,19 @@ export class TenantBookingsComponent implements OnInit {
         this.closeModals();
         this.loadBookings();
         this.loadUpcomingBookings();
-        setTimeout(() => this.successMessage = '', 3000);
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.successMessage = '';
+          this.cdr.markForCheck();
+        }, 3000);
       },
       error: (error) => {
         this.errorMessage = error.error?.error || 'Failed to cancel booking';
-        setTimeout(() => this.errorMessage = '', 3000);
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.errorMessage = '';
+          this.cdr.markForCheck();
+        }, 3000);
       }
     });
   }
@@ -161,6 +180,7 @@ export class TenantBookingsComponent implements OnInit {
       message: booking.message || ''
     };
     this.showUpdateModal = true;
+    this.cdr.markForCheck();
   }
 
   updateBooking(): void {
@@ -186,11 +206,19 @@ export class TenantBookingsComponent implements OnInit {
         this.successMessage = 'Booking updated successfully';
         this.closeModals();
         this.loadBookings();
-        setTimeout(() => this.successMessage = '', 3000);
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.successMessage = '';
+          this.cdr.markForCheck();
+        }, 3000);
       },
       error: (error) => {
         this.errorMessage = error.error?.error || 'Failed to update booking';
-        setTimeout(() => this.errorMessage = '', 3000);
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.errorMessage = '';
+          this.cdr.markForCheck();
+        }, 3000);
       }
     });
   }
@@ -200,14 +228,67 @@ export class TenantBookingsComponent implements OnInit {
     this.showUpdateModal = false;
     this.selectedBooking = null;
     this.cancellationReason = '';
+    this.cdr.markForCheck();
   }
 
-  viewBookingDetails(bookingId: string): void {
-    this.router.navigate(['/tenant/bookings', bookingId]);
+  /**
+   * View booking details with navigation guard
+   */
+  viewBookingDetails(bookingId: string, event?: MouseEvent): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (this.isNavigating) {
+      console.log('⚠️ Navigation already in progress');
+      return;
+    }
+
+    console.log('🔵 Viewing booking:', bookingId);
+    this.isNavigating = true;
+
+    this.router.navigate(['/tenant/bookings', bookingId]).then(success => {
+      if (success) {
+        console.log('✅ Navigation successful');
+      } else {
+        console.log('❌ Navigation failed');
+      }
+    }).finally(() => {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 500);
+    });
   }
 
-  viewProperty(propertyId: string): void {
-    this.router.navigate(['/properties', propertyId]);
+  /**
+   * View property with navigation guard
+   */
+  viewProperty(propertyId: string, event?: MouseEvent): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (this.isNavigating) {
+      console.log('⚠️ Navigation already in progress');
+      return;
+    }
+
+    console.log('🔵 Viewing property:', propertyId);
+    this.isNavigating = true;
+
+    this.router.navigate(['/properties', propertyId]).then(success => {
+      if (success) {
+        console.log('✅ Navigation successful');
+      } else {
+        console.log('❌ Navigation failed');
+      }
+    }).finally(() => {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 500);
+    });
   }
 
   goToPage(page: number): void {
@@ -245,8 +326,51 @@ export class TenantBookingsComponent implements OnInit {
     return this.bookingService.formatTime(timeString);
   }
 
-  getImageUrl(images?: string[]): string {
-    return images && images.length > 0 ? images[0] : '/assets/placeholder.jpg';
+  /**
+   * Get image URL with proper backend path
+   */
+  getImageUrl(booking: Booking): string {
+    // Check if property_details exists and has images
+    if (booking.property_details?.images && booking.property_details.images.length > 0) {
+      const imagePath = booking.property_details.images[0];
+      return this.constructImageUrl(imagePath);
+    }
+    
+    return '/assets/placeholder.jpg';
+  }
+
+  private constructImageUrl(imagePath: string): string {
+    if (!imagePath) {
+      return '/assets/placeholder.jpg';
+    }
+
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // CHANGE THIS TO YOUR ACTUAL BACKEND URL
+    const backendUrl = 'http://localhost:3000'; // Adjust to your backend port
+    
+    // If it's a relative path starting with 'uploads/', prepend backend URL
+    if (imagePath.startsWith('uploads/')) {
+      return `${backendUrl}/${imagePath}`;
+    }
+    
+    // If it starts with /, it's an absolute path
+    if (imagePath.startsWith('/')) {
+      return `${backendUrl}${imagePath}`;
+    }
+    
+    // Otherwise, assume it's in uploads/images/
+    return `${backendUrl}/uploads/images/${imagePath}`;
+  }
+
+  /**
+   * Handle image error
+   */
+  handleImageError(event: any): void {
+    event.target.src = '/assets/placeholder.jpg';
   }
 
   canUpdate(booking: Booking): boolean {

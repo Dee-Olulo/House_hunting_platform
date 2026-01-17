@@ -79,7 +79,7 @@
     <div class="bookings-list" *ngIf="!isLoading">
       <div class="booking-card" *ngFor="let booking of filteredBookings">
         <div class="booking-image">
-          <img [src]="getImageUrl(booking.property_details?.images)" [alt]="booking.property_details?.title">
+          <img [src]="getImageUrl(booking)" [alt]="booking.property_details?.title">
           <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
             {{ getStatusText(booking.status) }}
           </span>

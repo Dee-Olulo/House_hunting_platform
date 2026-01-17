@@ -1,0 +1,230 @@
+<!-- moderation-queue.component.html -->
+<div class="moderation-queue">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>✅ Property Moderation Queue</h1>
+      <p>Review and approve properties pending moderation</p>
+    </div>
+    <button class="back-btn" (click)="router.navigate(['/admin/dashboard'])">
+      ← Back to Dashboard
+    </button>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="success-alert">
+    ✅ {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="error-alert">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- Filters & Stats -->
+  <div class="filters-section">
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-label">Pending Review:</span>
+        <span class="stat-value">{{ totalProperties }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Current Page:</span>
+        <span class="stat-value">{{ currentPage }} / {{ totalPages }}</span>
+      </div>
+    </div>
+
+    <div class="filter-controls">
+      <select [(ngModel)]="sortBy" (change)="onSortChange()" class="filter-select">
+        <option value="score_low">Lowest Score First</option>
+        <option value="score_high">Highest Score First</option>
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+
+      <button class="refresh-btn" (click)="loadQueue()">
+        🔄 Refresh Queue
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading properties...</p>
+  </div>
+
+  <!-- Properties Grid -->
+  <div *ngIf="!isLoading && properties.length > 0" class="properties-grid">
+    <div *ngFor="let property of properties" class="property-card">
+      <!-- Property Image -->
+      <div class="property-image">
+        <img
+          [src]="getImageUrl(property.images[0])"
+          [alt]="property.title"
+          onerror="this.src='/assets/placeholder-property.jpg'"
+        />
+        <div class="moderation-score" [ngClass]="getScoreBadgeClass(property.moderation_score)">
+          Score: {{ (property.moderation_score * 100).toFixed(0) }}%
+        </div>
+      </div>
+
+      <!-- Property Info -->
+      <div class="property-info">
+        <h3 class="property-title">{{ property.title }}</h3>
+        <p class="property-location">📍 {{ property.city }}</p>
+        <p class="property-price">KES {{ property.price | number }}</p>
+        <p class="property-description">
+          {{ truncateText(property.description, 100) }}
+        </p>
+
+        <!-- Landlord Info -->
+        <div class="landlord-info">
+          <span class="landlord-label">Landlord:</span>
+          <span class="landlord-email">{{ property.landlord_info.email }}</span>
+        </div>
+
+        <!-- Moderation Issues -->
+        <div *ngIf="property.moderation_issues.length > 0" class="issues-section">
+          <h4>⚠️ Flagged Issues:</h4>
+          <ul class="issues-list">
+            <li *ngFor="let issue of property.moderation_issues">{{ issue }}</li>
+          </ul>
+        </div>
+
+        <!-- Property Stats -->
+        <div class="property-stats">
+          <span class="stat">
+            🖼️ {{ property.images.length }} images
+          </span>
+          <span class="stat">
+            📅 {{ property.created_at | date:'MMM d, y' }}
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div class="card-actions">
+          <button class="approve-btn" (click)="openApproveModal(property)">
+            ✅ Approve
+          </button>
+          <button class="reject-btn" (click)="openRejectModal(property)">
+            ❌ Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Properties -->
+  <div *ngIf="!isLoading && properties.length === 0" class="no-properties">
+    <div class="empty-state">
+      <div class="empty-icon">✨</div>
+      <h2>All Clear!</h2>
+      <p>No properties pending review at the moment.</p>
+      <button class="refresh-btn" (click)="loadQueue()">
+        🔄 Check Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && properties.length > 0" class="pagination">
+    <button
+      class="page-btn"
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+    >
+      ← Previous
+    </button>
+    <span class="page-info">
+      Page {{ currentPage }} of {{ totalPages }}
+    </span>
+    <button
+      class="page-btn"
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+    >
+      Next →
+    </button>
+  </div>
+
+  <!-- Approve Modal -->
+  <div *ngIf="showApproveModal" class="modal-overlay" (click)="closeApproveModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>✅ Approve Property</h2>
+      
+      <div class="modal-property-info">
+        <img
+          [src]="getImageUrl(selectedProperty!.images[0])"
+          [alt]="selectedProperty!.title"
+          class="modal-image"
+        />
+        <h3>{{ selectedProperty?.title }}</h3>
+        <p class="modal-location">📍 {{ selectedProperty?.city }}</p>
+        <p class="modal-price">KES {{ selectedProperty?.price | number }}</p>
+      </div>
+
+      <div class="form-group">
+        <label>Approval Notes (Optional)</label>
+        <textarea
+          [(ngModel)]="approvalNotes"
+          placeholder="Add any notes about the approval..."
+          rows="3"
+          class="modal-textarea"
+        ></textarea>
+      </div>
+
+      <div class="modal-info">
+        <p>✅ This property will be marked as approved and become visible to tenants.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeApproveModal()">Cancel</button>
+        <button class="confirm-btn approve" (click)="confirmApprove()">
+          Approve Property
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Modal -->
+  <div *ngIf="showRejectModal" class="modal-overlay" (click)="closeRejectModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>❌ Reject Property</h2>
+      
+      <div class="modal-property-info">
+        <img
+          [src]="getImageUrl(selectedProperty!.images[0])"
+          [alt]="selectedProperty!.title"
+          class="modal-image"
+        />
+        <h3>{{ selectedProperty?.title }}</h3>
+        <p class="modal-location">📍 {{ selectedProperty?.city }}</p>
+      </div>
+
+      <div class="form-group">
+        <label>Rejection Reason *</label>
+        <textarea
+          [(ngModel)]="rejectionReason"
+          placeholder="Explain why this property is being rejected..."
+          rows="4"
+          class="modal-textarea"
+          required
+        ></textarea>
+      </div>
+
+      <div class="modal-warning">
+        <p>⚠️ The landlord will be notified of this rejection and the reason provided.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closeRejectModal()">Cancel</button>
+        <button
+          class="confirm-btn reject"
+          (click)="confirmReject()"
+          [disabled]="!rejectionReason.trim()"
+        >
+          Reject Property
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
