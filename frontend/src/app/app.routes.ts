@@ -200,6 +200,11 @@ export const routes: Routes = [
           .then(m => m.ModerationQueueComponent)
       },
       {
+        path: 'analytics',
+        loadComponent: () => import('./admin/analytics-dashboard/analytics-dashboard')
+          .then(m => m.AnalyticsDashboardComponent)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

@@ -89,6 +89,14 @@
           </a>
         </li>
       </ng-container>
+      <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
+        <li>
+          <a routerLink="/admin/analytics" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Analytics</span>
+          </a>
+        </li>
+      </ng-container>
 
       <!-- Notification Bell - Shows for landlord and tenant -->
       <li *ngIf="isLoggedIn && (userRole === 'landlord' || userRole === 'tenant')" class="notification-item">
