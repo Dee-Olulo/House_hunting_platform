@@ -1,0 +1,348 @@
+<!-- notification-management.component.html -->
+<div class="notification-management">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>🔔 Notification Management</h1>
+      <p>Send broadcasts, campaigns, and manage notification templates</p>
+    </div>
+    <button class="back-btn" (click)="router.navigate(['/admin/dashboard'])">
+      ← Back to Dashboard
+    </button>
+  </div>
+
+  <!-- Stats Overview -->
+  <div *ngIf="stats" class="stats-overview">
+    <div class="stat-card">
+      <div class="stat-icon">📨</div>
+      <div class="stat-content">
+        <h3>Total Sent</h3>
+        <p class="stat-number">{{ stats.total_notifications }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📢</div>
+      <div class="stat-content">
+        <h3>Broadcasts</h3>
+        <p class="stat-number">{{ stats.total_broadcasts }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-content">
+        <h3>Campaigns</h3>
+        <p class="stat-number">{{ stats.total_campaigns }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏰</div>
+      <div class="stat-content">
+        <h3>Scheduled</h3>
+        <p class="stat-number">{{ stats.scheduled_pending }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="success-alert">
+    ✅ {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="error-alert">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button class="tab-btn" [class.active]="activeTab === 'broadcast'" (click)="setActiveTab('broadcast')">
+      📢 Broadcast
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'campaign'" (click)="setActiveTab('campaign')">
+      🎯 Campaign
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'templates'" (click)="setActiveTab('templates')">
+      📝 Templates
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'schedule'" (click)="setActiveTab('schedule')">
+      ⏰ Schedule
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'history'" (click)="setActiveTab('history')">
+      📋 History
+    </button>
+  </div>
+
+  <!-- BROADCAST TAB -->
+  <div *ngIf="activeTab === 'broadcast'" class="tab-content">
+    <div class="content-card">
+      <h2>📢 Send Broadcast Message</h2>
+      <p class="subtitle">Send a notification to all users or specific groups</p>
+
+      <form class="notification-form">
+        <div class="form-group">
+          <label>Target Audience *</label>
+          <select [(ngModel)]="targetAudience" name="targetAudience" class="form-control">
+            <option value="all">All Users</option>
+            <option value="landlords">Landlords Only</option>
+            <option value="tenants">Tenants Only</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Notification Type *</label>
+          <select [(ngModel)]="notificationType" name="notificationType" class="form-control">
+            <option value="system_announcement">System Announcement</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="update">Platform Update</option>
+            <option value="promotion">Promotion</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" [(ngModel)]="broadcastTitle" name="broadcastTitle" 
+                 placeholder="e.g., System Maintenance" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea [(ngModel)]="broadcastMessage" name="broadcastMessage" 
+                    placeholder="Enter your message here..." rows="5" class="form-control"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Link (Optional)</label>
+          <input type="text" [(ngModel)]="broadcastLink" name="broadcastLink" 
+                 placeholder="/announcements/123" class="form-control" />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="clearBroadcastForm()">Clear</button>
+          <button type="button" class="btn-primary" (click)="sendBroadcast()" [disabled]="isLoading">
+            {{ isLoading ? 'Sending...' : '📢 Send Broadcast' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CAMPAIGN TAB -->
+  <div *ngIf="activeTab === 'campaign'" class="tab-content">
+    <div class="content-card">
+      <h2>🎯 Send Targeted Campaign</h2>
+      <p class="subtitle">Send notifications to users matching specific criteria</p>
+
+      <form class="notification-form">
+        <div class="form-group">
+          <label>Target Role *</label>
+          <select [(ngModel)]="campaignRole" name="campaignRole" class="form-control">
+            <option value="landlord">Landlords</option>
+            <option value="tenant">Tenants</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Inactive Days</label>
+            <input type="number" [(ngModel)]="inactiveDays" name="inactiveDays" 
+                   class="form-control" min="0" />
+            <small>Target users inactive for this many days</small>
+          </div>
+
+          <div class="form-group">
+            <label>Property Status</label>
+            <select [(ngModel)]="propertyStatus" name="propertyStatus" class="form-control">
+              <option value="inactive">Inactive</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" [(ngModel)]="campaignTitle" name="campaignTitle" 
+                 placeholder="e.g., Reactivate Your Properties" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea [(ngModel)]="campaignMessage" name="campaignMessage" 
+                    placeholder="Your personalized campaign message..." rows="5" class="form-control"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="clearCampaignForm()">Clear</button>
+          <button type="button" class="btn-primary" (click)="sendCampaign()" [disabled]="isLoading">
+            {{ isLoading ? 'Sending...' : '🎯 Send Campaign' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TEMPLATES TAB -->
+  <div *ngIf="activeTab === 'templates'" class="tab-content">
+    <div class="content-card">
+      <div class="card-header">
+        <h2>📝 Notification Templates</h2>
+        <button class="btn-primary" (click)="openTemplateModal()">+ Create Template</button>
+      </div>
+
+      <div class="templates-grid">
+        <div *ngFor="let template of templates" class="template-card">
+          <div class="template-header">
+            <h3>{{ template.name }}</h3>
+            <span class="template-type">{{ template.notification_type }}</span>
+          </div>
+          <div class="template-body">
+            <p class="template-title">{{ template.title }}</p>
+            <p class="template-message">{{ template.message }}</p>
+          </div>
+          <div class="template-footer">
+            <button class="btn-edit" (click)="openTemplateModal(template)">✏️ Edit</button>
+            <button class="btn-delete" (click)="deleteTemplate(template._id!)">🗑️ Delete</button>
+          </div>
+        </div>
+
+        <div *ngIf="templates.length === 0" class="empty-templates">
+          <p>No templates yet. Create your first template!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE TAB -->
+  <div *ngIf="activeTab === 'schedule'" class="tab-content">
+    <div class="content-card">
+      <h2>⏰ Schedule Notification</h2>
+      <p class="subtitle">Schedule a notification for future delivery</p>
+
+      <form class="notification-form">
+        <div class="form-group">
+          <label>Target Audience *</label>
+          <select [(ngModel)]="scheduleAudience" name="scheduleAudience" class="form-control">
+            <option value="all">All Users</option>
+            <option value="landlords">Landlords Only</option>
+            <option value="tenants">Tenants Only</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" [(ngModel)]="scheduleDate" name="scheduleDate" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Time *</label>
+            <input type="time" [(ngModel)]="scheduleTime" name="scheduleTime" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" [(ngModel)]="scheduleTitle" name="scheduleTitle" 
+                 placeholder="Notification title" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea [(ngModel)]="scheduleMessage" name="scheduleMessage" 
+                    placeholder="Notification message..." rows="4" class="form-control"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="clearScheduleForm()">Clear</button>
+          <button type="button" class="btn-primary" (click)="scheduleNotification()">
+            ⏰ Schedule Notification
+          </button>
+        </div>
+      </form>
+
+      <!-- Scheduled List -->
+      <div class="scheduled-list" *ngIf="scheduledNotifications.length > 0">
+        <h3>Pending Scheduled Notifications</h3>
+        <div *ngFor="let item of scheduledNotifications" class="scheduled-item">
+          <div class="scheduled-info">
+            <h4>{{ item.title }}</h4>
+            <p>{{ item.message }}</p>
+            <span class="scheduled-time">📅 {{ formatDate(item.scheduled_for) }}</span>
+          </div>
+          <button class="btn-cancel" (click)="cancelScheduled(item._id)">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div *ngIf="activeTab === 'history'" class="tab-content">
+    <div class="content-card">
+      <h2>📋 Broadcast & Campaign History</h2>
+
+      <div class="history-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Target</th>
+              <th>Recipients</th>
+              <th>Sent At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of history">
+              <td>{{ item.title }}</td>
+              <td>{{ item.target_audience }}</td>
+              <td>{{ item.recipients_count }}</td>
+              <td>{{ formatDate(item.sent_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="history.length === 0" class="empty-history">
+          <p>No broadcast history yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPLATE MODAL -->
+  <div *ngIf="showTemplateModal" class="modal-overlay" (click)="closeTemplateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>{{ editingTemplate ? 'Edit' : 'Create' }} Template</h2>
+
+      <form class="modal-form">
+        <div class="form-group">
+          <label>Template Name *</label>
+          <input type="text" [(ngModel)]="templateForm.name" name="templateName" 
+                 placeholder="e.g., Welcome Email" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Notification Type *</label>
+          <select [(ngModel)]="templateForm.notification_type" name="templateType" class="form-control">
+            <option value="welcome">Welcome</option>
+            <option value="reminder">Reminder</option>
+            <option value="update">Update</option>
+            <option value="promotion">Promotion</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" [(ngModel)]="templateForm.title" name="templateTitle" 
+                  class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea [(ngModel)]="templateForm.message" name="templateMessage" rows="5" class="form-control"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeTemplateModal()">Cancel</button>
+          <button type="button" class="btn-primary" (click)="saveTemplate()">
+            {{ editingTemplate ? 'Update' : 'Create' }} Template
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

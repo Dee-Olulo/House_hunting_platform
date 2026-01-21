@@ -96,10 +96,20 @@
             <span class="nav-text">Analytics</span>
           </a>
         </li>
+       </ng-container>
+      <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
         <li>
           <a routerLink="/admin/financial" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">💵</span>
             <span class="nav-text">Financials</span>
+          </a>
+        </li>
+      </ng-container>
+      <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
+        <li>
+          <a routerLink="/admin/notifications" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">🔔</span>
+            <span class="nav-text">Notifications</span>
           </a>
         </li>
       </ng-container>

@@ -218,6 +218,11 @@ export const routes: Routes = [
           .then(m => m.FinancialDashboardComponent)
       },
       {
+        path:'notifications',
+        loadComponent:() => import('./admin/notification-management/notification-management')
+          .then(m => m.NotificationManagementComponent)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

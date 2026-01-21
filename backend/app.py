@@ -17,6 +17,8 @@ from routes.analytics_routes import analytics_bp
 from routes.subscription_routes import subscription_bp
 from routes.financial_routes import financial_bp
 from routes.mpesa_routes import mpesa_bp
+from routes.admin_notification_routes import  admin_notification_bp  
+ 
 
 def create_app():
     app = Flask(__name__)
@@ -66,6 +68,7 @@ def create_app():
     app.register_blueprint(analytics_bp, url_prefix="/analytics")
     app.register_blueprint(subscription_bp, url_prefix="/subscription")
     app.register_blueprint(financial_bp, url_prefix="/financial")
+    app.register_blueprint(admin_notification_bp, url_prefix="/admin/notifications")
     # Health check endpoint
     @app.route("/health", methods=["GET"])
     def health_check():
