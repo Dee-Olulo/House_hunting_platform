@@ -1,0 +1,447 @@
+<!-- financial-dashboard.component.html -->
+<div class="financial-dashboard">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>💰 Financial Management</h1>
+      <p>Revenue tracking, subscriptions, and financial reports</p>
+    </div>
+    <div class="header-actions">
+      <button class="back-btn" (click)="router.navigate(['/admin/dashboard'])">
+        ← Back
+      </button>
+      <button class="export-btn" (click)="exportOverview()">
+        📥 Export Overview
+      </button>
+    </div>
+  </div>
+
+  <!-- Period Selector -->
+  <div class="period-selector">
+    <label>Analysis Period:</label>
+    <select [(ngModel)]="selectedPeriod" (change)="onPeriodChange()" class="period-select">
+      <option [value]="7">Last 7 Days</option>
+      <option [value]="30">Last 30 Days</option>
+      <option [value]="90">Last 90 Days</option>
+      <option [value]="365">Last Year</option>
+    </select>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="success-alert">
+    ✅ {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="error-alert">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading financial data...</p>
+  </div>
+
+  <!-- Financial Content -->
+  <div *ngIf="!isLoading && financialOverview" class="financial-content">
+    
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'overview'"
+        (click)="setActiveTab('overview')"
+      >
+        💰 Revenue Overview
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'subscriptions'"
+        (click)="setActiveTab('subscriptions')"
+      >
+        💎 Subscriptions
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'transactions'"
+        (click)="setActiveTab('transactions')"
+      >
+        📋 Transactions
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'reports'"
+        (click)="setActiveTab('reports')"
+      >
+        📊 Reports
+      </button>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content">
+      
+      <!-- Revenue Cards -->
+      <div class="revenue-cards">
+        <div class="revenue-card total">
+          <div class="card-icon">💰</div>
+          <div class="card-content">
+            <h3>Total Revenue</h3>
+            <p class="revenue-amount">{{ formatCurrency(financialOverview.summary.total_revenue) }}</p>
+            <span class="period-label">Last {{ selectedPeriod }} days</span>
+          </div>
+        </div>
+
+        <div class="revenue-card subscription">
+          <div class="card-icon">💎</div>
+          <div class="card-content">
+            <h3>Subscription Revenue</h3>
+            <p class="revenue-amount">{{ formatCurrency(financialOverview.summary.subscription_revenue) }}</p>
+            <span class="period-label">Last {{ selectedPeriod }} days</span>
+          </div>
+        </div>
+
+        <div class="revenue-card commission">
+          <div class="card-icon">📈</div>
+          <div class="card-content">
+            <h3>Commission Revenue</h3>
+            <p class="revenue-amount">{{ formatCurrency(financialOverview.summary.commission_revenue) }}</p>
+            <span class="period-label">Estimated</span>
+          </div>
+        </div>
+
+        <div class="revenue-card mrr">
+          <div class="card-icon">🔄</div>
+          <div class="card-content">
+            <h3>Monthly Recurring Revenue</h3>
+            <p class="revenue-amount">{{ formatCurrency(financialOverview.summary.mrr) }}</p>
+            <span class="period-label">MRR</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Subscriptions -->
+      <div class="section-card">
+        <h2 class="section-title">Active Subscriptions by Tier</h2>
+        <div class="subscription-grid">
+          <div class="subscription-item free">
+            <div class="tier-icon">🆓</div>
+            <div class="tier-info">
+              <h3>Free Plan</h3>
+              <p class="tier-count">{{ financialOverview.active_subscriptions.free }}</p>
+              <span class="tier-label">Active Users</span>
+            </div>
+          </div>
+          <div class="subscription-item basic">
+            <div class="tier-icon">💎</div>
+            <div class="tier-info">
+              <h3>Basic Plan</h3>
+              <p class="tier-count">{{ financialOverview.active_subscriptions.basic }}</p>
+              <span class="tier-label">Subscribers</span>
+            </div>
+          </div>
+          <div class="subscription-item premium">
+            <div class="tier-icon">👑</div>
+            <div class="tier-info">
+              <h3>Premium Plan</h3>
+              <p class="tier-count">{{ financialOverview.active_subscriptions.premium }}</p>
+              <span class="tier-label">Subscribers</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Breakdown Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Subscription Revenue by Tier</h3>
+          <div class="bar-chart">
+            <div *ngFor="let item of financialOverview.subscription_breakdown" class="bar-item">
+              <span class="bar-label">{{ item._id || 'Unknown' }}</span>
+              <div class="bar-container">
+                <div 
+                  class="bar subscription-bar" 
+                  [style.width.%]="getBarWidth(item.revenue, getMaxRevenue(financialOverview.subscription_breakdown))"
+                >
+                  <span class="bar-value">{{ formatCurrency(item.revenue) }} ({{ item.count }})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Commission Revenue by Tier</h3>
+          <div class="bar-chart">
+            <div *ngFor="let item of financialOverview.commission_breakdown" class="bar-item">
+              <span class="bar-label">{{ item.tier }} ({{ item.commission_rate }}%)</span>
+              <div class="bar-container">
+                <div 
+                  class="bar commission-bar" 
+                  [style.width.%]="getBarWidth(item.estimated_revenue, getMaxRevenue(financialOverview.commission_breakdown))"
+                >
+                  <span class="bar-value">{{ formatCurrency(item.estimated_revenue) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Revenue Trend -->
+      <div class="section-card">
+        <h2 class="section-title">Daily Revenue Trend</h2>
+        <div class="line-chart">
+          <div *ngFor="let point of financialOverview.daily_trend" class="chart-point">
+            <div 
+              class="point-bar" 
+              [style.height.%]="getBarWidth(point.revenue, getMaxRevenue(financialOverview.daily_trend))"
+            >
+              <span class="point-value">{{ formatCurrency(point.revenue) }}</span>
+            </div>
+            <span class="point-label">{{ point.date | date:'MMM d' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTIONS TAB -->
+    <div *ngIf="activeTab === 'subscriptions' && subscriptionAnalytics" class="tab-content">
+      
+      <!-- Subscription Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">👥</div>
+          <h4>Total Paid Subscribers</h4>
+          <p class="metric-value">{{ subscriptionAnalytics.total_paid_subscribers }}</p>
+        </div>
+        <div class="metric-card warning">
+          <div class="metric-icon">⚠️</div>
+          <h4>Expiring Soon (7 days)</h4>
+          <p class="metric-value">{{ subscriptionAnalytics.expiring_soon }}</p>
+        </div>
+        <div class="metric-card danger">
+          <div class="metric-icon">📉</div>
+          <h4>Churn Rate</h4>
+          <p class="metric-value">{{ subscriptionAnalytics.churn_rate }}%</p>
+        </div>
+      </div>
+
+      <!-- Tier Distribution -->
+      <div class="section-card">
+        <h2 class="section-title">Subscription Distribution</h2>
+        <div class="tier-distribution">
+          <div *ngFor="let tier of subscriptionAnalytics.tier_distribution" class="distribution-item">
+            <div class="distribution-header">
+              <span class="tier-name">{{ tier._id || 'Unknown' }}</span>
+              <span class="tier-count">{{ tier.count }} landlords</span>
+            </div>
+            <div class="distribution-bar">
+              <div 
+                class="progress-fill" 
+                [style.width.%]="(tier.count / getTierCount('free') + getTierCount('basic') + getTierCount('premium')) * 100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Subscriptions -->
+      <div class="section-card">
+        <h2 class="section-title">New Subscriptions (Last 30 Days)</h2>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>New Subscribers</th>
+                <th>Revenue Generated</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sub of subscriptionAnalytics.new_subscriptions">
+                <td><strong>{{ sub._id }}</strong></td>
+                <td>{{ sub.count }}</td>
+                <td class="revenue-cell">{{ formatCurrency(sub.revenue) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS TAB -->
+    <div *ngIf="activeTab === 'transactions'" class="tab-content">
+      
+      <div class="section-header">
+        <h2 class="section-title">All Transactions</h2>
+        <button class="export-btn" (click)="exportTransactions()">
+          📥 Export CSV
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <select [(ngModel)]="transactionType" (change)="onFilterChange()" class="filter-select">
+          <option value="">All Types</option>
+          <option value="subscription">Subscription</option>
+          <option value="commission">Commission</option>
+        </select>
+
+        <select [(ngModel)]="transactionStatus" (change)="onFilterChange()" class="filter-select">
+          <option value="">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+
+        <div class="transaction-stats">
+          <span>Showing {{ transactions.length }} of {{ totalTransactions }} transactions</span>
+        </div>
+      </div>
+
+      <!-- Transactions Table -->
+      <div class="section-card">
+        <div class="table-container">
+          <table class="data-table transactions-table">
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>Landlord</th>
+                <th>Type</th>
+                <th>Tier</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let txn of transactions">
+                <td class="transaction-id">{{ txn._id.substring(0, 8) }}...</td>
+                <td class="landlord-email">{{ txn.landlord_email }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getTypeBadgeClass(txn.type)">
+                    {{ txn.type }}
+                  </span>
+                </td>
+                <td>{{ txn.tier || 'N/A' }}</td>
+                <td class="amount-cell">{{ formatCurrency(txn.amount) }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(txn.status)">
+                    {{ txn.status }}
+                  </span>
+                </td>
+                <td>{{ txn.created_at | date:'MMM d, y h:mm a' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+            ← Previous
+          </button>
+          <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS TAB -->
+    <div *ngIf="activeTab === 'reports'" class="tab-content">
+      
+      <div class="section-header">
+        <h2 class="section-title">Revenue Reports</h2>
+        <button *ngIf="revenueReport" class="export-btn" (click)="exportReport()">
+          📥 Export Report
+        </button>
+      </div>
+
+      <!-- Date Range Selector -->
+      <div class="date-range-selector">
+        <div class="date-input-group">
+          <label>Start Date:</label>
+          <input type="date" [(ngModel)]="reportStartDate" class="date-input" />
+        </div>
+        <div class="date-input-group">
+          <label>End Date:</label>
+          <input type="date" [(ngModel)]="reportEndDate" class="date-input" />
+        </div>
+        <button class="generate-btn" (click)="generateReport()">
+          📊 Generate Report
+        </button>
+      </div>
+
+      <!-- Report Results -->
+      <div *ngIf="revenueReport" class="report-content">
+        
+        <!-- Summary Cards -->
+        <div class="report-summary">
+          <div class="summary-item">
+            <h4>Total Revenue</h4>
+            <p class="summary-value">{{ formatCurrency(revenueReport.summary.total_revenue) }}</p>
+          </div>
+          <div class="summary-item">
+            <h4>Total Transactions</h4>
+            <p class="summary-value">{{ revenueReport.summary.transaction_count }}</p>
+          </div>
+          <div class="summary-item">
+            <h4>Average Transaction</h4>
+            <p class="summary-value">{{ formatCurrency(revenueReport.summary.average_transaction) }}</p>
+          </div>
+        </div>
+
+        <!-- Revenue by Type -->
+        <div class="section-card">
+          <h3>Revenue Breakdown by Type</h3>
+          <div class="bar-chart">
+            <div *ngFor="let item of revenueReport.revenue_by_type" class="bar-item">
+              <span class="bar-label">{{ item._id }}</span>
+              <div class="bar-container">
+                <div 
+                  class="bar report-bar" 
+                  [style.width.%]="getBarWidth(item.revenue, getMaxRevenue(revenueReport.revenue_by_type))"
+                >
+                  <span class="bar-value">{{ formatCurrency(item.revenue) }} ({{ item.count }} txns)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Landlords -->
+        <div class="section-card">
+          <h3>Top 10 Paying Landlords</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Email</th>
+                  <th>Total Paid</th>
+                  <th>Transactions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let landlord of revenueReport.top_landlords; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td class="landlord-email">{{ landlord.email }}</td>
+                  <td class="amount-cell">{{ formatCurrency(landlord.total_paid) }}</td>
+                  <td>{{ landlord.transaction_count }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Report Message -->
+      <div *ngIf="!revenueReport" class="no-report">
+        <div class="no-report-icon">📊</div>
+        <p>Select a date range and click "Generate Report" to view detailed revenue analysis</p>
+      </div>
+    </div>
+
+  </div>
+</div>

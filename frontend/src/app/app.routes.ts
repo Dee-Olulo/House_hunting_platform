@@ -102,7 +102,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./payments/payment-details/payment-details')
             .then(m => m.PaymentDetailsComponent)
+      },
+    // ? Subscription plan route
+      {
+        path: 'subscription',
+        loadComponent: () =>
+          import('./landlord/subscription-plans/suscription-plans')
+            .then(m => m.SubscriptionPlansComponent)
       }
+
     ]
   },
 
@@ -203,6 +211,11 @@ export const routes: Routes = [
         path: 'analytics',
         loadComponent: () => import('./admin/analytics-dashboard/analytics-dashboard')
           .then(m => m.AnalyticsDashboardComponent)
+      },
+      {
+        path: 'financial',
+        loadComponent: () => import('./admin/financial-dashboard/financial-dashboard')
+          .then(m => m.FinancialDashboardComponent)
       },
       {
         path: '',

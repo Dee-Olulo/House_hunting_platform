@@ -1,0 +1,232 @@
+<!-- subscription-plans.component.html -->
+<div class="subscription-plans">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>💎 Subscription Plans</h1>
+      <p>Choose the perfect plan for your property business</p>
+    </div>
+    <button class="back-btn" (click)="router.navigate(['/landlord/properties'])">
+      ← Back to Properties
+    </button>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="success-alert">
+    ✅ {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="error-alert">
+    ❌ {{ errorMessage }}
+    <button class="close-alert" (click)="errorMessage = ''">✕</button>
+  </div>
+
+  <!-- Current Subscription Info -->
+  <div *ngIf="currentSubscription && !isLoading" class="current-subscription">
+    <div class="current-plan-badge" [ngClass]="getPlanBadgeClass(currentSubscription.subscription.tier)">
+      Current Plan: {{ currentSubscription.subscription.name }}
+    </div>
+    <div class="usage-info">
+      <div class="usage-item">
+        <span>Properties: </span>
+        <strong>{{ currentSubscription.usage.properties_count }} / {{ currentSubscription.usage.properties_limit }}</strong>
+      </div>
+      <div class="usage-item">
+        <span>Commission Rate: </span>
+        <strong>{{ currentSubscription.subscription.commission_rate }}%</strong>
+      </div>
+      <div *ngIf="currentSubscription.subscription.expires_at" class="usage-item">
+        <span>Expires: </span>
+        <strong>{{ currentSubscription.subscription.expires_at | date:'MMM d, y' }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading plans...</p>
+  </div>
+
+  <!-- Plans Grid -->
+  <div *ngIf="!isLoading" class="plans-grid">
+    <div *ngFor="let plan of plans" class="plan-card" [class.featured]="plan.id === 'premium'" [class.current]="isCurrentPlan(plan.id)">
+      
+      <!-- Popular Badge -->
+      <div *ngIf="plan.id === 'basic'" class="popular-badge">
+        🌟 Most Popular
+      </div>
+
+      <!-- Best Value Badge -->
+      <div *ngIf="plan.id === 'premium'" class="best-value-badge">
+        👑 Best Value
+      </div>
+
+      <!-- Current Plan Badge -->
+      <div *ngIf="isCurrentPlan(plan.id)" class="current-badge">
+        ✅ Your Current Plan
+      </div>
+
+      <div class="plan-header">
+        <h2 class="plan-name">{{ plan.name }}</h2>
+        <div class="plan-price">
+          <span class="currency">KES</span>
+          <span class="amount">{{ plan.price | number }}</span>
+          <span *ngIf="plan.price > 0" class="period">/month</span>
+        </div>
+        <p *ngIf="plan.price === 0" class="free-text">Forever Free</p>
+      </div>
+
+      <div class="plan-features">
+        <h3>What's Included</h3>
+        <ul>
+          <li>
+            <span class="check">✓</span>
+            <span>
+              <strong>{{ plan.max_properties === 999 ? 'Unlimited' : plan.max_properties }}</strong> 
+              {{ plan.max_properties === 1 ? 'Property' : 'Properties' }}
+            </span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>
+              <strong>{{ plan.max_photos === 999 ? 'Unlimited' : plan.max_photos }}</strong> Photos
+            </span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>
+              <strong>{{ plan.max_videos === 999 ? 'Unlimited' : plan.max_videos }}</strong> 
+              {{ plan.max_videos === 1 ? 'Video' : 'Videos' }}
+            </span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span><strong>{{ plan.commission_rate }}%</strong> Commission Rate</span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>Listings valid for <strong>{{ plan.listing_duration_days }} days</strong></span>
+          </li>
+          <li [class.disabled]="!plan.priority_search">
+            <span class="check">{{ plan.priority_search ? '✓' : '✕' }}</span>
+            <span>Priority Search Ranking</span>
+          </li>
+          <li [class.disabled]="!plan.featured_placement">
+            <span class="check">{{ plan.featured_placement ? '✓' : '✕' }}</span>
+            <span>Featured Homepage Placement</span>
+          </li>
+          <li [class.disabled]="!plan.analytics">
+            <span class="check">{{ plan.analytics ? '✓' : '✕' }}</span>
+            <span>Advanced Analytics</span>
+          </li>
+          <li>
+            <span class="check">✓</span>
+            <span>{{ plan.support_level === 'community' ? 'Community' : plan.support_level === 'email' ? 'Email' : '24/7 Priority' }} Support</span>
+          </li>
+          <li [class.disabled]="!plan.api_access">
+            <span class="check">{{ plan.api_access ? '✓' : '✕' }}</span>
+            <span>API Access</span>
+          </li>
+          <li *ngIf="plan.dedicated_manager" class="highlight">
+            <span class="check">✓</span>
+            <span>Dedicated Account Manager</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="plan-footer">
+        <button
+          *ngIf="!isCurrentPlan(plan.id) && canSelectPlan(plan.id)"
+          class="select-plan-btn"
+          [class.premium]="plan.id === 'premium'"
+          (click)="selectPlan(plan)"
+        >
+          {{ plan.id === 'premium' ? 'Upgrade to Premium' : plan.id === 'basic' ? 'Upgrade to Basic' : 'Select Plan' }}
+        </button>
+        <button *ngIf="isCurrentPlan(plan.id)" class="current-plan-btn" disabled>
+          Current Plan
+        </button>
+        <button *ngIf="plan.id === 'free' && !isCurrentPlan(plan.id)" class="disabled-btn" disabled>
+          Cannot Downgrade
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Comparison -->
+  <div class="comparison-section">
+    <h2>Need Help Choosing?</h2>
+    <div class="comparison-cards">
+      <div class="comparison-card">
+        <div class="comparison-icon">🏠</div>
+        <h3>Just Starting</h3>
+        <p>Perfect for landlords with 1-2 properties testing the platform</p>
+        <strong>→ Free Plan</strong>
+      </div>
+      <div class="comparison-card featured">
+        <div class="comparison-icon">📈</div>
+        <h3>Growing Business</h3>
+        <p>Best for active landlords with 3-10 properties looking to scale</p>
+        <strong>→ Basic Plan</strong>
+      </div>
+      <div class="comparison-card">
+        <div class="comparison-icon">👑</div>
+        <h3>Professional</h3>
+        <p>Ideal for agencies and landlords with 10+ properties</p>
+        <strong>→ Premium Plan</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div *ngIf="showPaymentModal" class="modal-overlay" (click)="closePaymentModal()">
+    <div class="modal-content payment-modal" (click)="$event.stopPropagation()">
+      <h2>Complete Your Subscription</h2>
+      
+      <div class="selected-plan-info">
+        <h3>{{ selectedPlan?.name }}</h3>
+        <p class="plan-price-large">
+          {{ formatPrice(selectedPlan?.price || 0) }} /month
+        </p>
+      </div>
+
+      <div class="payment-instructions">
+        <h4>Payment Instructions:</h4>
+        <ol>
+          <li>Use M-PESA Paybill or Till Number</li>
+          <li>Enter the amount: <strong>{{ formatPrice(selectedPlan?.price || 0) }}</strong></li>
+          <li>Complete the payment on your phone</li>
+          <li>Click "Confirm Payment" below once done</li>
+        </ol>
+
+        <div class="payment-details">
+          <div class="detail-row">
+            <span>Paybill Number:</span>
+            <strong>123456</strong>
+          </div>
+          <div class="detail-row">
+            <span>Account Number:</span>
+            <strong>{{ pendingPaymentId.substring(0, 8) }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Amount:</span>
+            <strong>{{ formatPrice(selectedPlan?.price || 0) }}</strong>
+          </div>
+        </div>
+
+        <p class="payment-note">
+          💡 <strong>Note:</strong> Your subscription will be activated immediately after payment confirmation.
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closePaymentModal()">
+          Cancel
+        </button>
+        <button class="confirm-payment-btn" (click)="confirmPayment()">
+          ✅ Confirm Payment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
