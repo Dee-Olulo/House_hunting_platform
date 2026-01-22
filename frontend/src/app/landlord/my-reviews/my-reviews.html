@@ -1,0 +1,212 @@
+<!-- src/app/landlord/my-reviews/my-reviews.html -->
+<div class="my-reviews-container">
+  
+  <!-- Header -->
+  <div class="reviews-header">
+    <h1>⭐ My Reviews</h1>
+    <p class="subtitle">Manage and view tenant reviews</p>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    ✅ {{ successMessage }}
+  </div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- Statistics Dashboard -->
+  <div class="stats-dashboard" *ngIf="stats">
+    <div class="stat-card overall">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.average_rating.toFixed(1) }}</div>
+        <div class="stat-label">Average Rating</div>
+        <div class="stat-sublabel">{{ stats.total_reviews }} total reviews</div>
+      </div>
+    </div>
+
+    <div class="stat-card" [ngClass]="getRatingClass(stats.category_ratings.communication)">
+      <div class="stat-icon">💬</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.category_ratings.communication.toFixed(1) }}</div>
+        <div class="stat-label">Communication</div>
+      </div>
+    </div>
+
+    <div class="stat-card" [ngClass]="getRatingClass(stats.category_ratings.responsiveness)">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.category_ratings.responsiveness.toFixed(1) }}</div>
+        <div class="stat-label">Responsiveness</div>
+      </div>
+    </div>
+
+    <div class="stat-card" [ngClass]="getRatingClass(stats.category_ratings.property_accuracy)">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.category_ratings.property_accuracy.toFixed(1) }}</div>
+        <div class="stat-label">Property Accuracy</div>
+      </div>
+    </div>
+
+    <div class="stat-card" [ngClass]="getRatingClass(stats.category_ratings.cleanliness)">
+      <div class="stat-icon">✨</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.category_ratings.cleanliness.toFixed(1) }}</div>
+        <div class="stat-label">Cleanliness</div>
+      </div>
+    </div>
+
+    <div class="stat-card" [ngClass]="getRatingClass(stats.category_ratings.value_for_money)">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.category_ratings.value_for_money.toFixed(1) }}</div>
+        <div class="stat-label">Value for Money</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating Distribution -->
+  <div class="rating-distribution" *ngIf="stats">
+    <h2>📊 Rating Distribution</h2>
+    <div class="distribution-bars">
+      <div *ngFor="let num of [5,4,3,2,1]" class="distribution-row">
+        <span class="rating-label">{{ num }} ⭐</span>
+        <div class="distribution-bar">
+          <div class="bar-fill" [style.width.%]="getDistributionPercentage(num)"></div>
+        </div>
+        <span class="distribution-count">{{ getDistributionCount(num) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <h2>🔍 Filter Reviews</h2>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Rating</label>
+        <select [(ngModel)]="selectedRating" (change)="applyFilters()">
+          <option value="">All Ratings</option>
+          <option value="5">5 Stars</option>
+          <option value="4">4 Stars</option>
+          <option value="3">3 Stars</option>
+          <option value="2">2 Stars</option>
+          <option value="1">1 Star</option>
+        </select>
+      </div>
+
+      <div class="filter-group" *ngIf="properties.length > 0">
+        <label>Property</label>
+        <select [(ngModel)]="selectedProperty" (change)="applyFilters()">
+          <option value="">All Properties</option>
+          <option *ngFor="let property of properties" [value]="property.id">
+            {{ property.title }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Sort By</label>
+        <select [(ngModel)]="sortBy" (change)="applyFilters()">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="highest">Highest Rating</option>
+          <option value="lowest">Lowest Rating</option>
+        </select>
+      </div>
+
+      <button class="btn-clear-filters" (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading reviews...</p>
+  </div>
+
+  <!-- Reviews List -->
+  <div class="reviews-list" *ngIf="!isLoading">
+    <div class="review-card" *ngFor="let review of reviews">
+      
+      <!-- Review Header -->
+      <div class="review-header">
+        <div class="reviewer-info">
+          <div class="reviewer-avatar">{{ getInitials(review.tenant_name) }}</div>
+          <div>
+            <div class="reviewer-name">{{ review.tenant_name }}</div>
+            <div class="review-date">{{ formatRelativeTime(review.created_at) }}</div>
+          </div>
+        </div>
+        
+        <div class="review-rating">
+          <span *ngFor="let star of getStarArray(review.rating)" class="star filled">⭐</span>
+          <span class="rating-number">{{ review.rating.toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <!-- Property Info -->
+      <div class="property-info" *ngIf="review.property_title">
+        <span class="property-badge">🏠 {{ review.property_title }}</span>
+        <span *ngIf="review.is_verified" class="verified-badge">✓ Verified Booking</span>
+      </div>
+
+      <!-- Review Content -->
+      <div class="review-content">
+        <h3 *ngIf="review.title" class="review-title">{{ review.title }}</h3>
+        <p class="review-comment">{{ review.comment }}</p>
+      </div>
+
+      
+
+
+      <!-- Helpful Count -->
+      <div class="review-footer">
+        <span class="helpful-count">👍 {{ review.helpful_count || 0 }} people found this helpful</span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="reviews.length === 0">
+      <div class="empty-icon">📝</div>
+      <h2>No reviews yet</h2>
+      <p>You haven't received any reviews from tenants yet.</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
+    <button (click)="previousPage()" [disabled]="currentPage === 1" class="btn-page">
+      ← Previous
+    </button>
+    <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="btn-page">
+      Next →
+    </button>
+  </div>
+</div>
+
+
+    <div class="modal-body">
+      <!-- Original Review -->
+      <div class="original-review">
+        <h3>Review by {{ selectedReview?.tenant_name }}</h3>
+        <div class="review-rating-modal">
+          <span *ngFor="let star of getStarArray(selectedReview?.rating || 0)" class="star filled">⭐</span>
+          <span class="rating-number">{{ selectedReview?.rating?.toFixed }}</span>
+        </div>
+        <p class="review-comment-modal">{{ selectedReview?.comment }}</p>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-close" (click)="closeResponseModal()">
+        Close
+      </button>
+    </div>
+

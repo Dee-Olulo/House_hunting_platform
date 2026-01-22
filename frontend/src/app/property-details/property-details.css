@@ -878,4 +878,73 @@
   .issues-list {
     padding: 1rem;
   }
+  /* Add these styles to the END of your existing property-details.css file */
+
+/* ===========================================
+   REVIEWS SECTION STYLES
+   =========================================== */
+
+.reviews-section {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.write-review-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.write-review-btn {
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.write-review-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5568d3, #6a3f8f);
+}
+
+.write-review-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments for reviews section */
+@media (max-width: 768px) {
+  .write-review-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 1rem;
+    padding: 14px 24px;
+  }
+  
+  .reviews-section {
+    margin-top: 30px;
+    padding-top: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .write-review-container {
+    padding: 0 1rem;
+  }
+  
+  .write-review-btn {
+    font-size: 0.95rem;
+    padding: 12px 20px;
+  }
+}
 }

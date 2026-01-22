@@ -1,0 +1,106 @@
+<!-- src/app/tenant/create-review/create-review.html -->
+<div class="modal-overlay" *ngIf="isOpen" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>✍️ Write a Review</h2>
+      <button class="close-btn" (click)="close()">✕</button>
+    </div>
+    
+    <form (ngSubmit)="submitReview()" class="review-form">
+      <!-- Error Message -->
+      <div class="alert alert-error" *ngIf="errorMessage">
+        ⚠️ {{ errorMessage }}
+      </div>
+
+      <!-- Overall Rating -->
+      <div class="form-group">
+        <label class="form-label">Overall Rating *</label>
+        <div class="star-rating large">
+          <span *ngFor="let star of getStarArray()" 
+                class="star" 
+                [class.selected]="star <= rating"
+                (click)="setRating(star)">
+            ⭐
+          </span>
+        </div>
+        <p class="rating-text" *ngIf="rating > 0">
+          {{ rating }} star{{ rating !== 1 ? 's' : '' }}
+        </p>
+      </div>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label">Review Title *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="title" 
+          name="title" 
+          class="form-input"
+          placeholder="Summarize your experience"
+          maxlength="100"
+          required />
+        <small class="char-count">{{ title.length }}/100</small>
+      </div>
+
+      <!-- Comment -->
+      <div class="form-group">
+        <label class="form-label">Your Review *</label>
+        <textarea 
+          [(ngModel)]="comment" 
+          name="comment" 
+          class="form-textarea"
+          placeholder="Share details about your experience with this landlord and property. What went well? What could be improved?"
+          rows="6"
+          maxlength="1000"
+          required></textarea>
+        <small class="char-count">{{ comment.length }}/1000 (minimum 10 characters)</small>
+      </div>
+
+      <!-- Category Ratings -->
+      <div class="form-group">
+        <label class="form-label">Rate by Category *</label>
+        <p class="form-hint">Please rate each aspect of your experience</p>
+        
+        <div class="categories-list">
+          <div class="category-item" *ngFor="let cat of categories; let i = index">
+            <div class="category-header">
+              <span class="category-label">{{ cat.label }}</span>
+              <span class="category-value" *ngIf="cat.value > 0">
+                {{ cat.value }} ⭐
+              </span>
+            </div>
+            <div class="star-rating">
+              <span *ngFor="let star of getStarArray()" 
+                    class="star" 
+                    [class.selected]="star <= cat.value"
+                    (click)="setCategoryRating(i, star)">
+                ⭐
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="modal-actions">
+        <button 
+          type="button" 
+          class="btn-cancel" 
+          (click)="close()"
+          [disabled]="isSubmitting">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-submit" 
+          [disabled]="!isValid() || isSubmitting">
+          <span *ngIf="!isSubmitting">Submit Review</span>
+          <span *ngIf="isSubmitting">
+            <span class="spinner-small"></span>
+            Submitting...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

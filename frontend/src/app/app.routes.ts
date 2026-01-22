@@ -109,6 +109,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./landlord/subscription-plans/suscription-plans')
             .then(m => m.SubscriptionPlansComponent)
+      },
+      {
+        path: 'reviews',
+        loadComponent: () =>
+          import('./landlord/my-reviews/my-reviews')
+            .then(m => m.MyReviewsComponent)
       }
 
     ]
@@ -184,6 +190,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./payments/payment-details/payment-details')
             .then(m => m.PaymentDetailsComponent)
+      },
+      {
+        path: 'reviews',
+        loadComponent: () =>
+          import('./tenant/create-review/create-review')
+            .then(m => m.CreateReviewComponent)
       }
     ]
   },

@@ -37,6 +37,8 @@
 //     private authService: AuthService,
 //     private locationService: LocationService
 //   ) {}
+  
+  
 
 //   ngOnInit(): void {
 //     this.propertyId = this.route.snapshot.params['id'];
@@ -50,7 +52,9 @@
     
 //     this.loadProperty();
 //     this.getUserLocation();
+   
 //   }
+  
 
 //   loadProperty(): void {
 //     this.isLoading = true;
@@ -231,7 +235,6 @@
 //     }
 //   }
    
-
 //   /**
 //    * Open image in modal (new tab for now)
 //    */
@@ -240,6 +243,7 @@
 //       window.open(this.getImageUrl(this.property.images[index]), '_blank');
 //     }
 //   }
+
 //   // ==========================================
 //   // VIDEO GALLERY METHODS
 //   // ==========================================
@@ -290,6 +294,9 @@
 //     }
 //   }
 
+//   // ==========================================
+//   // USER INTERACTION METHODS
+//   // ==========================================
 
 //   contactLandlord(): void {
 //     console.log('Contact landlord clicked');
@@ -307,28 +314,46 @@
 //   }
 
 //   bookViewing(): void {
-//   console.log('Book viewing clicked');
-  
-//   if (!this.isLoggedIn) {
-//     alert('Please login to book a viewing');
-//     this.router.navigate(['/login'], { 
-//       queryParams: { returnUrl: `/properties/${this.propertyId}` }
-//     });
-//     return;
+//     console.log('Book viewing clicked');
+    
+//     if (!this.isLoggedIn) {
+//       alert('Please login to book a viewing');
+//       this.router.navigate(['/login'], { 
+//         queryParams: { returnUrl: `/properties/${this.propertyId}` }
+//       });
+//       return;
+//     }
+    
+//     if (this.userRole !== 'tenant') {
+//       alert('Only tenants can book property viewings');
+//       return;
+//     }
+    
+//     // Navigate to booking page with property ID
+//     this.router.navigate(['/tenant/book-viewing', this.propertyId]);
 //   }
-  
-//   if (this.userRole !== 'tenant') {
-//     alert('Only tenants can book property viewings');
-//     return;
-//   }
-  
-//   // Navigate to booking page with property ID
-//   this.router.navigate(['/tenant/book-viewing', this.propertyId]);
-// }
 
+//   /**
+//    * Navigate back - smart routing based on user role
+//    */
 //   goBack(): void {
-//     console.log('Going back');
-//     window.history.back();
+//     console.log('Going back - User role:', this.userRole);
+    
+//     // Smart navigation based on user role
+//     if (this.userRole === 'landlord') {
+//       console.log('Navigating to landlord properties');
+//       this.router.navigate(['/landlord/properties']);
+//     } else if (this.userRole === 'tenant') {
+//       console.log('Navigating to tenant dashboard');
+//       this.router.navigate(['/tenant/dashboard']);
+//     } else if (this.isLoggedIn) {
+//       console.log('Navigating to general properties list');
+//       this.router.navigate(['/properties']);
+//     } else {
+//       // Fallback to browser history for non-authenticated users
+//       console.log('Using browser history back');
+//       window.history.back();
+//     }
 //   }
 
 //   editProperty(): void {
@@ -361,8 +386,81 @@
     
 //     return isPropertyOwner && this.userRole === 'landlord';
 //   }
+//   getModerationClass(status?: string): string {
+//   switch (status) {
+//     case 'approved':
+//       return 'moderation-approved';
+//     case 'pending_review':
+//       return 'moderation-pending';
+//     case 'rejected':
+//       return 'moderation-rejected';
+//     default:
+//       return 'moderation-unknown';
+//   }
+// }
 
-//   // Helper method to get current image
+// /**
+//  * Get human-readable label for moderation status
+//  */
+// getModerationLabel(status?: string): string {
+//   switch (status) {
+//     case 'approved':
+//       return '✓ Approved';
+//     case 'pending_review':
+//       return '⏳ Under Review';
+//     case 'rejected':
+//       return '✗ Needs Improvement';
+//     default:
+//       return 'Unknown';
+//   }
+// }
+
+// /**
+//  * Get CSS class for quality score
+//  */
+// getScoreClass(score?: number): string {
+//   if (!score) return 'score-unknown';
+  
+//   if (score >= 80) return 'score-high';
+//   if (score >= 50) return 'score-medium';
+//   return 'score-low';
+// }
+
+// /**
+//  * Request re-moderation after fixes
+//  */
+// requestRemoderation(): void {
+//   if (!this.propertyId) {
+//     console.error('No property ID available');
+//     return;
+//   }
+
+//   if (confirm('Request re-moderation? Make sure you\'ve fixed all issues first.')) {
+//     console.log('Requesting re-moderation for property:', this.propertyId);
+    
+//     this.propertyService.remoderateProperty(this.propertyId).subscribe({
+//       next: (response) => {
+//         console.log('✅ Re-moderation complete:', response);
+//         alert(response.moderation.message);
+        
+//         // Reload property to show updated status
+//         this.loadProperty();
+//       },
+//       error: (error) => {
+//         console.error('❌ Error re-moderating:', error);
+//         alert('Failed to remoderate property. Please try again.');
+//       }
+//     });
+//   }
+// }
+
+//   // ==========================================
+//   // HELPER METHODS
+//   // ==========================================
+
+//   /**
+//    * Get current image URL
+//    */
 //   getCurrentImage(): string {
 //     if (this.hasImages() && this.property?.images) {
 //       return this.getImageUrl(this.property.images[this.currentImageIndex]);
@@ -370,10 +468,12 @@
 //     return 'https://placehold.co/800x600?text=No+Image';
 //   }
 
-//   // Helper method to check if property has amenity
+//   /**
+//    * Check if property has specific amenity
+//    */
 //   hasAmenity(amenity: string): boolean {
 //     return !!(this.property?.amenities?.includes(amenity));
-//   }
+//   } 
 // }
 
 import { Component, OnInit, ViewChild } from '@angular/core';
@@ -383,12 +483,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PropertyService, Property } from '../services/property.service';
 import { AuthService } from '../services/auth';
 import { LocationService } from '../shared/services/location.service';
+import { BookingService } from '../services/booking.service';
 import { MapComponent } from '../shared/components/map/map.component';
+import { LandlordReviewsComponent } from '../shared/landlord-reviews/landlord-reviews';
+import { CreateReviewComponent } from '../tenant/create-review/create-review';
 
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, MapComponent],
+  imports: [CommonModule, RouterModule, MapComponent, LandlordReviewsComponent, CreateReviewComponent],
   templateUrl: './property-details.html',
   styleUrls: ['./property-details.css']
 })
@@ -408,14 +511,18 @@ export class PropertyDetailsComponent implements OnInit {
   userLocation: { latitude: number; longitude: number } | null = null;
   distanceToProperty: number | null = null;
 
+  // Review functionality
+  canReview = false;
+  showReviewModal = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private propertyService: PropertyService,
     private authService: AuthService,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private bookingService: BookingService
   ) {}
-  
 
   ngOnInit(): void {
     this.propertyId = this.route.snapshot.params['id'];
@@ -442,6 +549,9 @@ export class PropertyDetailsComponent implements OnInit {
         console.log('✅ Property loaded:', property);
         this.property = property;
         this.isLoading = false;
+
+        // Check if user can review after property is loaded
+        this.checkCanReview();
 
         // Initialize map with property location after property is loaded
         if (this.property.latitude && this.property.longitude) {
@@ -475,6 +585,55 @@ export class PropertyDetailsComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  /**
+   * Check if the current user can write a review
+   * User can review if they have a completed booking for this property
+   */
+  checkCanReview(): void {
+    if (!this.property || this.isOwner() || !this.isLoggedIn || this.userRole !== 'tenant') {
+      this.canReview = false;
+      return;
+    }
+
+    // Check if user has any completed bookings for this property
+    this.bookingService.getTenantBookings({ 
+      status: 'completed',
+      page: 1,
+      per_page: 100 
+    }).subscribe({
+      next: (response) => {
+        // Check if any completed booking is for this property
+        const hasCompletedBooking = response.bookings.some(
+          booking => booking.property_id === this.propertyId && booking.status === 'completed'
+        );
+        this.canReview = hasCompletedBooking;
+        console.log('Can review:', this.canReview);
+      },
+      error: (error) => {
+        console.error('Error checking booking status:', error);
+        this.canReview = false;
+      }
+    });
+  }
+
+  /**
+   * Open the review modal
+   */
+  openReviewModal(): void {
+    this.showReviewModal = true;
+  }
+
+  /**
+   * Handle review created event
+   * Refresh the reviews section
+   */
+  onReviewCreated(): void {
+    this.showReviewModal = false;
+    // Show success message
+    alert('Thank you for your review! It has been submitted successfully.');
+    // The landlord-reviews component will automatically refresh via its own logic
   }
 
   /**
@@ -761,73 +920,74 @@ export class PropertyDetailsComponent implements OnInit {
     
     return isPropertyOwner && this.userRole === 'landlord';
   }
+
   getModerationClass(status?: string): string {
-  switch (status) {
-    case 'approved':
-      return 'moderation-approved';
-    case 'pending_review':
-      return 'moderation-pending';
-    case 'rejected':
-      return 'moderation-rejected';
-    default:
-      return 'moderation-unknown';
-  }
-}
-
-/**
- * Get human-readable label for moderation status
- */
-getModerationLabel(status?: string): string {
-  switch (status) {
-    case 'approved':
-      return '✓ Approved';
-    case 'pending_review':
-      return '⏳ Under Review';
-    case 'rejected':
-      return '✗ Needs Improvement';
-    default:
-      return 'Unknown';
-  }
-}
-
-/**
- * Get CSS class for quality score
- */
-getScoreClass(score?: number): string {
-  if (!score) return 'score-unknown';
-  
-  if (score >= 80) return 'score-high';
-  if (score >= 50) return 'score-medium';
-  return 'score-low';
-}
-
-/**
- * Request re-moderation after fixes
- */
-requestRemoderation(): void {
-  if (!this.propertyId) {
-    console.error('No property ID available');
-    return;
+    switch (status) {
+      case 'approved':
+        return 'moderation-approved';
+      case 'pending_review':
+        return 'moderation-pending';
+      case 'rejected':
+        return 'moderation-rejected';
+      default:
+        return 'moderation-unknown';
+    }
   }
 
-  if (confirm('Request re-moderation? Make sure you\'ve fixed all issues first.')) {
-    console.log('Requesting re-moderation for property:', this.propertyId);
+  /**
+   * Get human-readable label for moderation status
+   */
+  getModerationLabel(status?: string): string {
+    switch (status) {
+      case 'approved':
+        return '✓ Approved';
+      case 'pending_review':
+        return '⏳ Under Review';
+      case 'rejected':
+        return '✗ Needs Improvement';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /**
+   * Get CSS class for quality score
+   */
+  getScoreClass(score?: number): string {
+    if (!score) return 'score-unknown';
     
-    this.propertyService.remoderateProperty(this.propertyId).subscribe({
-      next: (response) => {
-        console.log('✅ Re-moderation complete:', response);
-        alert(response.moderation.message);
-        
-        // Reload property to show updated status
-        this.loadProperty();
-      },
-      error: (error) => {
-        console.error('❌ Error re-moderating:', error);
-        alert('Failed to remoderate property. Please try again.');
-      }
-    });
+    if (score >= 80) return 'score-high';
+    if (score >= 50) return 'score-medium';
+    return 'score-low';
   }
-}
+
+  /**
+   * Request re-moderation after fixes
+   */
+  requestRemoderation(): void {
+    if (!this.propertyId) {
+      console.error('No property ID available');
+      return;
+    }
+
+    if (confirm('Request re-moderation? Make sure you\'ve fixed all issues first.')) {
+      console.log('Requesting re-moderation for property:', this.propertyId);
+      
+      this.propertyService.remoderateProperty(this.propertyId).subscribe({
+        next: (response) => {
+          console.log('✅ Re-moderation complete:', response);
+          alert(response.moderation.message);
+          
+          // Reload property to show updated status
+          this.loadProperty();
+        },
+        error: (error) => {
+          console.error('❌ Error re-moderating:', error);
+          alert('Failed to remoderate property. Please try again.');
+        }
+      });
+    }
+  }
 
   // ==========================================
   // HELPER METHODS
@@ -848,5 +1008,5 @@ requestRemoderation(): void {
    */
   hasAmenity(amenity: string): boolean {
     return !!(this.property?.amenities?.includes(amenity));
-  } 
+  }
 }

@@ -60,32 +60,33 @@
     <div class="placeholder-icon">🏠</div>
     <p>No images available</p>
   </div>
-   <!-- Video Gallery -->
-    <div class="property-section video-section" *ngIf="hasVideos()">
-      <h2>🎥 Property Videos</h2>
-      <div class="video-gallery">
-        <div class="video-grid">
-          <div *ngFor="let video of property.videos; let i = index" class="video-item">
-            <video 
-              [src]="getVideoUrl(video)" 
-              controls
-              preload="metadata"
-              [poster]="getVideoPoster(video)"
-              class="property-video"
-              playsinline>
-              Your browser does not support the video tag.
-            </video>
-            <div class="video-info">
-              <span>Video {{ i + 1 }} of {{ property.videos }}</span>
-            </div>
+  
+  <!-- Video Gallery -->
+  <div class="property-section video-section" *ngIf="hasVideos()">
+    <h2>🎥 Property Videos</h2>
+    <div class="video-gallery">
+      <div class="video-grid">
+        <div *ngFor="let video of property.videos; let i = index" class="video-item">
+          <video 
+            [src]="getVideoUrl(video)" 
+            controls
+            preload="metadata"
+            [poster]="getVideoPoster(video)"
+            class="property-video"
+            playsinline>
+            Your browser does not support the video tag.
+          </video>
+          <div class="video-info">
+            <span>Video {{ i + 1 }} of {{ property.videos?.length }}</span>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
   <!-- Property Information -->
   <div class="property-info">
-    <div class="info-header">AC
+    <div class="info-header">
       <div>
         <h1>{{ property.title }}</h1>
         <p class="location">
@@ -142,8 +143,6 @@
       </div>
     </div>
 
-   
-
     <!-- Location & Map -->
     <div class="property-section" *ngIf="property.latitude && property.longitude">
       <h2>📍 Location</h2>
@@ -163,7 +162,7 @@
         <app-map [height]="'400px'"></app-map>
       </div>
     </div>
-
+    
     <!-- Action Buttons -->
     <div class="action-buttons">
       <button class="btn btn-primary btn-large" (click)="bookViewing()" *ngIf="!isOwner()">
@@ -172,47 +171,70 @@
       <button class="btn btn-secondary btn-large" (click)="contactLandlord()" *ngIf="!isOwner()">
         💬 Contact Landlord
       </button>
-    </div> 
+    </div>
+    
+    <!-- Moderation Panel (for owners) -->
     <div *ngIf="isOwner() && property.moderation_status" class="moderation-panel">
-  <h3>📋 Moderation Status</h3>
-  
-  <div class="moderation-info">
-    <div class="info-row">
-      <span class="label">Status:</span>
-      <span class="badge" [ngClass]="getModerationClass(property.moderation_status)">
-        {{ getModerationLabel(property.moderation_status) }}
-      </span>
-    </div>
-    
-    <div class="info-row" *ngIf="property.moderation_score">
-      <span class="label">Quality Score:</span>
-      <span class="score" [ngClass]="getScoreClass(property.moderation_score)">
-        {{ property.moderation_score }}/100
-      </span>
-    </div>
-    
-    <div class="info-row" *ngIf="property.moderation_notes">
-      <span class="label">Notes:</span>
-      <span>{{ property.moderation_notes }}</span>
-    </div>
-    
-    <!-- Show issues if any -->
-    <div *ngIf="property.moderation_issues && property.moderation_issues.length > 0" class="issues-list">
-      <h4>Issues to Address:</h4>
-      <ul>
-        <li *ngFor="let issue of property.moderation_issues">{{ issue }}</li>
-      </ul>
+      <h3>📋 Moderation Status</h3>
       
-      <!-- Button to request re-moderation -->
-      <button *ngIf="property.moderation_status !== 'approved'" 
-              class="btn btn-primary"
-              (click)="requestRemoderation()">
-        🔄 Request Re-Review
+      <div class="moderation-info">
+        <div class="info-row">
+          <span class="label">Status:</span>
+          <span class="badge" [ngClass]="getModerationClass(property.moderation_status)">
+            {{ getModerationLabel(property.moderation_status) }}
+          </span>
+        </div>
+        
+        <div class="info-row" *ngIf="property.moderation_score">
+          <span class="label">Quality Score:</span>
+          <span class="score" [ngClass]="getScoreClass(property.moderation_score)">
+            {{ property.moderation_score }}/100
+          </span>
+        </div>
+        
+        <div class="info-row" *ngIf="property.moderation_notes">
+          <span class="label">Notes:</span>
+          <span>{{ property.moderation_notes }}</span>
+        </div>
+        
+        <!-- Show issues if any -->
+        <div *ngIf="property.moderation_issues && property.moderation_issues.length > 0" class="issues-list">
+          <h4>Issues to Address:</h4>
+          <ul>
+            <li *ngFor="let issue of property.moderation_issues">{{ issue }}</li>
+          </ul>
+          
+          <!-- Button to request re-moderation -->
+          <button *ngIf="property.moderation_status !== 'approved'" 
+                  class="btn btn-primary"
+                  (click)="requestRemoderation()">
+            🔄 Request Re-Review
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Section -->
+  <div class="reviews-section" *ngIf="property.landlord_id">
+    <!-- Write Review Button (for tenants with completed bookings) -->
+    <div class="write-review-container" *ngIf="canReview">
+      <button class="write-review-btn" (click)="openReviewModal()">
+        ⭐ Write a Review
       </button>
     </div>
+
+    <!-- Landlord Reviews Component -->
+    <app-landlord-reviews [landlordId]="property.landlord_id"></app-landlord-reviews>
   </div>
 </div>
 
-  </div>
-</div>
- 
+<!-- Review Modal -->
+<app-create-review 
+  *ngIf="property && property._id && property.landlord_id"
+  [isOpen]="showReviewModal"
+  [landlordId]="property.landlord_id"
+  [propertyId]="property._id"
+  (reviewCreated)="onReviewCreated()"
+  (closed)="showReviewModal = false">
+</app-create-review>

@@ -1,0 +1,183 @@
+<!-- src/app/shared/landlord-reviews/landlord-reviews.html -->
+<div class="landlord-reviews-section">
+  
+  <!-- Reviews Header -->
+  <div class="reviews-header">
+    <h2>⭐ Landlord Reviews</h2>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading reviews...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-message" *ngIf="errorMessage && !isLoading">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <!-- Statistics Dashboard -->
+  <div class="stats-section" *ngIf="stats && !isLoading">
+    <div class="overall-rating">
+      <div class="rating-score">
+        <span class="score-large">{{ stats.average_rating.toFixed(1) }}</span>
+        <div class="stars-display">
+          <span *ngFor="let filled of getStarArray(stats.average_rating)" 
+                class="star" 
+                [class.filled]="filled">
+            ⭐
+          </span>
+        </div>
+        <p class="review-count">Based on {{ stats.total_reviews }} review{{ stats.total_reviews !== 1 ? 's' : '' }}</p>
+      </div>
+    </div>
+
+    <!-- Category Ratings -->
+    <div class="category-ratings" *ngIf="stats.category_ratings">
+      <div class="category-item">
+        <span class="category-icon">💬</span>
+        <div class="category-info">
+          <span class="category-label">Communication</span>
+          <div class="category-bar">
+            <div class="bar-fill" [style.width.%]="(stats.category_ratings.communication / 5) * 100"></div>
+          </div>
+          <span class="category-score">{{ stats.category_ratings.communication.toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <div class="category-item">
+        <span class="category-icon">⚡</span>
+        <div class="category-info">
+          <span class="category-label">Responsiveness</span>
+          <div class="category-bar">
+            <div class="bar-fill" [style.width.%]="(stats.category_ratings.responsiveness / 5) * 100"></div>
+          </div>
+          <span class="category-score">{{ stats.category_ratings.responsiveness.toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <div class="category-item">
+        <span class="category-icon">🎯</span>
+        <div class="category-info">
+          <span class="category-label">Property Accuracy</span>
+          <div class="category-bar">
+            <div class="bar-fill" [style.width.%]="(stats.category_ratings.property_accuracy / 5) * 100"></div>
+          </div>
+          <span class="category-score">{{ stats.category_ratings.property_accuracy.toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <div class="category-item">
+        <span class="category-icon">✨</span>
+        <div class="category-info">
+          <span class="category-label">Cleanliness</span>
+          <div class="category-bar">
+            <div class="bar-fill" [style.width.%]="(stats.category_ratings.cleanliness / 5) * 100"></div>
+          </div>
+          <span class="category-score">{{ stats.category_ratings.cleanliness.toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <div class="category-item">
+        <span class="category-icon">💰</span>
+        <div class="category-info">
+          <span class="category-label">Value for Money</span>
+          <div class="category-bar">
+            <div class="bar-fill" [style.width.%]="(stats.category_ratings.value_for_money / 5) * 100"></div>
+          </div>
+          <span class="category-score">{{ stats.category_ratings.value_for_money.toFixed(1) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating Distribution -->
+    <div class="rating-distribution">
+      <h3>Rating Distribution</h3>
+      <div class="distribution-bars">
+        <div *ngFor="let num of [5,4,3,2,1]" class="distribution-row">
+          <span class="rating-label">{{ num }} ⭐</span>
+          <div class="distribution-bar">
+            <div class="bar-fill" [style.width.%]="getDistributionPercentage(num)"></div>
+          </div>
+          <span class="distribution-count">{{ getDistributionCount(num) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews List -->
+  <div class="reviews-list" *ngIf="!isLoading">
+    <h3 *ngIf="reviews.length > 0">Recent Reviews</h3>
+    
+    <div class="review-card" *ngFor="let review of reviews">
+      <!-- Review Header -->
+      <div class="review-header">
+        <div class="reviewer-info">
+          <div class="reviewer-avatar">
+            {{ review.tenant_name?.charAt(0) || 'T' }}
+          </div>
+          <div>
+            <div class="reviewer-name">{{ review.tenant_name || 'Tenant' }}</div>
+            <div class="review-date">{{ getRelativeTime(review.created_at) }}</div>
+          </div>
+        </div>
+        
+        <div class="review-rating">
+          <span *ngFor="let filled of getStarArray(review.rating)" 
+                class="star" 
+                [class.filled]="filled">
+            ⭐
+          </span>
+        </div>
+      </div>
+
+      <!-- Property Badge -->
+      <div class="property-badge" *ngIf="review.property_title">
+        🏠 {{ review.property_title }}
+      </div>
+
+      <!-- Verified Badge -->
+      <div class="verified-badge" *ngIf="review.is_verified">
+        ✓ Verified Booking
+      </div>
+
+      <!-- Review Content -->
+      <div class="review-content">
+        <h4 *ngIf="review.title" class="review-title">{{ review.title }}</h4>
+        <p class="review-comment">{{ review.comment }}</p>
+      </div>
+
+      <!-- Helpful Count -->
+      <div class="review-footer">
+        <span class="helpful-count">
+          👍 {{ review.helpful_count || 0 }} people found this helpful
+        </span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="reviews.length === 0">
+      <div class="empty-icon">📝</div>
+      <h3>No reviews yet</h3>
+      <p>This landlord hasn't received any reviews from tenants yet.</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
+    <button 
+      class="btn-page" 
+      (click)="previousPage()" 
+      [disabled]="currentPage === 1">
+      ← Previous
+    </button>
+    <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <button 
+      class="btn-page" 
+      (click)="nextPage()" 
+      [disabled]="currentPage === totalPages">
+      Next →
+    </button>
+  </div>
+</div>
