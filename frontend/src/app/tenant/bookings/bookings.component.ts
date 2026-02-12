@@ -350,7 +350,7 @@ export class TenantBookingsComponent implements OnInit {
     }
     
     // CHANGE THIS TO YOUR ACTUAL BACKEND URL
-    const backendUrl = 'http://localhost:3000'; // Adjust to your backend port
+    const backendUrl = 'http://localhost:5000'; // Adjust to your backend port
     
     // If it's a relative path starting with 'uploads/', prepend backend URL
     if (imagePath.startsWith('uploads/')) {

@@ -46,10 +46,27 @@
           src="assets/placeholder.jpg" 
           alt="No image"
         />
+
+        <!-- Status badge (active / inactive / …) -->
         <span [class]="'status-badge ' + getStatusClass(property.status || 'active')">
           {{ property.status || 'active' }}
         </span>
+
+        <!-- ── NEW: Confirmation countdown badge ─────────────────── -->
+        <ng-container *ngIf="getConfirmationStatus(property._id!) as cs">
+          <!-- Pending confirmation — red urgent badge -->
+          <span *ngIf="cs.confirmation_pending" class="confirmation-badge confirmation-badge--urgent">
+            🔔 Confirm listing
+          </span>
+          <!-- Approaching deadline (≤ 7 days left) — amber warning badge -->
+          <span *ngIf="!cs.confirmation_pending && cs.days_until_reminder <= 7 && cs.days_until_reminder > 0"
+                class="confirmation-badge confirmation-badge--warning">
+            ⏳ {{ cs.days_until_reminder }}d left
+          </span>
+        </ng-container>
+        <!-- ──────────────────────────────────────────────────────── -->
       </div>
+
       <!-- Property Details -->
       <div class="property-details">
         <h3>{{ property.title }}</h3>

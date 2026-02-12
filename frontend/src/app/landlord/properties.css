@@ -369,3 +369,42 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+/* ================================================================
+   NEW — Confirmation countdown badges (Requirement 6)
+   Positioned at the bottom-left of .property-image, just above
+   the card details section.  Two variants:
+     --urgent   red pulsing ring  →  confirmation is overdue
+     --warning  amber             →  ≤ 7 days before it is due
+   ================================================================ */
+
+.confirmation-badge {
+  position:        absolute;
+  bottom:          12px;
+  left:            12px;
+  padding:         6px 14px;
+  border-radius:   20px;
+  font-size:       12px;
+  font-weight:     700;
+  color:           white;
+  backdrop-filter: blur(8px);
+  box-shadow:      0 3px 10px rgba(0, 0, 0, 0.25);
+  z-index:         1;                          /* stay above the image */
+}
+
+/* Overdue — red with a subtle pulse so it catches the eye */
+.confirmation-badge--urgent {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  animation: confirmation-pulse 2s ease-in-out infinite;
+}
+
+@keyframes confirmation-pulse {
+  0%, 100% { box-shadow: 0 3px 10px rgba(235, 51, 73, 0.3); }
+  50%      { box-shadow: 0 3px 18px rgba(235, 51, 73, 0.7); }
+}
+
+/* Approaching deadline — amber, no animation */
+.confirmation-badge--warning {
+  background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+}

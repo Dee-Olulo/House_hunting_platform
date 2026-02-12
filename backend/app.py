@@ -19,7 +19,9 @@ from routes.financial_routes import financial_bp
 from routes.mpesa_routes import mpesa_bp
 from routes.admin_notification_routes import  admin_notification_bp  
 from routes.review_routes import review_bp
- 
+from routes.listing_confirmation_routes import listing_confirmation_bp
+from apscheduler.schedulers.background import BackgroundScheduler
+from services.listing_scheduler import run_listing_confirmation_check
 
 def create_app():
     app = Flask(__name__)
@@ -71,6 +73,7 @@ def create_app():
     app.register_blueprint(financial_bp, url_prefix="/financial")
     app.register_blueprint(admin_notification_bp, url_prefix="/admin/notifications")
     app.register_blueprint(review_bp, url_prefix="/reviews")
+    app.register_blueprint(listing_confirmation_bp, url_prefix="/listing-confirmation")
 
     # Health check endpoint
     @app.route("/health", methods=["GET"])
@@ -82,6 +85,32 @@ def create_app():
     def uploaded_file(filename):
         uploads_dir = os.path.join(app.root_path, 'uploads')
         return send_from_directory(uploads_dir, filename)
+       # APScheduler docs: https://apscheduler.readthedocs.io
+    # We only start it once (not on every reload in debug mode).
+    if not app.config.get("SCHEDULER_STARTED"):
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(
+            func=run_listing_confirmation_check,
+            trigger="interval",
+            hours=app.config.get("LISTING_CHECK_INTERVAL_HOURS", 24),
+            id="listing_confirmation_check",
+            name="Listing Confirmation Checker",
+            replace_existing=True
+        )
+        # Wrap the job so it runs inside the Flask app context
+        # (needed because it accesses mongo.db)
+        original_func = run_listing_confirmation_check
+
+        def _job_wrapper():
+            with app.app_context():
+                original_func()
+
+        scheduler.modify_job("listing_confirmation_check", func=_job_wrapper)
+        scheduler.start()
+        app.config["SCHEDULER_STARTED"] = True
+
+        print("\n✅ [ListingScheduler] Background scheduler started "
+              f"(interval: {app.config.get('LISTING_CHECK_INTERVAL_HOURS', 24)}h)")
 
     return app
 

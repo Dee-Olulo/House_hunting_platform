@@ -59,3 +59,10 @@ class Config:
     PAYMENT_CURRENCY = os.getenv("PAYMENT_CURRENCY", "USD")
     PAYMENT_TIMEOUT_MINUTES = int(os.getenv("PAYMENT_TIMEOUT_MINUTES", "30"))
     REFUND_PROCESSING_DAYS = int(os.getenv("REFUND_PROCESSING_DAYS", "7"))
+
+    # Default 24 = once per day.  Set to 1 during development for quick tests.
+    LISTING_CHECK_INTERVAL_HOURS = int(os.getenv("LISTING_CHECK_INTERVAL_HOURS", "24"))
+
+    # Prevent APScheduler from starting a second instance when Flask's
+    # reloader spawns a child process in debug mode.
+    SCHEDULER_STARTED = False
