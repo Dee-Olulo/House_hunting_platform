@@ -224,11 +224,11 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/analytics-dashboard/analytics-dashboard')
           .then(m => m.AnalyticsDashboardComponent)
       },
-      {
-        path: 'financial',
-        loadComponent: () => import('./admin/financial-dashboard/financial-dashboard')
-          .then(m => m.FinancialDashboardComponent)
-      },
+      // {
+      //   path: 'financial',
+      //   loadComponent: () => import('./admin/financial-dashboard/financial-dashboard')
+      //     .then(m => m.FinancialDashboardComponent)
+      // },
       {
         path:'notifications',
         loadComponent:() => import('./admin/notification-management/notification-management')

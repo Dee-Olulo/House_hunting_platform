@@ -41,7 +41,7 @@ export class AddPropertyComponent {
   selectedImagePreviews: string[] = [];
   uploadedImageUrls: string[] = [];
   
-  // Video properties (NEW)
+  // Video properties
   selectedVideos: File[] = [];
   videoPreviewUrls: string[] = [];
   uploadedVideoUrls: string[] = [];
@@ -77,6 +77,23 @@ export class AddPropertyComponent {
   ) {}
 
   // ============================================
+  // NAVIGATION HELPER
+  // ============================================
+
+  /**
+   * Redirects to the landlord properties page.
+   * Falls back gracefully if the primary route fails.
+   */
+  private redirectToProperties(): void {
+    this.router.navigate(['/landlord/properties']).catch(() => {
+      this.router.navigate(['/landlord/dashboard']).catch(() => {
+        // Log the failure — do NOT fall back to '/' as that leads to login
+        console.error('❌ Could not navigate to properties or dashboard. Check your route configuration.');
+      });
+    });
+  }
+
+  // ============================================
   // IMAGE HANDLING
   // ============================================
   
@@ -89,10 +106,7 @@ export class AddPropertyComponent {
       return;
     }
 
-    // Validate files
     const validFiles = files.filter(file => {
-      console.log(`Validating file: ${file.name}`);
-      
       if (!this.uploadService.validateImageType(file)) {
         this.errorMessage = `${file.name} is not a valid image type`;
         setTimeout(() => this.errorMessage = '', 3000);
@@ -112,7 +126,6 @@ export class AddPropertyComponent {
       return;
     }
 
-    // Generate preview URLs
     validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e: any) => {
@@ -181,7 +194,7 @@ export class AddPropertyComponent {
   }
 
   // ============================================
-  // VIDEO HANDLING (NEW)
+  // VIDEO HANDLING
   // ============================================
   
   onVideoSelect(event: any): void {
@@ -193,10 +206,7 @@ export class AddPropertyComponent {
       return;
     }
 
-    // Validate files
     const validFiles = files.filter(file => {
-      console.log(`Validating video: ${file.name}`);
-      
       if (!this.uploadService.validateVideoType(file)) {
         this.errorMessage = `${file.name} is not a valid video type. Accepted: MP4, MOV, AVI, WEBM`;
         setTimeout(() => this.errorMessage = '', 3000);
@@ -216,7 +226,6 @@ export class AddPropertyComponent {
       return;
     }
 
-    // Generate preview URLs
     validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e: any) => {
@@ -349,7 +358,7 @@ export class AddPropertyComponent {
       const propertyData: Property = {
         ...this.property,
         images: this.uploadedImageUrls,
-        videos: this.uploadedVideoUrls, // Include videos
+        videos: this.uploadedVideoUrls,
         amenities: this.selectedAmenities,
         latitude: this.locationData.latitude || this.property.latitude || undefined,
         longitude: this.locationData.longitude || this.property.longitude || undefined,
@@ -361,65 +370,38 @@ export class AddPropertyComponent {
 
       console.log('Creating property with data:', propertyData);
 
-      // // Create property
-      // this.propertyService.createProperty(propertyData).subscribe({
-      //   next: (response) => {
-      //     console.log('✅ Property created:', response);
-      //     this.isLoading = false;
-      //     this.successMessage = 'Property created successfully!';
-          
-      //     // Redirect after 1.5 seconds
-      //     setTimeout(() => {
-      //       this.router.navigate(['/landlord-dashboard']).catch(() => {
-      //         this.router.navigate(['/landlord/properties']).catch(() => {
-      //           this.router.navigate(['/']);
-      //         });
-      //       });
-      //     }, 1500);
-      //   },
-      //   error: (error) => {
-      //     console.error('❌ Error creating property:', error);
-      //     this.isLoading = false;
-      //     this.errorMessage = error.error?.error || error.error?.message || 'Failed to create property';
-      //   }
-      // });
-       this.propertyService.createProperty(propertyData).subscribe({
-      next: (response: any) => {
-        console.log('✅ Property created:', response);
-        this.isLoading = false;
-        
-        // Handle moderation response
-        const moderation = response.moderation;
-        
-        if (moderation.status === 'approved') {
-          this.successMessage = '✅ Property approved and published successfully!';
-        } else if (moderation.status === 'pending_review') {
-          this.successMessage = '⏳ Property submitted for review. We\'ll notify you once it\'s approved.';
-        } else {
-          this.errorMessage = `⚠️ Property needs improvement: ${moderation.issues.slice(0, 3).join(', ')}`;
-          return;  // Don't redirect if rejected
+      this.propertyService.createProperty(propertyData).subscribe({
+        next: (response: any) => {
+          console.log('✅ Property created:', response);
+          this.isLoading = false;
+
+          const moderation = response.moderation;
+
+          if (moderation.status === 'approved') {
+            this.successMessage = '✅ Property approved and published successfully!';
+          } else if (moderation.status === 'pending_review') {
+            this.successMessage = "⏳ Property submitted for review. We'll notify you once it's approved.";
+          } else {
+            // Property was rejected — stay on page and show errors
+            this.errorMessage = `⚠️ Property needs improvement: ${moderation.issues.slice(0, 3).join(', ')}`;
+            return;
+          }
+
+          if (moderation.issues && moderation.issues.length > 0) {
+            console.log('⚠️ Moderation issues:', moderation.issues);
+          }
+
+          // ✅ FIX: redirect to My Properties page after 2 seconds
+          setTimeout(() => {
+            this.redirectToProperties();
+          }, 2000);
+        },
+        error: (error) => {
+          console.error('❌ Error creating property:', error);
+          this.isLoading = false;
+          this.errorMessage = error.error?.error || error.error?.message || 'Failed to create property';
         }
-        
-        // Show issues if any (even for approved)
-        if (moderation.issues && moderation.issues.length > 0) {
-          console.log('⚠️ Moderation issues:', moderation.issues);
-        }
-        
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          this.router.navigate(['/landlord-dashboard']).catch(() => {
-            this.router.navigate(['/landlord/properties']).catch(() => {
-              this.router.navigate(['/']);
-            });
-          });
-        }, 2000);
-      },
-      error: (error) => {
-        console.error('❌ Error creating property:', error);
-        this.isLoading = false;
-        this.errorMessage = error.error?.error || error.error?.message || 'Failed to create property';
-      }
-    });
+      });
 
     } catch (error: any) {
       console.error('❌ Error in form submission:', error);
@@ -430,11 +412,8 @@ export class AddPropertyComponent {
 
   cancel(): void {
     if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-      this.router.navigate(['/landlord-dashboard']).catch(() => {
-        this.router.navigate(['/dashboard']).catch(() => {
-          this.router.navigate(['/']);
-        });
-      });
+      // ✅ FIX: cancel also goes back to My Properties, not login
+      this.redirectToProperties();
     }
   }
 }

@@ -10,17 +10,15 @@
           <span class="stat-value">{{ getStatusCount('pending') }}</span>
           <span class="stat-label">Pending</span>
         </div>
-        <div class="stat-card confirmed">
+        <!-- <div class="stat-card confirmed">
           <span class="stat-value">{{ upcomingBookings.length }}</span>
           <span class="stat-label">Upcoming</span>
-        </div>
+        </div> -->
         <div class="stat-card completed">
           <span class="stat-value">{{ getStatusCount('completed') }}</span>
           <span class="stat-label">Completed</span>
         </div>
-      </div>
-      <a routerLink="/create-booking" class="btn-primary btn-new-booking">➕ New Booking</a>
-    </div>
+      
 
     <!-- Alerts -->
     <div class="alert alert-success" *ngIf="successMessage">
