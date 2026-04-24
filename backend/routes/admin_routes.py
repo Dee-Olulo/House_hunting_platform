@@ -9,10 +9,14 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from extensions import mongo, bcrypt
 from utils.decorators import admin_only
+from services.notification_service import NotificationService
 from bson import ObjectId
 from datetime import datetime, timedelta
 
 admin_bp = Blueprint("admin", __name__)
+
+# Initialize notification service
+notification_service = NotificationService()
 
 # ============================================================================
 # ADMIN DASHBOARD & STATISTICS
@@ -94,7 +98,6 @@ def get_dashboard_stats():
         })
         
         # ===== SYSTEM HEALTH =====
-        # Check if collections are accessible
         collections_status = {
             "users": True,
             "properties": True,
@@ -147,25 +150,21 @@ def get_recent_activity():
     try:
         limit = request.args.get("limit", 20, type=int)
         
-        # Recent user registrations
         recent_users = list(mongo.db.users.find(
             {},
             {"email": 1, "role": 1, "created_at": 1}
         ).sort("_id", -1).limit(limit))
         
-        # Recent property listings
         recent_properties = list(mongo.db.properties.find(
             {},
             {"title": 1, "city": 1, "price": 1, "status": 1, "moderation_status": 1, "created_at": 1}
         ).sort("created_at", -1).limit(limit))
         
-        # Recent bookings
         recent_bookings = list(mongo.db.bookings.find(
             {},
             {"property_id": 1, "tenant_id": 1, "status": 1, "booking_date": 1, "created_at": 1}
         ).sort("created_at", -1).limit(limit))
         
-        # Convert ObjectIds to strings
         for user in recent_users:
             user["_id"] = str(user["_id"])
             if user.get("created_at") and isinstance(user["created_at"], datetime):
@@ -203,14 +202,12 @@ def get_recent_activity():
 def get_all_users():
     """Get all users with filtering and pagination"""
     try:
-        # Query parameters
         role = request.args.get("role")
         search = request.args.get("search")
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 20, type=int)
         sort_by = request.args.get("sort_by", "newest")
         
-        # Build query
         query = {}
         
         if role:
@@ -221,36 +218,30 @@ def get_all_users():
                 {"email": {"$regex": search, "$options": "i"}}
             ]
         
-        # Get total count
         total_count = mongo.db.users.count_documents(query)
         
-        # Build sort criteria
         if sort_by == "oldest":
             sort_criteria = [("_id", 1)]
-        else:  # newest (default)
+        else:
             sort_criteria = [("_id", -1)]
         
-        # Apply pagination
         skip = (page - 1) * per_page
         users_cursor = mongo.db.users.find(
             query,
-            {"password": 0}  # Exclude password
+            {"password": 0}
         ).sort(sort_criteria).skip(skip).limit(per_page)
         
         users = list(users_cursor)
         
-        # Get additional stats for each user
         for user in users:
             user_id = str(user["_id"])
             user["_id"] = user_id
             
-            # Count properties if landlord
             if user["role"] == "landlord":
                 user["properties_count"] = mongo.db.properties.count_documents({
                     "landlord_id": user_id
                 })
             
-            # Count bookings
             if user["role"] == "tenant":
                 user["bookings_count"] = mongo.db.bookings.count_documents({
                     "tenant_id": user_id
@@ -260,7 +251,6 @@ def get_all_users():
                     "landlord_id": user_id
                 })
             
-            # Convert datetime
             if user.get("created_at") and isinstance(user["created_at"], datetime):
                 user["created_at"] = user["created_at"].isoformat()
         
@@ -286,10 +276,9 @@ def get_user_details(user_id):
         if not ObjectId.is_valid(user_id):
             return jsonify({"error": "Invalid user ID"}), 400
         
-        # Get user
         user = mongo.db.users.find_one(
             {"_id": ObjectId(user_id)},
-            {"password": 0}  # Exclude password
+            {"password": 0}
         )
         
         if not user:
@@ -297,7 +286,6 @@ def get_user_details(user_id):
         
         user["_id"] = str(user["_id"])
         
-        # Get user's properties (if landlord)
         if user["role"] == "landlord":
             properties = list(mongo.db.properties.find(
                 {"landlord_id": user_id},
@@ -312,7 +300,6 @@ def get_user_details(user_id):
             user["properties"] = properties
             user["total_properties"] = mongo.db.properties.count_documents({"landlord_id": user_id})
         
-        # Get user's bookings
         bookings = list(mongo.db.bookings.find(
             {"tenant_id": user_id} if user["role"] == "tenant" else {"landlord_id": user_id}
         ).sort("created_at", -1).limit(10))
@@ -328,7 +315,6 @@ def get_user_details(user_id):
             {"tenant_id": user_id} if user["role"] == "tenant" else {"landlord_id": user_id}
         )
         
-        # Convert datetime
         if user.get("created_at") and isinstance(user["created_at"], datetime):
             user["created_at"] = user["created_at"].isoformat()
         
@@ -342,7 +328,7 @@ def get_user_details(user_id):
 @jwt_required()
 @admin_only
 def suspend_user(user_id):
-    """Suspend a user account"""
+    """Suspend a user account and send notification"""
     try:
         if not ObjectId.is_valid(user_id):
             return jsonify({"error": "Invalid user ID"}), 400
@@ -360,6 +346,10 @@ def suspend_user(user_id):
         if str(user_id) == current_admin_id:
             return jsonify({"error": "Cannot suspend your own account"}), 400
         
+        # Prevent suspending other admins
+        if user["role"] == "admin":
+            return jsonify({"error": "Cannot suspend admin accounts"}), 403
+
         # Update user status
         mongo.db.users.update_one(
             {"_id": ObjectId(user_id)},
@@ -378,6 +368,14 @@ def suspend_user(user_id):
                 {"$set": {"status": "inactive"}}
             )
         
+        # ✅ Send suspension notification to the user
+        try:
+            notification_service.notify_account_suspended(user, reason)
+            print(f"✅ Suspension notification sent to: {user['email']}")
+        except Exception as notif_err:
+            # Don't fail the whole operation if notification fails
+            print(f"⚠️ Failed to send suspension notification: {str(notif_err)}")
+        
         print(f"✅ User suspended: {user['email']}")
         
         return jsonify({
@@ -393,12 +391,11 @@ def suspend_user(user_id):
 @jwt_required()
 @admin_only
 def activate_user(user_id):
-    """Activate/unsuspend a user account"""
+    """Activate/unsuspend a user account and send notification"""
     try:
         if not ObjectId.is_valid(user_id):
             return jsonify({"error": "Invalid user ID"}), 400
         
-        # Check if user exists
         user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -419,6 +416,13 @@ def activate_user(user_id):
             }
         )
         
+        # ✅ Send reactivation notification to the user
+        try:
+            notification_service.notify_account_activated(user)
+            print(f"✅ Activation notification sent to: {user['email']}")
+        except Exception as notif_err:
+            print(f"⚠️ Failed to send activation notification: {str(notif_err)}")
+        
         print(f"✅ User activated: {user['email']}")
         
         return jsonify({
@@ -434,39 +438,29 @@ def activate_user(user_id):
 @jwt_required()
 @admin_only
 def delete_user(user_id):
-    """Delete a user account (with confirmation)"""
+    """Delete a user account"""
     try:
         if not ObjectId.is_valid(user_id):
             return jsonify({"error": "Invalid user ID"}), 400
         
-        # Check if user exists
         user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
             return jsonify({"error": "User not found"}), 404
         
-        # Prevent admin from deleting themselves
         current_admin_id = get_jwt_identity()
         if str(user_id) == current_admin_id:
             return jsonify({"error": "Cannot delete your own account"}), 400
         
-        # Prevent deleting other admins
         if user["role"] == "admin":
             return jsonify({"error": "Cannot delete admin accounts"}), 403
         
-        # Delete user's data
         if user["role"] == "landlord":
-            # Delete properties
             mongo.db.properties.delete_many({"landlord_id": user_id})
-            # Delete bookings
             mongo.db.bookings.delete_many({"landlord_id": user_id})
         elif user["role"] == "tenant":
-            # Delete bookings
             mongo.db.bookings.delete_many({"tenant_id": user_id})
         
-        # Delete notifications
         mongo.db.notifications.delete_many({"user_id": user_id})
-        
-        # Delete user
         mongo.db.users.delete_one({"_id": ObjectId(user_id)})
         
         print(f"✅ User deleted: {user['email']}")
@@ -492,30 +486,24 @@ def get_moderation_queue():
     try:
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 20, type=int)
-        sort_by = request.args.get("sort_by", "score_low")  # score_low, score_high, newest, oldest
+        sort_by = request.args.get("sort_by", "score_low")
         
-        # Query for pending review properties
         query = {"moderation_status": "pending_review"}
         
-        # Build sort criteria
         if sort_by == "score_low":
-            sort_criteria = [("moderation_score", 1)]  # Lowest scores first
+            sort_criteria = [("moderation_score", 1)]
         elif sort_by == "score_high":
             sort_criteria = [("moderation_score", -1)]
         elif sort_by == "oldest":
             sort_criteria = [("created_at", 1)]
-        else:  # newest
+        else:
             sort_criteria = [("created_at", -1)]
         
-        # Get total count
         total_count = mongo.db.properties.count_documents(query)
-        
-        # Apply pagination
         skip = (page - 1) * per_page
         properties_cursor = mongo.db.properties.find(query).sort(sort_criteria).skip(skip).limit(per_page)
         properties = list(properties_cursor)
         
-        # Enrich with landlord details
         for prop in properties:
             landlord = mongo.db.users.find_one(
                 {"_id": ObjectId(prop["landlord_id"])},
@@ -528,11 +516,9 @@ def get_moderation_queue():
                     "user_id": str(landlord["_id"])
                 }
             
-            # Convert ObjectIds
             prop["_id"] = str(prop["_id"])
             prop["landlord_id"] = str(prop["landlord_id"])
             
-            # Convert datetime
             if prop.get("created_at") and isinstance(prop["created_at"], datetime):
                 prop["created_at"] = prop["created_at"].isoformat()
             if prop.get("moderated_at") and isinstance(prop["moderated_at"], datetime):
@@ -563,12 +549,10 @@ def approve_property(property_id):
         if not ObjectId.is_valid(property_id):
             return jsonify({"error": "Invalid property ID"}), 400
         
-        # Get property
         prop = mongo.db.properties.find_one({"_id": ObjectId(property_id)})
         if not prop:
             return jsonify({"error": "Property not found"}), 404
         
-        # Update property
         mongo.db.properties.update_one(
             {"_id": ObjectId(property_id)},
             {"$set": {
@@ -582,8 +566,6 @@ def approve_property(property_id):
         )
         
         print(f"✅ Property approved by admin: {prop['title']}")
-        
-        # TODO: Send notification to landlord
         
         return jsonify({
             "message": "Property approved successfully",
@@ -609,12 +591,10 @@ def reject_property(property_id):
         if not ObjectId.is_valid(property_id):
             return jsonify({"error": "Invalid property ID"}), 400
         
-        # Get property
         prop = mongo.db.properties.find_one({"_id": ObjectId(property_id)})
         if not prop:
             return jsonify({"error": "Property not found"}), 404
         
-        # Update property
         mongo.db.properties.update_one(
             {"_id": ObjectId(property_id)},
             {"$set": {
@@ -628,8 +608,6 @@ def reject_property(property_id):
         )
         
         print(f"❌ Property rejected by admin: {prop['title']}")
-        
-        # TODO: Send notification to landlord with rejection reason
         
         return jsonify({
             "message": "Property rejected successfully",
@@ -652,11 +630,9 @@ def get_growth_analytics():
     try:
         days = request.args.get("days", 30, type=int)
         
-        # Get date range
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
         
-        # User growth
         user_growth_pipeline = [
             {"$match": {"created_at": {"$gte": start_date, "$lte": end_date}}},
             {"$group": {
@@ -671,7 +647,6 @@ def get_growth_analytics():
         ]
         user_growth = list(mongo.db.users.aggregate(user_growth_pipeline))
         
-        # Property growth
         property_growth_pipeline = [
             {"$match": {"created_at": {"$gte": start_date, "$lte": end_date}}},
             {"$group": {

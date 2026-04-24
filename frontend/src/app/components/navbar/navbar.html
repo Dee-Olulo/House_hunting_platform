@@ -18,12 +18,12 @@
       
       <!-- Tenant Links -->
       <ng-container *ngIf="isLoggedIn && userRole === 'tenant'">
-        <li>
+        <!-- <li>
           <a routerLink="/tenant/dashboard" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">🏠</span>
             <span class="nav-text">Dashboard</span>
           </a>
-        </li>
+        </li> -->
         <li>
           <a routerLink="/properties" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">🔍</span>
@@ -44,12 +44,12 @@
             <span class="nav-text">My Bookings</span>
           </a>
         </li>
-        <li>
+        <!-- <li>
           <a routerLink="/tenant/payments/history" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">💳</span>
             <span class="nav-text">Payments</span>
           </a>
-        </li>
+        </li> -->
       </ng-container>
      
       <!-- Landlord Links -->
@@ -72,12 +72,12 @@
             <span class="nav-text">Bookings</span>
           </a>
         </li>
-        <li>
+        <!-- <li>
           <a routerLink="/landlord/subscription" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">💼</span>
             <span class="nav-text">Subscription Plan</span>
           </a>
-        </li>
+        </li> -->
         <li>
           <a routerLink="/landlord/reviews" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">⭐</span>
