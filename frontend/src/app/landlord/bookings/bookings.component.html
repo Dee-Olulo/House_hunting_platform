@@ -9,10 +9,7 @@
           <span class="stat-value">{{ statistics.pending_bookings_count || 0 }}</span>
           <span class="stat-label">Pending</span>
         </div>
-        <div class="stat-card">
-          <span class="stat-value">{{ upcomingBookings.length }}</span>
-          <span class="stat-label">Upcoming</span>
-        </div>
+        
         <div class="stat-card">
           <span class="stat-value">{{ statistics.recent_bookings_count || 0 }}</span>
           <span class="stat-label">Last 7 Days</span>
@@ -122,9 +119,7 @@
 
           <!-- Action Buttons -->
           <div class="booking-actions">
-            <button class="btn-view" (click)="viewBookingDetails(booking._id!)">
-              View Details
-            </button>
+            
             <button class="btn-property" (click)="viewProperty(booking.property_id)">
               View Property
             </button>

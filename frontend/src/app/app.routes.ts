@@ -103,19 +103,13 @@ export const routes: Routes = [
           import('./payments/payment-details/payment-details')
             .then(m => m.PaymentDetailsComponent)
       },
-    // ? Subscription plan route
-      {
-        path: 'subscription',
-        loadComponent: () =>
-          import('./landlord/subscription-plans/suscription-plans')
-            .then(m => m.SubscriptionPlansComponent)
-      },
-      {
-        path: 'reviews',
-        loadComponent: () =>
-          import('./landlord/my-reviews/my-reviews')
-            .then(m => m.MyReviewsComponent)
-      }
+   
+      // {
+      //   path: 'reviews',
+      //   loadComponent: () =>
+      //     import('./landlord/my-reviews/my-reviews')
+      //       .then(m => m.MyReviewsComponent)
+      // }
 
     ]
   },

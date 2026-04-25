@@ -45,17 +45,17 @@ export interface LocationData {
             <input
               type="text"
               [(ngModel)]="locationData.city"
-              placeholder="New York"
+              placeholder="Nairobi"
               class="form-control"
               (blur)="onAddressChange()"
             />
           </div>
           <div class="form-group">
-            <label>State/Province *</label>
+            <label>State/County *</label>
             <input
               type="text"
               [(ngModel)]="locationData.state"
-              placeholder="NY"
+              placeholder="Nairobi"
               class="form-control"
               (blur)="onAddressChange()"
             />
@@ -68,7 +68,7 @@ export interface LocationData {
             <input
               type="text"
               [(ngModel)]="locationData.zip_code"
-              placeholder="10001"
+              placeholder="00100"
               class="form-control"
             />
           </div>
@@ -77,7 +77,7 @@ export interface LocationData {
             <input
               type="text"
               [(ngModel)]="locationData.country"
-              placeholder="USA"
+              placeholder="Kenya"
               class="form-control"
               (blur)="onAddressChange()"
             />

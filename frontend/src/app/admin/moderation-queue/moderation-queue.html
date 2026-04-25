@@ -63,7 +63,7 @@
           onerror="this.src='/assets/placeholder-property.jpg'"
         />
         <div class="moderation-score" [ngClass]="getScoreBadgeClass(property.moderation_score)">
-          Score: {{ (property.moderation_score * 100).toFixed(0) }}%
+          Score: {{ (property.moderation_score).toFixed(0) }}%
         </div>
       </div>
 
