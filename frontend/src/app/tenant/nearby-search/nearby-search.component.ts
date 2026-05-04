@@ -128,7 +128,7 @@ export class NearbySearchComponent implements OnInit {
       <div class="property-popup">
         <h3>${property.title}</h3>
         <p class="price">ksh{property.price.toLocaleString()}/month</p>
-        <p>${property.bedrooms} bed • ksh{property.bathrooms} bath</p>
+        <p>${property.bedrooms} bed • ${property.bathrooms} bath</p>
         <p class="distance">
           <i class="fas fa-location-arrow"></i> 
           ksh{this.locationService.formatDistance(property.distance_km)} away
@@ -183,7 +183,7 @@ export class NearbySearchComponent implements OnInit {
   formatPrice(price: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'Ksh',
       minimumFractionDigits: 0
     }).format(price);
   }

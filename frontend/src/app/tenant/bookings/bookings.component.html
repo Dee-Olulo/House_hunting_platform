@@ -10,10 +10,7 @@
           <span class="stat-value">{{ getStatusCount('pending') }}</span>
           <span class="stat-label">Pending</span>
         </div>
-        <!-- <div class="stat-card confirmed">
-          <span class="stat-value">{{ upcomingBookings.length }}</span>
-          <span class="stat-label">Upcoming</span>
-        </div> -->
+       
         <div class="stat-card completed">
           <span class="stat-value">{{ getStatusCount('completed') }}</span>
           <span class="stat-label">Completed</span>
@@ -129,9 +126,9 @@
 
           <!-- Action Buttons -->
           <div class="booking-actions">
-            <button class="btn-view" (click)="viewBookingDetails(booking._id!)">
+            <!-- <button class="btn-view" (click)="viewBookingDetails(booking._id!)">
               View Details
-            </button>
+            </button> -->
             <button class="btn-property" (click)="viewProperty(booking.property_id)">
               View Property
             </button>

@@ -3,7 +3,7 @@
   <div class="page-header">
     <div class="header-content">
       <h1>🔔 Notification Management</h1>
-      <p>Send broadcasts, campaigns, and manage notification templates</p>
+      <p>Send broadcasts, campaigns </p>
     </div>
     <button class="back-btn" (click)="router.navigate(['/admin/dashboard'])">
       ← Back to Dashboard
@@ -58,9 +58,7 @@
     <button class="tab-btn" [class.active]="activeTab === 'campaign'" (click)="setActiveTab('campaign')">
       🎯 Campaign
     </button>
-    <button class="tab-btn" [class.active]="activeTab === 'templates'" (click)="setActiveTab('templates')">
-      📝 Templates
-    </button>
+    
     <button class="tab-btn" [class.active]="activeTab === 'schedule'" (click)="setActiveTab('schedule')">
       ⏰ Schedule
     </button>
@@ -178,36 +176,6 @@
     </div>
   </div>
 
-  <!-- TEMPLATES TAB -->
-  <div *ngIf="activeTab === 'templates'" class="tab-content">
-    <div class="content-card">
-      <div class="card-header">
-        <h2>📝 Notification Templates</h2>
-        <button class="btn-primary" (click)="openTemplateModal()">+ Create Template</button>
-      </div>
-
-      <div class="templates-grid">
-        <div *ngFor="let template of templates" class="template-card">
-          <div class="template-header">
-            <h3>{{ template.name }}</h3>
-            <span class="template-type">{{ template.notification_type }}</span>
-          </div>
-          <div class="template-body">
-            <p class="template-title">{{ template.title }}</p>
-            <p class="template-message">{{ template.message }}</p>
-          </div>
-          <div class="template-footer">
-            <button class="btn-edit" (click)="openTemplateModal(template)">✏️ Edit</button>
-            <button class="btn-delete" (click)="deleteTemplate(template._id!)">🗑️ Delete</button>
-          </div>
-        </div>
-
-        <div *ngIf="templates.length === 0" class="empty-templates">
-          <p>No templates yet. Create your first template!</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- SCHEDULE TAB -->
   <div *ngIf="activeTab === 'schedule'" class="tab-content">
