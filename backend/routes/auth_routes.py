@@ -6,6 +6,7 @@ from models.user import User
 from utils.validators import validate_email, validate_password, validate_role
 from utils.decorators import admin_only, landlord_only, tenant_only
 from services.notification_service import NotificationService
+from services.email_service import EmailService
 from datetime import datetime, timedelta
 import secrets
 import string
@@ -13,8 +14,9 @@ import string
 # Blueprint with URL prefix /auth
 auth_bp = Blueprint("auth", __name__)
 
-# Initialize notification service
+# Initialize services
 notification_service = NotificationService()
+email_service = EmailService()
 
 # ---------------------------
 # REGISTER USER
@@ -81,16 +83,13 @@ def login():
         if not email or not password:
             return jsonify({"error": "Email and password are required"}), 400
 
-        # Find user
         user = mongo.db.users.find_one({"email": email})
         if not user:
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # Check password
         if not bcrypt.check_password_hash(user["password"], password):
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # ✅ CHECK SUSPENSION — block login before issuing a token
         if user.get("is_suspended"):
             suspension_reason = user.get("suspension_reason", "Your account has been suspended.")
             print(f"🚫 Blocked login for suspended user: {email}")
@@ -100,7 +99,6 @@ def login():
                 "reason": suspension_reason
             }), 403
 
-        # Create JWT token
         access_token = create_access_token(
             identity=str(user["_id"]),
             additional_claims={
@@ -132,7 +130,6 @@ def get_current_user():
         user_id = get_jwt_identity()
         claims = get_jwt()
 
-        # ✅ Also check suspension on /me in case account was suspended mid-session
         user = mongo.db.users.find_one({"_id": __import__('bson').ObjectId(user_id)}, {"is_suspended": 1, "suspension_reason": 1})
         if user and user.get("is_suspended"):
             return jsonify({
@@ -161,7 +158,6 @@ def get_current_user():
 def admin_dashboard():
     user_id = get_jwt_identity()
     claims = get_jwt()
-    
     return jsonify({
         "message": "Welcome to the admin dashboard",
         "user": {
@@ -177,7 +173,6 @@ def admin_dashboard():
 def landlord_properties():
     user_id = get_jwt_identity()
     claims = get_jwt()
-    
     return jsonify({
         "message": "Here are your properties",
         "user": {
@@ -193,7 +188,6 @@ def landlord_properties():
 def tenant_bookings():
     user_id = get_jwt_identity()
     claims = get_jwt()
-    
     return jsonify({
         "message": "Here are your bookings",
         "user": {
@@ -220,12 +214,14 @@ def forgot_password():
         
         user = mongo.db.users.find_one({"email": email})
         
+        # Always return the same message to prevent email enumeration
         if not user:
             return jsonify({
-                "message": "If an account exists with this email, a password reset link has been sent.",
+                "message": "If an account exists with this email, a password reset code has been sent.",
                 "email": email
             }), 200
         
+        # Generate 6-digit token and save to DB
         reset_token = ''.join(secrets.choice(string.digits) for _ in range(6))
         expires_at = datetime.utcnow() + timedelta(hours=1)
         
@@ -248,11 +244,25 @@ def forgot_password():
         print(f"Token: {reset_token}")
         print(f"Expires: {expires_at}")
         print(f"{'='*50}\n")
-        
+
+        # ✅ FIX: Actually send the reset token via email
+        user_name = email.split('@')[0]
+        email_sent = email_service.send_password_reset_email(
+            user_email=email,
+            user_name=user_name,
+            reset_token=reset_token
+        )
+
+        if not email_sent:
+            print(f"⚠️ Email delivery failed for {email}, but token is saved in DB.")
+            # Still return success so the user isn't confused —
+            # but log this so you can investigate delivery issues.
+
         return jsonify({
-            "message": "If an account exists with this email, a password reset link has been sent.",
-            "email": email,
-            "dev_token": reset_token  # Remove in production
+            "message": "If an account exists with this email, a password reset code has been sent.",
+            "email": email
+            # ⚠️ Remove dev_token below before going to production
+            # "dev_token": reset_token
         }), 200
         
     except Exception as e:

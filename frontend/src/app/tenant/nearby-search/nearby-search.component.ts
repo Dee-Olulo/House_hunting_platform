@@ -127,11 +127,11 @@ export class NearbySearchComponent implements OnInit {
     return `
       <div class="property-popup">
         <h3>${property.title}</h3>
-        <p class="price">$${property.price.toLocaleString()}/month</p>
-        <p>${property.bedrooms} bed • ${property.bathrooms} bath</p>
+        <p class="price">ksh{property.price.toLocaleString()}/month</p>
+        <p>${property.bedrooms} bed • ksh{property.bathrooms} bath</p>
         <p class="distance">
           <i class="fas fa-location-arrow"></i> 
-          ${this.locationService.formatDistance(property.distance_km)} away
+          ksh{this.locationService.formatDistance(property.distance_km)} away
         </p>
       </div>
     `;

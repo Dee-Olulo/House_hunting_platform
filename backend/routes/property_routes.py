@@ -13,78 +13,8 @@ import os
 
 property_bp = Blueprint("property", __name__)
 # Initialize moderator
-moderator = PropertyModerator()
+# moderator = PropertyModerator()
 
-    
-    #  ---------------------------
-# VALIDATE AND AUTO-GEOCODE ON PROPERTY CREATION
-# ---------------------------
-# # Modify the create_property endpoint to auto-geocode if coordinates not provided
-# @property_bp.route("/", methods=["POST"])
-# @jwt_required()
-# @landlord_only
-# def create_property():
-#     try:
-#         user_id = get_jwt_identity()
-#         data = request.get_json()
-        
-#         # Validate property data
-#         is_valid, errors = validate_property_data(data)
-#         if not is_valid:
-#             return jsonify({"error": errors}), 400
-        
-#         # Auto-geocode if coordinates not provided
-#         if not data.get("latitude") or not data.get("longitude"):
-#             print("⚠️ No coordinates provided. Attempting to geocode address...")
-            
-#             geocode_result = geocode_address(
-#                 data.get("address"),
-#                 data.get("city"),
-#                 data.get("state"),
-#                 data.get("country")
-#             )
-            
-#             if geocode_result:
-#                 data["latitude"] = geocode_result["latitude"]
-#                 data["longitude"] = geocode_result["longitude"]
-#                 print(f"✅ Auto-geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
-#             else:
-#                 print("⚠️ Auto-geocoding failed. Property will be created without coordinates.")
-        
-#         # Create property object
-#         property_obj = Property(
-#             landlord_id=user_id,
-#             title=data.get("title"),
-#             description=data.get("description"),
-#             property_type=data.get("property_type"),
-#             address=data.get("address"),
-#             city=data.get("city"),
-#             state=data.get("state"),
-#             zip_code=data.get("zip_code"),
-#             country=data.get("country"),
-#             latitude=data.get("latitude"),
-#             longitude=data.get("longitude"),
-#             price=data.get("price"),
-#             bedrooms=data.get("bedrooms"),
-#             bathrooms=data.get("bathrooms"),
-#             area_sqft=data.get("area_sqft"),
-#             images=data.get("images", []),
-#             videos=data.get("videos", []),
-#             amenities=data.get("amenities", []),
-#             is_featured=data.get("is_featured", False)
-#         )
-        
-#         # Insert into database
-#         result = mongo.db.properties.insert_one(property_obj.to_dict())
-        
-#         return jsonify({
-#             "message": "Property created successfully",
-#             "property_id": str(result.inserted_id),
-#             "coordinates_added": bool(data.get("latitude") and data.get("longitude"))
-#         }), 201
-        
-#     except Exception as e:
-#         return jsonify({"error": f"Failed to create property: {str(e)}"}), 500
 # Initialize moderator
 moderator = PropertyModerator()
 
