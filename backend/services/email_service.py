@@ -16,7 +16,7 @@ class EmailService:
         self.sender_email = os.getenv("SENDER_EMAIL", "noreply@househunting.com")
         self.sender_password = os.getenv("SENDER_PASSWORD", "")
         self.sender_name = os.getenv("SENDER_NAME", "House Hunting Platform")
-        self.enabled = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
+        self.enabled = os.getenv("EMAIL_ENABLED", "true").lower() == "true"
     
     def send_email(self, to_email, subject, html_content, text_content=None):
         """

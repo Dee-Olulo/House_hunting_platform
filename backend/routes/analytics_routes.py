@@ -2,11 +2,10 @@
 """
 Analytics Routes - Comprehensive Platform Analytics
 """
-
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from extensions import mongo
-from utils.decorators import admin_only
+from utils.decorators import admin_only, tenant_only, landlord_only
 from bson import ObjectId
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -19,7 +18,6 @@ analytics_bp = Blueprint("analytics", __name__)
 
 @analytics_bp.route("/users/engagement", methods=["GET"])
 @jwt_required()
-@admin_only
 def get_user_engagement():
     """Get user engagement metrics"""
     try:
@@ -104,7 +102,6 @@ def get_user_engagement():
 
 @analytics_bp.route("/properties/performance", methods=["GET"])
 @jwt_required()
-@admin_only
 def get_property_performance():
     """Get property performance metrics"""
     try:
@@ -214,7 +211,6 @@ def get_property_performance():
 
 @analytics_bp.route("/geography/distribution", methods=["GET"])
 @jwt_required()
-@admin_only
 def get_geographic_distribution():
     """Get geographic distribution of properties and searches"""
     try:
@@ -287,7 +283,6 @@ def get_geographic_distribution():
 
 @analytics_bp.route("/bookings/trends", methods=["GET"])
 @jwt_required()
-@admin_only
 def get_booking_trends():
     """Get booking trends and statistics"""
     try:
@@ -359,7 +354,6 @@ def get_booking_trends():
 
 @analytics_bp.route("/summary", methods=["GET"])
 @jwt_required()
-@admin_only
 def get_analytics_summary():
     """Get comprehensive analytics summary"""
     try:

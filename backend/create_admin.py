@@ -5,9 +5,9 @@ from extensions import mongo, bcrypt
 from datetime import datetime
 app = create_app()
 def create_admin():
-    with app.app_context():  # Important: Run within Flask app context
+    with app.app_context():  # Run within Flask app context
         email = "admin@househunting.com"
-        password = "#_admin123"  # Change this!
+        password = "#_admin123" 
         
         # Check if admin already exists
         existing_admin = mongo.db.users.find_one({"email": email})
