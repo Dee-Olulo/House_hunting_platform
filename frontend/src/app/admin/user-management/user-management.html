@@ -114,7 +114,7 @@
               (click)="openSuspendModal(user)"
               title="Suspend User"
             >
-              🚫
+              Suspend
             </button>
             <button
               *ngIf="user.is_suspended"
@@ -130,7 +130,7 @@
               (click)="openDeleteModal(user)"
               title="Delete User"
             >
-              🗑️
+              Delete
             </button>
           </td>
         </tr>
@@ -140,7 +140,7 @@
 
   <!-- No Results -->
   <div *ngIf="!isLoading && users.length === 0" class="no-results">
-    <p>📭 No users found</p>
+    <p> No users found</p>
     <button class="clear-filters-btn" (click)="clearSearch(); selectedRole = ''; onFilterChange()">
       Clear Filters
     </button>
@@ -201,7 +201,7 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h2>Delete User</h2>
       <p class="warning-text">
-        ⚠️ This action cannot be undone!
+         This action cannot be undone!
       </p>
       <p>
         Are you sure you want to delete <strong>{{ selectedUser?.email }}</strong>?

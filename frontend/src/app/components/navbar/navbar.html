@@ -1,145 +1,206 @@
+<!-- navbar.component.html -->
+<!-- Root navigation bar — visible on every page of the application -->
 <nav class="navbar">
   <div class="navbar-container">
-    <!-- Logo/Brand -->
+
+    <!-- ===== LOGO / BRAND ===== -->
+    <!-- getHomeRoute() in the .ts file returns the correct home URL based on the user's role.
+         e.g. tenant → /properties, landlord → /landlord/properties, admin → /admin/dashboard -->
     <a [routerLink]="getHomeRoute()" class="navbar-brand">
-      <span class="logo-icon">🏠</span>
-      <h1>House Hunting</h1>
+      <span class="logo-icon"></span>
+      <h1>House Hunting Platform</h1>
     </a>
 
-    <!-- Mobile Menu Toggle -->
+    <!-- ===== MOBILE MENU TOGGLE ===== -->
+    <!-- The hamburger button — only visible on small screens (controlled via CSS).
+         *ngIf="isLoggedIn" hides it entirely when no user is logged in since
+         there are no nav links to show. (click) calls toggleMobileMenu() in the .ts
+         file which flips isMobileMenuOpen true/false. -->
     <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" *ngIf="isLoggedIn">
+      <!-- Three lines that form the hamburger icon -->
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
       <span class="hamburger-line"></span>
     </button>
 
-    <!-- Navigation Links -->
+    <!-- ===== NAVIGATION LINKS ===== -->
+    <!-- [class.mobile-open] adds the 'mobile-open' CSS class when isMobileMenuOpen is true,
+         which slides the menu into view on mobile screens. -->
     <ul class="navbar-menu" [class.mobile-open]="isMobileMenuOpen">
-      
-      <!-- Tenant Links -->
+
+      <!-- ================================================================ -->
+      <!-- TENANT LINKS                                                       -->
+      <!-- Only rendered when a user is logged in AND their role is 'tenant' -->
+      <!-- ================================================================ -->
       <ng-container *ngIf="isLoggedIn && userRole === 'tenant'">
+
+        <!-- Browse all available property listings -->
         <li>
           <a routerLink="/properties" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">🔍</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">Browse Properties</span>
           </a>
         </li>
-        
+
+        <!-- Tenant's saved/favourited properties -->
         <li>
           <a routerLink="/tenant/favourites" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">❤️</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">Saved</span>
-            <!-- <span class="badge" *ngIf="favouritesCount > 0">{{ favouritesCount }}</span> -->
           </a>
         </li>
+
+        <!-- Tenant's booking history and status -->
         <li>
           <a routerLink="/tenant/bookings" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📅</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">My Bookings</span>
           </a>
         </li>
-         <li>
+
+        <!-- Tenant-specific analytics page -->
+        <li>
           <a routerLink="/tenant/analytics" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">Analytics</span>
-          </a>
-        </li>
-      
-      </ng-container>
-     
-      <!-- Landlord Links -->
-      <ng-container *ngIf="isLoggedIn && userRole === 'landlord'">
-        <li>
-          <a routerLink="/landlord/properties" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">🏢</span>
-            <span class="nav-text">My Properties</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/landlord/properties/add" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">➕</span>
-            <span class="nav-text">Add Property</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/landlord/bookings" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📋</span>
-            <span class="nav-text">Bookings</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/landlord/analytics" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">Analytics</span>
           </a>
         </li>
 
       </ng-container>
-      
-      <!-- Admin Links -->
+
+      <!-- =================================================================== -->
+      <!-- LANDLORD LINKS                                                        -->
+      <!-- Only rendered when a user is logged in AND their role is 'landlord'  -->
+      <!-- =================================================================== -->
+      <ng-container *ngIf="isLoggedIn && userRole === 'landlord'">
+
+        <!-- List of properties the landlord has created -->
+        <li>
+          <a routerLink="/landlord/properties" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon"></span>
+            <span class="nav-text">My Properties</span>
+          </a>
+        </li>
+
+        <!-- Form to create a new property listing -->
+        <li>
+          <a routerLink="/landlord/properties/add" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon"></span>
+            <span class="nav-text">Add Property</span>
+          </a>
+        </li>
+
+        <!-- All booking requests received for the landlord's properties -->
+        <li>
+          <a routerLink="/landlord/bookings" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon"></span>
+            <span class="nav-text">Bookings</span>
+          </a>
+        </li>
+
+        <!-- Landlord-specific analytics — property views, bookings, revenue etc. -->
+        <li>
+          <a routerLink="/landlord/analytics" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon"></span>
+            <span class="nav-text">Analytics</span>
+          </a>
+        </li>
+
+      </ng-container>
+
+      <!-- ================================================================ -->
+      <!-- ADMIN LINKS                                                        -->
+      <!-- Only rendered when a user is logged in AND their role is 'admin'  -->
+      <!-- Note: each link is in its own ng-container — they can be merged   -->
+      <!-- into one ng-container to reduce repetition in a future refactor.  -->
+      <!-- ================================================================ -->
+
+      <!-- Admin dashboard — user management, moderation queue, platform stats -->
       <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
         <li>
           <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">⚙️</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">Admin Dashboard</span>
           </a>
         </li>
       </ng-container>
+
+      <!-- Platform-wide analytics — currently points to /landlord/analytics.
+           TODO: update this to point to /admin/analytics once confirmed -->
       <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
         <li>
           <a routerLink="/landlord/analytics" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">Analytics</span>
           </a>
         </li>
-       </ng-container>
-      <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
-        
       </ng-container>
+
+      <!-- Empty admin ng-container — placeholder for a future link -->
+      <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
+      </ng-container>
+
+      <!-- Admin notification management page -->
       <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
         <li>
           <a routerLink="/admin/notifications" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">🔔</span>
+            <span class="nav-icon"></span>
             <span class="nav-text">Notifications</span>
           </a>
         </li>
       </ng-container>
 
-      <!-- Notification Bell - Shows for landlord and tenant -->
+      <!-- ===== NOTIFICATION BELL ===== -->
+      <!-- The bell icon with an unread count badge.
+           Only shown for landlords and tenants — admins have their own
+           notifications page linked above instead of the bell component. -->
       <li *ngIf="isLoggedIn && (userRole === 'landlord' || userRole === 'tenant')" class="notification-item">
         <app-notification-bell></app-notification-bell>
       </li>
 
-      <!-- User Profile Section -->
+      <!-- ===== USER PROFILE DROPDOWN ===== -->
+      <!-- Only rendered when a user is logged in.
+           Shows the user's initials, email, and role, and opens a dropdown menu. -->
       <li *ngIf="isLoggedIn" class="user-profile-dropdown">
+
+        <!-- Profile button — toggleUserMenu() opens/closes the dropdown -->
         <button class="user-profile-btn" (click)="toggleUserMenu()">
+          <!-- getUserInitials() in the .ts file returns e.g. "JD" from "john.doe@email.com" -->
           <span class="user-avatar">{{ getUserInitials() }}</span>
           <span class="user-info">
+            <!-- userEmail and userRole are read from localStorage via the .ts file -->
             <span class="user-email-display">{{ userEmail }}</span>
             <span class="user-role-badge">{{ userRole }}</span>
           </span>
+          <!-- Arrow icon that can be rotated via CSS when the menu is open -->
           <span class="dropdown-arrow">▼</span>
         </button>
-        
-        <!-- Dropdown Menu -->
+
+        <!-- Dropdown Menu — [class.show] makes it visible when isUserMenuOpen is true -->
         <div class="user-dropdown-menu" [class.show]="isUserMenuOpen">
+
+          <!-- Notifications link — dynamically routes to the correct role's notifications page.
+               e.g. tenant → /tenant/notifications, landlord → /landlord/notifications -->
           <a routerLink="/{{ userRole }}/notifications" class="dropdown-item" (click)="closeUserMenu()">
             <span class="dropdown-icon">🔔</span>
             Notifications
           </a>
-          <a routerLink="/profile" class="dropdown-item" (click)="closeUserMenu()">
-            <span class="dropdown-icon">👤</span>
-            Profile Settings
-          </a>
+
+          <!-- Visual separator between menu sections -->
           <div class="dropdown-divider"></div>
+
+          <!-- Logout button — calls logout() in the .ts file which clears localStorage
+               (token, role, email, userId) and redirects the user to the login page -->
           <button (click)="logout()" class="dropdown-item logout-item">
-            <span class="dropdown-icon">🚪</span>
+            <span class="dropdown-icon"></span>
             Logout
           </button>
         </div>
       </li>
 
-      <!-- Auth Links (Not Logged In) -->
+      <!-- ===== AUTH LINKS (NOT LOGGED IN) ===== -->
+      <!-- Shown only when no user is logged in.
+           Replaces all the role-based nav links above with just Login and Register. -->
       <ng-container *ngIf="!isLoggedIn">
         <li>
           <a routerLink="/login" routerLinkActive="active" class="auth-link login-link">
@@ -152,6 +213,7 @@
           </a>
         </li>
       </ng-container>
+
     </ul>
   </div>
 </nav>

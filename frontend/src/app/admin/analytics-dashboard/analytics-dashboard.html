@@ -120,11 +120,11 @@
             <!-- Growth badge — getGrowthClass() returns 'positive', 'negative', or 'neutral'
                  which maps to a green / red / grey CSS class.
                  | number:'1.1-1' formats to exactly 1 decimal place e.g. 12.5% -->
-            <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.user_growth)">
+            <!-- <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.user_growth)">
               <span class="growth-icon">{{ getGrowthIcon(summary.growth.user_growth) }}</span>
               <span>{{ summary.growth.user_growth | number:'1.1-1' }}%</span>
               <span class="growth-label">vs previous period</span>
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -133,11 +133,11 @@
           <div class="card-content">
             <h3>Total Properties</h3>
             <p class="card-number">{{ summary.overview.total_properties | number }}</p>
-            <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.property_growth)">
+            <!-- <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.property_growth)">
               <span class="growth-icon">{{ getGrowthIcon(summary.growth.property_growth) }}</span>
               <span>{{ summary.growth.property_growth | number:'1.1-1' }}%</span>
               <span class="growth-label">vs previous period</span>
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -146,11 +146,11 @@
           <div class="card-content">
             <h3>Total Bookings</h3>
             <p class="card-number">{{ summary.overview.total_bookings | number }}</p>
-            <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.booking_growth)">
+            <!-- <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.booking_growth)">
               <span class="growth-icon">{{ getGrowthIcon(summary.growth.booking_growth) }}</span>
               <span>{{ summary.growth.booking_growth | number:'1.1-1' }}%</span>
               <span class="growth-label">vs previous period</span>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -250,19 +250,7 @@
       <!-- DAILY USER TREND — Vertical bar chart (styled as a line chart in CSS)
            *ngFor loops over each day in the trend array returned by the API.
            Bar height is a % of the highest day's count so they scale correctly. -->
-      <div class="chart-card">
-        <h3>Daily New Users Trend</h3>
-        <div class="line-chart">
-          <div *ngFor="let point of userEngagement.daily_trend" class="chart-point">
-            <!-- [style.height.%] sets the bar height as a percentage of the tallest bar -->
-            <div class="point-bar" [style.height.%]="getBarWidth(point.count, getMaxCount(userEngagement.daily_trend))">
-              <span class="point-value">{{ point.count }}</span>
-            </div>
-            <!-- | date:'MMM d' formats the date string to e.g. "Jun 5" -->
-            <span class="point-label">{{ point.date | date:'MMM d' }}</span>
-          </div>
-        </div>
-      </div>
+      
     </div>
 
 
