@@ -9,9 +9,8 @@ from datetime import datetime
 notification_bp = Blueprint("notification", __name__)
 notification_service = NotificationService()
 
-# ---------------------------
 # GET ALL NOTIFICATIONS FOR USER
-# ---------------------------
+
 @notification_bp.route("/", methods=["GET"])
 @jwt_required()
 def get_notifications():
@@ -62,10 +61,8 @@ def get_notifications():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch notifications: {str(e)}"}), 500
 
-
-# ---------------------------
 # GET UNREAD COUNT
-# ---------------------------
+
 @notification_bp.route("/unread-count", methods=["GET"])
 @jwt_required()
 def get_unread_count():
@@ -81,10 +78,8 @@ def get_unread_count():
     except Exception as e:
         return jsonify({"error": f"Failed to get unread count: {str(e)}"}), 500
 
-
-# ---------------------------
 # MARK NOTIFICATION AS READ
-# ---------------------------
+
 @notification_bp.route("/<notification_id>/read", methods=["PUT"])
 @jwt_required()
 def mark_notification_as_read(notification_id):
@@ -117,9 +112,8 @@ def mark_notification_as_read(notification_id):
         return jsonify({"error": f"Failed to mark notification as read: {str(e)}"}), 500
 
 
-# ---------------------------
 # MARK ALL AS READ
-# ---------------------------
+
 @notification_bp.route("/read-all", methods=["PUT"])
 @jwt_required()
 def mark_all_as_read():
@@ -136,10 +130,8 @@ def mark_all_as_read():
     except Exception as e:
         return jsonify({"error": f"Failed to mark all as read: {str(e)}"}), 500
 
-
-# ---------------------------
 # DELETE NOTIFICATION
-# ---------------------------
+
 @notification_bp.route("/<notification_id>", methods=["DELETE"])
 @jwt_required()
 def delete_notification(notification_id):
@@ -163,9 +155,8 @@ def delete_notification(notification_id):
         return jsonify({"error": f"Failed to delete notification: {str(e)}"}), 500
 
 
-# ---------------------------
 # DELETE ALL NOTIFICATIONS
-# ---------------------------
+
 @notification_bp.route("/delete-all", methods=["DELETE"])
 @jwt_required()
 def delete_all_notifications():
@@ -184,9 +175,8 @@ def delete_all_notifications():
         return jsonify({"error": f"Failed to delete all notifications: {str(e)}"}), 500
 
 
-# ---------------------------
 # GET NOTIFICATION STATISTICS
-# ---------------------------
+
 @notification_bp.route("/statistics", methods=["GET"])
 @jwt_required()
 def get_notification_statistics():
@@ -232,10 +222,8 @@ def get_notification_statistics():
     except Exception as e:
         return jsonify({"error": f"Failed to get statistics: {str(e)}"}), 500
 
-
-# ---------------------------
 # CLEANUP OLD NOTIFICATIONS (ADMIN)
-# ---------------------------
+
 @notification_bp.route("/cleanup", methods=["POST"])
 @jwt_required()
 def cleanup_old_notifications():

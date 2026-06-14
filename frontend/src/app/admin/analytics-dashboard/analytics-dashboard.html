@@ -1,21 +1,32 @@
 <!-- analytics-dashboard.component.html -->
+<!-- Root container for the entire analytics page -->
 <div class="analytics-dashboard">
+
+  <!-- ===== PAGE HEADER ===== -->
+  <!-- Contains the page title on the left and action buttons on the right -->
   <div class="page-header">
     <div class="header-content">
-      <h1>📊 Analytics & Reports</h1>
+      <h1>Analytics & Reports</h1>
       <p>Comprehensive platform insights and metrics</p>
     </div>
+
     <div class="header-actions">
-      <button class="back-btn" (click)="router.navigate(['/admin/dashboard'])">
+      <!-- goBack() in the .ts file checks the user's role and navigates to the correct dashboard -->
+      <button class="back-btn" (click)="goBack()">
         ← Back
       </button>
+
+      <!-- Calls exportToPDF() in the .ts file which triggers a browser print/download -->
       <button class="export-btn" (click)="exportToPDF()">
-        📄 Export PDF
+        Export PDF
       </button>
     </div>
   </div>
 
-  <!-- Period Selector -->
+  <!-- ===== PERIOD SELECTOR ===== -->
+  <!-- Dropdown that controls how many days of data to analyse.
+       [(ngModel)] keeps selectedPeriod in the .ts file in sync with the selected option.
+       (change) fires onPeriodChange() which re-fetches all data with the new period. -->
   <div class="period-selector">
     <label>Analysis Period:</label>
     <select [(ngModel)]="selectedPeriod" (change)="onPeriodChange()" class="period-select">
@@ -26,70 +37,89 @@
     </select>
   </div>
 
-  <!-- Error Message -->
+  <!-- ===== ERROR ALERT ===== -->
+  <!-- Only renders if errorMessage has a value (set by the .ts file when an API call fails).
+       *ngIf hides the element completely when there is no error. -->
   <div *ngIf="errorMessage" class="error-alert">
-    ❌ {{ errorMessage }}
+    {{ errorMessage }}
   </div>
 
-  <!-- Loading State -->
+  <!-- ===== LOADING SPINNER ===== -->
+  <!-- Shown while isLoading is true (i.e. API calls are still in flight).
+       The .ts file sets isLoading = false once the last API call completes. -->
   <div *ngIf="isLoading" class="loading">
     <div class="spinner"></div>
     <p>Loading analytics...</p>
   </div>
 
-  <!-- Analytics Content -->
+  <!-- ===== MAIN ANALYTICS CONTENT ===== -->
+  <!-- Only renders when loading is finished AND the summary data has arrived.
+       Checking both prevents a flash of broken content if data is partially loaded. -->
   <div *ngIf="!isLoading && summary" class="analytics-content">
-    
-    <!-- Tab Navigation -->
+
+    <!-- ===== TAB NAVIGATION ===== -->
+    <!-- Each button calls setActiveTab() in the .ts file with its tab name.
+         [class.active] adds the 'active' CSS class only when that tab is currently selected,
+         which highlights the active tab button. -->
     <div class="tab-navigation">
       <button
         class="tab-btn"
         [class.active]="activeTab === 'overview'"
         (click)="setActiveTab('overview')"
       >
-        📊 Overview
+        Overview
       </button>
       <button
         class="tab-btn"
         [class.active]="activeTab === 'users'"
         (click)="setActiveTab('users')"
       >
-        👥 Users
+        Users
       </button>
       <button
         class="tab-btn"
         [class.active]="activeTab === 'properties'"
         (click)="setActiveTab('properties')"
       >
-        🏠 Properties
+        Properties
       </button>
       <button
         class="tab-btn"
         [class.active]="activeTab === 'geography'"
         (click)="setActiveTab('geography')"
       >
-        🗺️ Geography
+        Geography
       </button>
       <button
         class="tab-btn"
         [class.active]="activeTab === 'bookings'"
         (click)="setActiveTab('bookings')"
       >
-        📅 Bookings
+        Bookings
       </button>
     </div>
 
-    <!-- OVERVIEW TAB -->
+
+    <!-- ================================================================== -->
+    <!-- OVERVIEW TAB                                                         -->
+    <!-- Shows platform-wide totals and growth figures vs the previous period -->
+    <!-- ================================================================== -->
     <div *ngIf="activeTab === 'overview'" class="tab-content">
       <h2 class="section-title">Platform Overview</h2>
-      
-      <!-- Summary Cards -->
+
+      <!-- Summary Cards — one card each for Users, Properties, and Bookings -->
       <div class="summary-grid">
+
+        <!-- USERS CARD -->
         <div class="summary-card">
-          <div class="card-icon">👥</div>
           <div class="card-content">
             <h3>Total Users</h3>
+            <!-- | number formats the value with thousand separators e.g. 1,234 -->
             <p class="card-number">{{ summary.overview.total_users | number }}</p>
+
+            <!-- Growth badge — getGrowthClass() returns 'positive', 'negative', or 'neutral'
+                 which maps to a green / red / grey CSS class.
+                 | number:'1.1-1' formats to exactly 1 decimal place e.g. 12.5% -->
             <div class="card-growth" [ngClass]="getGrowthClass(summary.growth.user_growth)">
               <span class="growth-icon">{{ getGrowthIcon(summary.growth.user_growth) }}</span>
               <span>{{ summary.growth.user_growth | number:'1.1-1' }}%</span>
@@ -98,8 +128,8 @@
           </div>
         </div>
 
+        <!-- PROPERTIES CARD -->
         <div class="summary-card">
-          <div class="card-icon">🏠</div>
           <div class="card-content">
             <h3>Total Properties</h3>
             <p class="card-number">{{ summary.overview.total_properties | number }}</p>
@@ -111,8 +141,8 @@
           </div>
         </div>
 
+        <!-- BOOKINGS CARD -->
         <div class="summary-card">
-          <div class="card-icon">📅</div>
           <div class="card-content">
             <h3>Total Bookings</h3>
             <p class="card-number">{{ summary.overview.total_bookings | number }}</p>
@@ -125,7 +155,8 @@
         </div>
       </div>
 
-      <!-- Period Stats -->
+      <!-- Period Stats — shows counts of NEW records created within the selected period only,
+           as opposed to the summary cards above which show all-time totals -->
       <div class="period-stats">
         <h3>Last {{ selectedPeriod }} Days Activity</h3>
         <div class="stats-row">
@@ -145,16 +176,21 @@
       </div>
     </div>
 
-    <!-- USERS TAB -->
+
+    <!-- ================================================================== -->
+    <!-- USERS TAB                                                            -->
+    <!-- Only renders when this tab is active AND userEngagement data exists  -->
+    <!-- ================================================================== -->
     <div *ngIf="activeTab === 'users' && userEngagement" class="tab-content">
       <div class="section-header">
         <h2 class="section-title">User Engagement Metrics</h2>
+        <!-- Exports the daily user trend data as a CSV file download -->
         <button class="export-small-btn" (click)="exportUserData()">
-          📥 Export CSV
+          Export CSV
         </button>
       </div>
 
-      <!-- User Metrics Cards -->
+      <!-- Top-level user count cards -->
       <div class="metrics-grid">
         <div class="metric-card">
           <h4>Total Users</h4>
@@ -162,22 +198,24 @@
         </div>
         <div class="metric-card">
           <h4>New Users</h4>
+          <!-- New users = accounts created within the selected period -->
           <p class="metric-value">{{ userEngagement.new_users | number }}</p>
         </div>
         <div class="metric-card">
           <h4>Active Users</h4>
+          <!-- Active users = users who have logged in during the selected period -->
           <p class="metric-value">{{ userEngagement.active_users | number }}</p>
         </div>
-        <!-- <div class="metric-card">
-          <h4>Retention Rate</h4>
-          <p class="metric-value">{{ userEngagement.retention_rate }}%</p>
-        </div> -->
       </div>
 
-      <!-- Users by Role -->
+      <!-- USERS BY ROLE — Horizontal bar chart -->
+      <!-- Each bar width is calculated by getBarWidth(roleCount, totalUsers),
+           which returns a 0-100 percentage so the bars are always proportional -->
       <div class="chart-card">
         <h3>Users by Role</h3>
         <div class="bar-chart">
+
+          <!-- Tenant bar — getRoleCount('tenant') searches the API data for the tenant count -->
           <div class="bar-item">
             <span class="bar-label">Tenants</span>
             <div class="bar-container">
@@ -186,6 +224,8 @@
               </div>
             </div>
           </div>
+
+          <!-- Landlord bar -->
           <div class="bar-item">
             <span class="bar-label">Landlords</span>
             <div class="bar-container">
@@ -194,6 +234,8 @@
               </div>
             </div>
           </div>
+
+          <!-- Admin bar -->
           <div class="bar-item">
             <span class="bar-label">Admins</span>
             <div class="bar-container">
@@ -205,30 +247,39 @@
         </div>
       </div>
 
-      <!-- Daily User Trend -->
+      <!-- DAILY USER TREND — Vertical bar chart (styled as a line chart in CSS)
+           *ngFor loops over each day in the trend array returned by the API.
+           Bar height is a % of the highest day's count so they scale correctly. -->
       <div class="chart-card">
         <h3>Daily New Users Trend</h3>
         <div class="line-chart">
           <div *ngFor="let point of userEngagement.daily_trend" class="chart-point">
+            <!-- [style.height.%] sets the bar height as a percentage of the tallest bar -->
             <div class="point-bar" [style.height.%]="getBarWidth(point.count, getMaxCount(userEngagement.daily_trend))">
               <span class="point-value">{{ point.count }}</span>
             </div>
+            <!-- | date:'MMM d' formats the date string to e.g. "Jun 5" -->
             <span class="point-label">{{ point.date | date:'MMM d' }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PROPERTIES TAB -->
+
+    <!-- ================================================================== -->
+    <!-- PROPERTIES TAB                                                       -->
+    <!-- Only renders when this tab is active AND propertyPerformance exists  -->
+    <!-- ================================================================== -->
     <div *ngIf="activeTab === 'properties' && propertyPerformance" class="tab-content">
       <div class="section-header">
         <h2 class="section-title">Property Performance</h2>
+        <!-- Exports the most-booked properties table as a CSV file download -->
         <button class="export-small-btn" (click)="exportPropertyData()">
-          📥 Export CSV
+          Export CSV
         </button>
       </div>
 
-      <!-- Property Metrics -->
+      <!-- Property count metric cards -->
       <div class="metrics-grid">
         <div class="metric-card">
           <h4>Total Properties</h4>
@@ -236,19 +287,19 @@
         </div>
         <div class="metric-card">
           <h4>Active Properties</h4>
+          <!-- Active = currently listed and available for booking -->
           <p class="metric-value">{{ propertyPerformance.active_properties | number }}</p>
         </div>
-        <!-- <div class="metric-card">
-          <h4>Conversion Rate</h4>
-          <p class="metric-value">{{ propertyPerformance.conversion_rate }}%</p>
-        </div> -->
         <div class="metric-card">
           <h4>Avg Price</h4>
+          <!-- Average listing price across all active properties -->
           <p class="metric-value">KES {{ propertyPerformance.avg_price | number }}</p>
         </div>
       </div>
 
-      <!-- Most Booked Properties -->
+      <!-- TOP 10 MOST BOOKED — Standard HTML table
+           *ngFor loops over the most_booked array from the API.
+           'let i = index' gives a zero-based index used to show rank (i + 1) -->
       <div class="chart-card">
         <h3>Top 10 Most Booked Properties</h3>
         <div class="table-container">
@@ -275,7 +326,8 @@
         </div>
       </div>
 
-      <!-- Daily Property Trend -->
+      <!-- DAILY NEW PROPERTIES TREND — Vertical bar chart
+           Same scaling logic as the users trend above -->
       <div class="chart-card">
         <h3>Daily New Properties</h3>
         <div class="line-chart">
@@ -289,22 +341,30 @@
       </div>
     </div>
 
-    <!-- GEOGRAPHY TAB -->
+
+    <!-- ================================================================== -->
+    <!-- GEOGRAPHY TAB                                                        -->
+    <!-- Only renders when this tab is active AND geographicData exists       -->
+    <!-- ================================================================== -->
     <div *ngIf="activeTab === 'geography' && geographicData" class="tab-content">
       <div class="section-header">
         <h2 class="section-title">Geographic Distribution</h2>
+        <!-- Exports the properties-by-city breakdown as a CSV file download -->
         <button class="export-small-btn" (click)="exportGeographicData()">
-          📥 Export CSV
+          Export CSV
         </button>
       </div>
 
-      <!-- Properties by City -->
+      <!-- PROPERTIES BY CITY — Horizontal bar chart (top 20 cities)
+           The first city in the array has the highest count, so it's used as
+           the max denominator to make that bar fill 100% width -->
       <div class="chart-card">
         <h3>Properties by City (Top 20)</h3>
         <div class="bar-chart">
           <div *ngFor="let city of geographicData.properties_by_city" class="bar-item">
             <span class="bar-label">{{ city.city }}</span>
             <div class="bar-container">
+              <!-- The first element [0] is always the highest because the API returns sorted data -->
               <div class="bar city" [style.width.%]="getBarWidth(city.property_count, geographicData.properties_by_city[0].property_count)">
                 <span class="bar-value">{{ city.property_count }} (Avg: KES {{ city.avg_price | number }})</span>
               </div>
@@ -313,7 +373,8 @@
         </div>
       </div>
 
-      <!-- Popular Cities by Bookings -->
+      <!-- MOST POPULAR CITIES BY BOOKINGS — Horizontal bar chart
+           Same pattern as above but sorted by booking count instead of property count -->
       <div class="chart-card">
         <h3>Most Popular Cities (By Bookings)</h3>
         <div class="bar-chart">
@@ -328,7 +389,9 @@
         </div>
       </div>
 
-      <!-- Properties by Type -->
+      <!-- PROPERTIES BY TYPE — Displayed as a list (styled like a legend/pie chart).
+           type._id holds the property type name from MongoDB (e.g. 'apartment', 'house').
+           Falls back to 'Other' if _id is null or empty. -->
       <div class="chart-card">
         <h3>Properties by Type</h3>
         <div class="pie-chart-container">
@@ -341,40 +404,43 @@
       </div>
     </div>
 
-    <!-- BOOKINGS TAB -->
+
+    <!-- ================================================================== -->
+    <!-- BOOKINGS TAB                                                         -->
+    <!-- Only renders when this tab is active AND bookingTrends data exists   -->
+    <!-- ================================================================== -->
     <div *ngIf="activeTab === 'bookings' && bookingTrends" class="tab-content">
       <div class="section-header">
         <h2 class="section-title">Booking Trends</h2>
+        <!-- Exports the daily booking trend as a CSV file download -->
         <button class="export-small-btn" (click)="exportBookingData()">
-          📥 Export CSV
+          Export CSV
         </button>
       </div>
 
-      <!-- Booking Metrics -->
+      <!-- Booking count metric cards -->
       <div class="metrics-grid">
         <div class="metric-card">
           <h4>Total Bookings</h4>
+          <!-- All-time booking count across the entire platform -->
           <p class="metric-value">{{ bookingTrends.total_bookings | number }}</p>
         </div>
         <div class="metric-card">
-          <h4>Period Bookings</h4>
-          <p class="metric-value">{{ bookingTrends.period_bookings | number }}</p>
-        </div>
-        <div class="metric-card">
           <h4>Confirmed</h4>
+          <!-- Bookings that have been accepted by the landlord -->
           <p class="metric-value">{{ bookingTrends.confirmed_bookings | number }}</p>
         </div>
-        <!-- <div class="metric-card">
-          <h4>Conversion Rate</h4>
-          <p class="metric-value">{{ bookingTrends.conversion_rate }}%</p>
-        </div> -->
       </div>
 
-      <!-- Bookings by Status -->
+      <!-- BOOKINGS BY STATUS — Horizontal bar chart
+           *ngFor loops over every status group (e.g. pending, confirmed, cancelled).
+           Each bar is sized relative to the confirmed count as a reference point.
+           '|| 1' prevents division by zero if confirmed count is 0. -->
       <div class="chart-card">
         <h3>Bookings by Status</h3>
         <div class="bar-chart">
           <div *ngFor="let status of bookingTrends.bookings_by_status" class="bar-item">
+            <!-- status._id is the status name coming from MongoDB e.g. 'confirmed' -->
             <span class="bar-label">{{ status._id }}</span>
             <div class="bar-container">
               <div class="bar status" [style.width.%]="getBarWidth(status.count, getStatusCount(bookingTrends.bookings_by_status, 'confirmed') || 1)">
@@ -385,7 +451,8 @@
         </div>
       </div>
 
-      <!-- Daily Booking Trend -->
+      <!-- DAILY BOOKINGS TREND — Vertical bar chart
+           Same scaling logic as the other trend charts -->
       <div class="chart-card">
         <h3>Daily Bookings Trend</h3>
         <div class="line-chart">

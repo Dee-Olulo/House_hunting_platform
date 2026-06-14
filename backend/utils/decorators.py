@@ -7,7 +7,7 @@ def admin_only(fn):
     """Decorator to restrict access to admin users only"""
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # ✅ FIXED: Get role from claims, not from identity
+        #  Get role from claims, not from identity
         claims = get_jwt()
         role = claims.get("role")
         
@@ -20,7 +20,7 @@ def landlord_only(fn):
     """Decorator to restrict access to landlord users only"""
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # ✅ FIXED: Get role from claims, not from identity
+        #  Get role from claims, not from identity
         claims = get_jwt()
         role = claims.get("role")
         
@@ -33,7 +33,7 @@ def tenant_only(fn):
     """Decorator to restrict access to tenant users only"""
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # ✅ FIXED: Get role from claims, not from identity
+        #  Get role from claims, not from identity
         claims = get_jwt()
         role = claims.get("role")
         

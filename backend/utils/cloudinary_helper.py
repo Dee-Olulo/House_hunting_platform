@@ -4,12 +4,6 @@ import os
 from werkzeug.utils import secure_filename
 import tempfile
 
-# Configure Cloudinary (add your credentials in your main app or config)
-# cloudinary.config(
-#     cloud_name = "your_cloud_name",
-#     api_key = "your_api_key",
-#     api_secret = "your_api_secret"
-# )
 
 
 def upload_image_to_cloudinary(file):
@@ -134,9 +128,7 @@ def upload_multiple_videos(files):
 def delete_from_cloudinary(url, resource_type="image"):
     """Delete a file from Cloudinary using its URL"""
     try:
-        # Extract public_id from URL
-        # Example URL: https://res.cloudinary.com/demo/image/upload/v1234567890/property_images/abc123.jpg
-        # Public ID would be: property_images/abc123
+       
         
         parts = url.split("/upload/")
         if len(parts) < 2:

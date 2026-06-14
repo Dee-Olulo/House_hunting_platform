@@ -1,7 +1,6 @@
 # backend/routes/admin_notification_routes.py
 """
 Admin Notification Management Routes
-Broadcast messages, campaigns, and notification templates
 """
 
 from flask import Blueprint, request, jsonify
@@ -30,7 +29,6 @@ def send_broadcast():
         "message": "Platform will be down for 2 hours",
         "target_audience": "all" | "landlords" | "tenants",
         "notification_type": "system_announcement",
-        "link": "/announcements/123" (optional)
     }
     """
     try:
@@ -90,7 +88,7 @@ def send_broadcast():
             }
             mongo.db.broadcast_logs.insert_one(broadcast_log)
             
-            print(f"✅ Broadcast sent to {len(user_ids)} users")
+            print(f"Broadcast sent to {len(user_ids)} users")
             
             return jsonify({
                 "message": "Broadcast sent successfully",

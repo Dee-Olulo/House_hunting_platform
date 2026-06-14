@@ -28,7 +28,7 @@ notification_service = NotificationService()
 def get_dashboard_stats():
     """Get comprehensive dashboard statistics"""
     try:
-        print("\n📊 Admin Dashboard Stats Request")
+        print("\n Admin Dashboard Stats Request")
         
         # ===== USER STATISTICS =====
         total_users = mongo.db.users.count_documents({})
@@ -134,7 +134,7 @@ def get_dashboard_stats():
             }
         }
         
-        print(f"✅ Stats compiled: {total_users} users, {total_properties} properties")
+        print(f" Stats compiled: {total_users} users, {total_properties} properties")
         return jsonify(response_data), 200
         
     except Exception as e:
@@ -368,15 +368,15 @@ def suspend_user(user_id):
                 {"$set": {"status": "inactive"}}
             )
         
-        # ✅ Send suspension notification to the user
+        #  Send suspension notification to the user
         try:
             notification_service.notify_account_suspended(user, reason)
-            print(f"✅ Suspension notification sent to: {user['email']}")
+            print(f"Suspension notification sent to: {user['email']}")
         except Exception as notif_err:
             # Don't fail the whole operation if notification fails
-            print(f"⚠️ Failed to send suspension notification: {str(notif_err)}")
+            print(f"Failed to send suspension notification: {str(notif_err)}")
         
-        print(f"✅ User suspended: {user['email']}")
+        print(f"User suspended: {user['email']}")
         
         return jsonify({
             "message": "User suspended successfully",
@@ -416,14 +416,14 @@ def activate_user(user_id):
             }
         )
         
-        # ✅ Send reactivation notification to the user
+        #  Send reactivation notification to the user
         try:
             notification_service.notify_account_activated(user)
-            print(f"✅ Activation notification sent to: {user['email']}")
+            print(f" Activation notification sent to: {user['email']}")
         except Exception as notif_err:
-            print(f"⚠️ Failed to send activation notification: {str(notif_err)}")
+            print(f" Failed to send activation notification: {str(notif_err)}")
         
-        print(f"✅ User activated: {user['email']}")
+        print(f"User activated: {user['email']}")
         
         return jsonify({
             "message": "User activated successfully",

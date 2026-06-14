@@ -8,9 +8,8 @@ from datetime import datetime
 
 favourite_bp = Blueprint("favourite", __name__)
 
-# ---------------------------
 # ADD PROPERTY TO FAVOURITES
-# ---------------------------
+
 @favourite_bp.route("/", methods=["POST"])
 @jwt_required()
 @tenant_only
@@ -64,9 +63,8 @@ def add_to_favourites():
         return jsonify({"error": f"Failed to add to favourites: {str(e)}"}), 500
 
 
-# ---------------------------
 # REMOVE PROPERTY FROM FAVOURITES
-# ---------------------------
+
 @favourite_bp.route("/<property_id>", methods=["DELETE"])
 @jwt_required()
 @tenant_only
@@ -96,9 +94,8 @@ def remove_from_favourites(property_id):
         return jsonify({"error": f"Failed to remove from favourites: {str(e)}"}), 500
 
 
-# ---------------------------
 # GET ALL USER'S FAVOURITES
-# ---------------------------
+
 @favourite_bp.route("/", methods=["GET"])
 @jwt_required()
 @tenant_only
@@ -206,9 +203,8 @@ def get_favourites():
         return jsonify({"error": f"Failed to get favourites: {str(e)}"}), 500
 
 
-# ---------------------------
 # CHECK IF PROPERTY IS IN FAVOURITES
-# ---------------------------
+
 @favourite_bp.route("/check/<property_id>", methods=["GET"])
 @jwt_required()
 @tenant_only
@@ -238,9 +234,8 @@ def check_favourite(property_id):
         return jsonify({"error": f"Failed to check favourite: {str(e)}"}), 500
 
 
-# ---------------------------
 # GET FAVOURITES COUNT
-# ---------------------------
+
 @favourite_bp.route("/count", methods=["GET"])
 @jwt_required()
 @tenant_only
@@ -259,9 +254,8 @@ def get_favourites_count():
         return jsonify({"error": f"Failed to get favourites count: {str(e)}"}), 500
 
 
-# ---------------------------
 # CLEAR ALL FAVOURITES
-# ---------------------------
+
 @favourite_bp.route("/clear", methods=["DELETE"])
 @jwt_required()
 @tenant_only

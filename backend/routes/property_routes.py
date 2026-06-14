@@ -30,7 +30,7 @@ def create_property():
         data = request.get_json()
         
         print("\n" + "="*60)
-        print("🏠 CREATE PROPERTY - AUTO-MODERATION ENABLED")
+        print("CREATE PROPERTY - AUTO-MODERATION ENABLED")
         print("="*60)
         print(f"User ID: {user_id}")
         print(f"Property Title: {data.get('title')}")
@@ -38,14 +38,14 @@ def create_property():
         # Step 1: Validate property data (existing validation)
         is_valid, errors = validate_property_data(data)
         if not is_valid:
-            print(f"❌ Validation failed: {errors}")
+            print(f" Validation failed: {errors}")
             return jsonify({"error": errors}), 400
         
-        print("✅ Basic validation passed")
+        print(" Basic validation passed")
         
         # Step 2: Auto-moderation (NEW)
         if ModerationConfig.AUTO_MODERATION_ENABLED:
-            print("\n🤖 Running auto-moderation...")
+            print("\n Running auto-moderation...")
             
             moderation_status, moderation_score, moderation_issues = moderator.moderate_property(data)
             moderation_summary = moderator.get_moderation_summary(
@@ -72,11 +72,11 @@ def create_property():
                 'message': 'Auto-moderation disabled',
                 'issues': []
             }
-            print("⚠️ Auto-moderation is disabled - approving by default")
+            print(" Auto-moderation is disabled - approving by default")
         
         # Step 3: Auto-geocode if coordinates not provided
         if not data.get("latitude") or not data.get("longitude"):
-            print("\n🗺️ No coordinates provided. Attempting to geocode...")
+            print("\n No coordinates provided. Attempting to geocode...")
             
             try:
                 from utils.location_utils import geocode_address
@@ -90,11 +90,11 @@ def create_property():
                 if geocode_result:
                     data["latitude"] = geocode_result["latitude"]
                     data["longitude"] = geocode_result["longitude"]
-                    print(f"   ✅ Geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
+                    print(f"  Geocoded: {geocode_result['latitude']}, {geocode_result['longitude']}")
                 else:
-                    print("   ⚠️ Geocoding failed. Property will be created without coordinates.")
+                    print(" Geocoding failed. Property will be created without coordinates.")
             except Exception as e:
-                print(f"   ⚠️ Geocoding error: {str(e)}")
+                print(f" Geocoding error: {str(e)}")
         
         # Step 4: Determine property status based on moderation
         if moderation_status == 'approved':
@@ -104,7 +104,7 @@ def create_property():
         else:  # rejected
             property_status = 'inactive'  # Not visible
         
-        print(f"\n📋 Property status will be: {property_status}")
+        print(f"\n Property status will be: {property_status}")
         
         # Step 5: Create property object with moderation data
         property_obj = Property(
@@ -141,7 +141,7 @@ def create_property():
         result = mongo.db.properties.insert_one(property_obj.to_dict())
         property_id = str(result.inserted_id)
         
-        print(f"\n✅ Property created with ID: {property_id}")
+        print(f"\n Property created with ID: {property_id}")
         print("="*60 + "\n")
         
         # Step 7: Prepare response
@@ -153,28 +153,17 @@ def create_property():
             "coordinates_added": bool(data.get("latitude") and data.get("longitude"))
         }
         
-        # Step 8: Send notifications based on moderation result
-        # TODO: Implement notification sending
-        # if moderation_status == 'approved':
-        #     send_notification(user_id, "Property approved and listed!")
-        # elif moderation_status == 'pending_review':
-        #     send_notification(user_id, "Property submitted for review")
-        #     notify_admin(property_id, "New property needs review")
-        # else:  # rejected
-        #     send_notification(user_id, f"Property needs improvement: {', '.join(moderation_issues[:3])}")
-        
         return jsonify(response), 201
         
     except Exception as e:
-        print(f"\n❌ Error creating property: {str(e)}")
+        print(f"\n Error creating property: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": f"Failed to create property: {str(e)}"}), 500
 
 
-# ============================================================================
 # NEW ENDPOINT: Get property moderation status
-# ============================================================================
+
 
 @property_bp.route("/<property_id>/moderation", methods=["GET"])
 @jwt_required()
@@ -195,7 +184,7 @@ def get_property_moderation(property_id):
         
         # Check if user owns the property or is admin
         if str(property_data["landlord_id"]) != user_id:
-            # TODO: Add admin check here
+            # : Add admin check here
             return jsonify({"error": "Unauthorized"}), 403
         
         # Extract moderation data
@@ -214,10 +203,7 @@ def get_property_moderation(property_id):
     except Exception as e:
         return jsonify({"error": f"Failed to get moderation data: {str(e)}"}), 500
 
-
-# ============================================================================
 # NEW ENDPOINT: Re-moderate property (after landlord makes changes)
-# ============================================================================
 
 @property_bp.route("/<property_id>/remoderate", methods=["POST"])
 @jwt_required()
@@ -401,9 +387,8 @@ def get_all_properties():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch properties: {str(e)}"}), 500
 
-# ---------------------------
 # GET SINGLE PROPERTY
-# ---------------------------
+
 @property_bp.route("/<property_id>", methods=["GET"])
 def get_property(property_id):
     try:
@@ -434,9 +419,8 @@ def get_property(property_id):
     except Exception as e:
         return jsonify({"error": f"Failed to fetch property: {str(e)}"}), 500
 
-# ---------------------------
 # GET LANDLORD'S PROPERTIES
-# ---------------------------
+
 @property_bp.route("/landlord/my-properties", methods=["GET"])
 @jwt_required()
 @landlord_only
@@ -463,15 +447,14 @@ def get_my_properties():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch properties: {str(e)}"}), 500
 
-# ---------------------------
 # UPDATE PROPERTY
-# ---------------------------
+
 @property_bp.route("/<property_id>", methods=["PUT"])
 @jwt_required()
 @landlord_only
 def update_property(property_id):
     try:
-        # ✅ FIXED: Get user ID directly (it's a string)
+        #  Get user ID directly (it's a string)
         user_id = get_jwt_identity()
         data = request.get_json()
         
@@ -485,7 +468,7 @@ def update_property(property_id):
         if not property_data:
             return jsonify({"error": "Property not found"}), 404
         
-        # ✅ FIXED: Compare string to string
+        # Compare string to string
         if str(property_data["landlord_id"]) != user_id:
             return jsonify({"error": "Unauthorized to update this property"}), 403
         
@@ -530,7 +513,7 @@ def update_property(property_id):
 @landlord_only
 def delete_property(property_id):
     try:
-        # ✅ FIXED: Get user ID directly (it's a string)
+        # Get user ID directly (it's a string)
         user_id = get_jwt_identity()
         
         # Validate ObjectId
@@ -543,7 +526,7 @@ def delete_property(property_id):
         if not property_data:
             return jsonify({"error": "Property not found"}), 404
         
-        # ✅ FIXED: Compare string to string
+        # Compare string to string
         if str(property_data["landlord_id"]) != user_id:
             return jsonify({"error": "Unauthorized to delete this property"}), 403
         
@@ -555,15 +538,13 @@ def delete_property(property_id):
     except Exception as e:
         return jsonify({"error": f"Failed to delete property: {str(e)}"}), 500
 
-# ---------------------------
 # CONFIRM PROPERTY LISTING (30-day renewal)
-# ---------------------------
 @property_bp.route("/<property_id>/confirm", methods=["POST"])
 @jwt_required()
 @landlord_only
 def confirm_property(property_id):
     try:
-        # ✅ FIXED: Get user ID directly (it's a string)
+        # Get user ID directly (it's a string)
         user_id = get_jwt_identity()
         
         # Validate ObjectId
@@ -576,7 +557,7 @@ def confirm_property(property_id):
         if not property_data:
             return jsonify({"error": "Property not found"}), 404
         
-        # ✅ FIXED: Compare string to string
+        # Compare string to string
         if str(property_data["landlord_id"]) != user_id:
             return jsonify({"error": "Unauthorized to confirm this property"}), 403
         
@@ -593,10 +574,9 @@ def confirm_property(property_id):
         
     except Exception as e:
         return jsonify({"error": f"Failed to confirm property: {str(e)}"}), 500
-    
-    # ---------------------------
+
 # ADVANCED SEARCH ENDPOINT
-# ---------------------------
+
 @property_bp.route("/search", methods=["POST"])
 def search_properties():
     """
@@ -714,9 +694,8 @@ def search_properties():
     except Exception as e:
         return jsonify({"error": f"Search failed: {str(e)}"}), 500
 
-# ---------------------------
 # GET FILTER OPTIONS (for dropdowns)
-# ---------------------------
+
 @property_bp.route("/filters/options", methods=["GET"])
 def get_filter_options():
     """
@@ -770,9 +749,8 @@ def get_filter_options():
     except Exception as e:
         return jsonify({"error": f"Failed to get filter options: {str(e)}"}), 500
 
-# ---------------------------
 # GET PROPERTY STATISTICS
-# ---------------------------
+
 @property_bp.route("/stats", methods=["GET"])
 def get_property_stats():
     """
@@ -840,9 +818,7 @@ from utils.location_utils import (
     get_bounding_box
 )
 
-# ---------------------------
 # GEOCODE ADDRESS (Convert address to coordinates)
-# ---------------------------
 @property_bp.route("/geocode", methods=["POST"])
 def geocode_property_address():
     """
@@ -1034,9 +1010,8 @@ def search_properties_nearby():
         return jsonify({"error": f"Nearby search failed: {str(e)}"}), 500
 
 
-# ---------------------------
 # GET PROPERTY WITH DISTANCE FROM USER
-# ---------------------------
+
 @property_bp.route("/<property_id>/distance", methods=["POST"])
 def get_property_distance(property_id):
     """
@@ -1101,4 +1076,3 @@ def get_property_distance(property_id):
         return jsonify({"error": f"Failed to calculate distance: {str(e)}"}), 500
 
 
-#

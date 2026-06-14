@@ -5,7 +5,10 @@ class Notification:
     """
     In-app Notification Model
     Types: booking_confirmed, booking_rejected, booking_cancelled, 
-           property_inquiry, new_booking, booking_reminder, property_expiring
+        property_inquiry, new_booking, booking_reminder, property_expiring
+    __init__ is a special method in Python called a constructor. It runs automatically 
+     whenever you create a new object from a class. Its job is to set up the 
+     object's starting values.
     """
     
     def __init__(
@@ -22,6 +25,9 @@ class Notification:
         expires_at=None,
         _id=None
     ):
+         # If no _id is passed in, generate a fresh MongoDB ObjectId.
+        # This lets you create a brand-new notification OR rebuild an
+        # existing one from the database (which already has an _id).
         self._id = _id or ObjectId()
         self.user_id = user_id  # User who receives the notification
         self.notification_type = notification_type
@@ -35,7 +41,9 @@ class Notification:
         self.expires_at = expires_at  # Optional expiration date
     
     def to_dict(self):
-        """Convert notification object to dictionary for MongoDB"""
+        """Convert notification object to dictionary for MongoDB
+        MongoDB stores documents as dictionaries, so this is called
+        right before saving/inserting the notification into the database"""
         return {
             "_id": self._id,
             "user_id": self.user_id,
@@ -52,7 +60,16 @@ class Notification:
     
     @staticmethod
     def from_dict(data):
-        """Create Notification object from dictionary"""
+        """Create Notification object from dictionary
+        This is the reverse of to_dict(): when you read a document back
+        OUT of MongoDB, it comes as a dict, and this turns it into a
+        usable Notification object.
+
+        It's a @staticmethod because it doesn't need an existing instance —
+        you call it on the class itself, e.g. Notification.from_dict(doc).
+
+        Using data.get("key") instead of data["key"] avoids crashing if a
+        field is missing; it just returns None (or the given default)."""
         return Notification(
             user_id=data.get("user_id"),
             notification_type=data.get("notification_type"),

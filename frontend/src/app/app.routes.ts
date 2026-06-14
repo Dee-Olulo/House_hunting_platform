@@ -103,15 +103,13 @@ export const routes: Routes = [
           import('./payments/payment-details/payment-details')
             .then(m => m.PaymentDetailsComponent)
       },
-   
-      // {
-      //   path: 'reviews',
-      //   loadComponent: () =>
-      //     import('./landlord/my-reviews/my-reviews')
-      //       .then(m => m.MyReviewsComponent)
-      // }
-
-    ]
+      {
+      path: 'analytics',
+      loadComponent: () =>
+        import('./admin/analytics-dashboard/analytics-dashboard')
+          .then(m => m.AnalyticsDashboardComponent)
+    },
+          ]
   },
 
   // Tenant routes
@@ -190,7 +188,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./tenant/create-review/create-review')
             .then(m => m.CreateReviewComponent)
-      }
+      },
+    {
+      path: 'analytics',
+      loadComponent: () =>
+        import('./admin/analytics-dashboard/analytics-dashboard')
+          .then(m => m.AnalyticsDashboardComponent)
+    },
     ]
   },
   // Admin routes

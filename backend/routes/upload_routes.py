@@ -15,9 +15,8 @@ from utils.cloudinary_helper import (
 
 upload_bp = Blueprint("upload", __name__)
 
-# =========================
 # CONFIGURATION
-# =========================
+
 UPLOAD_FOLDER = "uploads"
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
@@ -27,9 +26,8 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024      # 5MB
 MAX_VIDEO_SIZE = 50 * 1024 * 1024     # 50MB
 
 
-# =========================
 # HELPERS
-# =========================
+
 def allowed_file(filename, allowed_extensions):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
@@ -39,9 +37,9 @@ def generate_unique_filename(filename):
     return f"{uuid.uuid4().hex}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.{ext}"
 
 
-# =========================
+
 # DEBUG ENDPOINT
-# =========================
+
 @upload_bp.route("/debug", methods=["POST"])
 @jwt_required()
 def debug_upload():
@@ -57,9 +55,9 @@ def debug_upload():
     }), 200
 
 
-# =========================
+
 # IMAGES (MULTIPLE - LOCAL)
-# =========================
+
 @upload_bp.route("/images/multiple", methods=["POST", "OPTIONS"])
 @jwt_required()
 def upload_multiple_images():
@@ -127,9 +125,8 @@ def upload_multiple_images():
     }), 201
 
 
-# =========================
 # IMAGE (SINGLE)
-# =========================
+
 @upload_bp.route("/image", methods=["POST"])
 @jwt_required()
 def upload_single_image():
@@ -159,9 +156,8 @@ def upload_single_image():
     }), 201
 
 
-# =========================
+
 # VIDEOS (MULTIPLE - CLOUDINARY)
-# =========================
 @upload_bp.route("/videos/multiple", methods=["POST", "OPTIONS"])
 @jwt_required()
 def upload_multiple_videos():

@@ -13,9 +13,8 @@ booking_bp = Blueprint("booking", __name__)
 # Initialize notification service
 notification_service = NotificationService()
 
-# ---------------------------
 # LANDLORD: GET ALL BOOKINGS FOR MY PROPERTIES
-# ---------------------------
+
 @booking_bp.route("/landlord/my-bookings", methods=["GET"])
 @jwt_required()
 @landlord_only

@@ -92,7 +92,7 @@ def login():
 
         if user.get("is_suspended"):
             suspension_reason = user.get("suspension_reason", "Your account has been suspended.")
-            print(f"🚫 Blocked login for suspended user: {email}")
+            print(f" Blocked login for suspended user: {email}")
             return jsonify({
                 "error": "account_suspended",
                 "message": "Your account has been suspended. Please contact support.",
@@ -245,7 +245,7 @@ def forgot_password():
         print(f"Expires: {expires_at}")
         print(f"{'='*50}\n")
 
-        # ✅ FIX: Actually send the reset token via email
+        # Actually send the reset token via email
         user_name = email.split('@')[0]
         email_sent = email_service.send_password_reset_email(
             user_email=email,
@@ -254,14 +254,14 @@ def forgot_password():
         )
 
         if not email_sent:
-            print(f"⚠️ Email delivery failed for {email}, but token is saved in DB.")
+            print(f"Email delivery failed for {email}, but token is saved in DB.")
             # Still return success so the user isn't confused —
             # but log this so you can investigate delivery issues.
 
         return jsonify({
             "message": "If an account exists with this email, a password reset code has been sent.",
             "email": email
-            # ⚠️ Remove dev_token below before going to production
+            # Remove dev_token below before going to production
             # "dev_token": reset_token
         }), 200
         

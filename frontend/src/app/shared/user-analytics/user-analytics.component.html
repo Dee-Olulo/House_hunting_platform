@@ -1,0 +1,370 @@
+<!-- src/app/shared/user-analytics/user-analytics.component.html -->
+
+<div class="analytics-wrap">
+
+  <!-- ── Header ───────────────────────────────────────────────────────── -->
+  <header class="analytics-header">
+    <div class="header-left">
+      <button class="back-btn" (click)="navigateBack()">
+        <span class="back-arrow">←</span> Back
+      </button>
+      <div class="header-copy">
+        <h1 class="page-title">
+          <span class="title-icon">{{ userRole === 'landlord' ? '🏠' : '📊' }}</span>
+          {{ userRole === 'landlord' ? 'Property Analytics' : 'My Booking Analytics' }}
+        </h1>
+        <p class="page-subtitle">
+          {{ userRole === 'landlord'
+            ? 'Track your listings, bookings, and performance'
+            : 'Monitor your booking history and activity'
+          }}
+        </p>
+      </div>
+    </div>
+    <div class="header-right">
+      <label class="period-label" for="periodSelect">Period</label>
+      <select id="periodSelect" class="period-select"
+              [(ngModel)]="selectedPeriod"
+              (change)="onPeriodChange()">
+        <option [value]="7">Last 7 days</option>
+        <option [value]="30">Last 30 days</option>
+        <option [value]="90">Last 90 days</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- ── Loading ──────────────────────────────────────────────────────── -->
+  <div *ngIf="isLoading" class="state-container">
+    <div class="loader-ring">
+      <div></div><div></div><div></div><div></div>
+    </div>
+    <p class="state-text">Loading your analytics…</p>
+  </div>
+
+  <!-- ── Error ────────────────────────────────────────────────────────── -->
+  <div *ngIf="errorMessage && !isLoading" class="state-container state-error">
+    <span class="state-icon">⚠️</span>
+    <p class="state-text">{{ errorMessage }}</p>
+    <button class="retry-btn" (click)="loadDashboard()">Try again</button>
+  </div>
+
+
+  <!-- ================================================================== -->
+  <!-- LANDLORD DASHBOARD                                                  -->
+  <!-- ================================================================== -->
+  <ng-container *ngIf="userRole === 'landlord' && landlordData && !isLoading">
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+
+      <div class="kpi-card kpi-indigo">
+        <div class="kpi-top">
+          <span class="kpi-icon">🏠</span>
+          <span class="kpi-trend neutral">{{ landlordData.active_properties }} active</span>
+        </div>
+        <div class="kpi-value">{{ landlordData.total_properties }}</div>
+        <div class="kpi-label">Total Properties</div>
+        <div class="kpi-sub">+{{ landlordData.new_properties }} this period</div>
+      </div>
+
+      <div class="kpi-card kpi-teal">
+        <div class="kpi-top">
+          <span class="kpi-icon">📅</span>
+          <span class="kpi-trend" [ngClass]="getGrowthClass(landlordData.booking_growth)">
+            {{ getGrowthIcon(landlordData.booking_growth) }}
+            {{ landlordData.booking_growth | number:'1.0-1' }}%
+          </span>
+        </div>
+        <div class="kpi-value">{{ landlordData.period_bookings }}</div>
+        <div class="kpi-label">Bookings ({{ landlordData.period_days }}d)</div>
+        <div class="kpi-sub">vs previous period</div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-top">
+          <span class="kpi-icon">✅</span>
+          <span class="kpi-trend neutral">all time</span>
+        </div>
+        <div class="kpi-value">{{ landlordData.confirmed_bookings }}</div>
+        <div class="kpi-label">Confirmed</div>
+        <div class="kpi-sub">{{ landlordData.pending_bookings }} pending</div>
+      </div>
+
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-top">
+          <span class="kpi-icon">🎯</span>
+          <span class="kpi-trend neutral">conversion</span>
+        </div>
+        <div class="kpi-value">{{ landlordData.conversion_rate | number:'1.0-1' }}%</div>
+        <div class="kpi-label">Booking Rate</div>
+        <div class="kpi-sub">Confirmed ÷ total</div>
+      </div>
+
+    </section>
+
+    <!-- Charts row -->
+    <section class="charts-row">
+
+      <!-- Daily trend -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Booking Activity</h3>
+          <span class="chart-badge">{{ landlordData.period_days }}d</span>
+        </div>
+        <ng-container *ngIf="landlordData.daily_trend.length > 0; else emptyTrend">
+          <div class="bar-chart">
+            <div *ngFor="let pt of landlordData.daily_trend" class="bar-row">
+              <span class="bar-date">{{ pt.date | date:'d MMM' }}</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-indigo"
+                     [style.width.%]="getBarWidth(pt.count, getMaxCount(landlordData.daily_trend))">
+                </div>
+              </div>
+              <span class="bar-num">{{ pt.count }}</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #emptyTrend>
+          <div class="empty-chart">No bookings in this period</div>
+        </ng-template>
+      </div>
+
+      <!-- Status breakdown -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Status Breakdown</h3>
+          <span class="chart-badge">{{ landlordData.total_bookings }} total</span>
+        </div>
+        <div class="status-list" *ngIf="landlordData.bookings_by_status.length > 0; else emptyStatus">
+          <div *ngFor="let s of landlordData.bookings_by_status" class="status-row">
+            <div class="status-label">
+              <span class="status-dot" [ngClass]="getDotClass(s._id)"></span>
+              {{ s._id | titlecase }}
+            </div>
+            <div class="status-track">
+              <div class="status-fill"
+                   [ngClass]="'fill-' + s._id"
+                   [style.width.%]="getBarWidth(s.count, getMaxCount(landlordData.bookings_by_status))">
+              </div>
+            </div>
+            <span class="status-num">{{ s.count }}</span>
+          </div>
+        </div>
+        <ng-template #emptyStatus>
+          <div class="empty-chart">No booking data yet</div>
+        </ng-template>
+      </div>
+
+    </section>
+
+    <!-- Top properties table -->
+    <section class="table-card" *ngIf="landlordData.most_booked_properties.length > 0">
+      <div class="chart-header">
+        <h3 class="chart-title">🏆 Top Performing Properties</h3>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Property</th>
+              <th>City</th>
+              <th>Price / mo</th>
+              <th>Bookings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of landlordData.most_booked_properties; let i = index">
+              <td class="rank-cell">{{ i + 1 }}</td>
+              <td class="prop-name">{{ p.title }}</td>
+              <td>{{ p.city }}</td>
+              <td>KES {{ p.price | number:'1.0-0' }}</td>
+              <td>
+                <span class="pill pill-blue">{{ p.booking_count }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Quick info row -->
+    <section class="info-row">
+      <div class="info-tile tile-pending">
+        <span class="tile-icon">⏳</span>
+        <div>
+          <div class="tile-num">{{ landlordData.pending_bookings }}</div>
+          <div class="tile-lbl">Awaiting Your Response</div>
+        </div>
+      </div>
+      <div class="info-tile tile-new">
+        <span class="tile-icon">🆕</span>
+        <div>
+          <div class="tile-num">{{ landlordData.new_properties }}</div>
+          <div class="tile-lbl">New Listings This Period</div>
+        </div>
+      </div>
+    </section>
+
+  </ng-container>
+
+
+  <!-- ================================================================== -->
+  <!-- TENANT DASHBOARD                                                    -->
+  <!-- ================================================================== -->
+  <ng-container *ngIf="userRole === 'tenant' && tenantData && !isLoading">
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+
+      <div class="kpi-card kpi-indigo">
+        <div class="kpi-top">
+          <span class="kpi-icon">📅</span>
+          <span class="kpi-trend neutral">all time</span>
+        </div>
+        <div class="kpi-value">{{ tenantData.total_bookings }}</div>
+        <div class="kpi-label">Total Bookings</div>
+        <div class="kpi-sub">{{ tenantData.period_bookings }} this period</div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-top">
+          <span class="kpi-icon">✅</span>
+          <span class="kpi-trend" [ngClass]="getGrowthClass(tenantData.booking_growth)">
+            {{ getGrowthIcon(tenantData.booking_growth) }}
+            {{ tenantData.booking_growth | number:'1.0-1' }}%
+          </span>
+        </div>
+        <div class="kpi-value">{{ tenantData.confirmed_bookings }}</div>
+        <div class="kpi-label">Confirmed</div>
+        <div class="kpi-sub">vs previous period</div>
+      </div>
+
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-top">
+          <span class="kpi-icon">⏳</span>
+          <span class="kpi-trend neutral">awaiting</span>
+        </div>
+        <div class="kpi-value">{{ tenantData.pending_bookings }}</div>
+        <div class="kpi-label">Pending</div>
+        <div class="kpi-sub">Awaiting confirmation</div>
+      </div>
+
+      <div class="kpi-card kpi-rose">
+        <div class="kpi-top">
+          <span class="kpi-icon">❤️</span>
+          <span class="kpi-trend neutral">saved</span>
+        </div>
+        <div class="kpi-value">{{ tenantData.favourites_count }}</div>
+        <div class="kpi-label">Saved Properties</div>
+        <div class="kpi-sub">In your favourites</div>
+      </div>
+
+    </section>
+
+    <!-- Charts row -->
+    <section class="charts-row">
+
+      <!-- Daily trend -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Booking Activity</h3>
+          <span class="chart-badge">{{ tenantData.period_days }}d</span>
+        </div>
+        <ng-container *ngIf="tenantData.daily_trend.length > 0; else emptyTenantTrend">
+          <div class="bar-chart">
+            <div *ngFor="let pt of tenantData.daily_trend" class="bar-row">
+              <span class="bar-date">{{ pt.date | date:'d MMM' }}</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-teal"
+                     [style.width.%]="getBarWidth(pt.count, getMaxCount(tenantData.daily_trend))">
+                </div>
+              </div>
+              <span class="bar-num">{{ pt.count }}</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #emptyTenantTrend>
+          <div class="empty-chart">No bookings in this period</div>
+        </ng-template>
+      </div>
+
+      <!-- Status breakdown -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Status Breakdown</h3>
+          <span class="chart-badge">{{ tenantData.total_bookings }} total</span>
+        </div>
+        <div class="status-list" *ngIf="tenantData.bookings_by_status.length > 0; else emptyTenantStatus">
+          <div *ngFor="let s of tenantData.bookings_by_status" class="status-row">
+            <div class="status-label">
+              <span class="status-dot" [ngClass]="getDotClass(s._id)"></span>
+              {{ s._id | titlecase }}
+            </div>
+            <div class="status-track">
+              <div class="status-fill"
+                   [ngClass]="'fill-' + s._id"
+                   [style.width.%]="getBarWidth(s.count, getMaxCount(tenantData.bookings_by_status))">
+              </div>
+            </div>
+            <span class="status-num">{{ s.count }}</span>
+          </div>
+        </div>
+        <ng-template #emptyTenantStatus>
+          <div class="empty-chart">No booking data yet</div>
+        </ng-template>
+      </div>
+
+    </section>
+
+    <!-- Recent bookings table -->
+    <section class="table-card" *ngIf="tenantData.recent_bookings.length > 0">
+      <div class="chart-header">
+        <h3 class="chart-title">🕒 Recent Bookings</h3>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>City</th>
+              <th>Price / mo</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let b of tenantData.recent_bookings">
+              <td class="prop-name">
+                <a [routerLink]="['/properties', b.property_id]" class="prop-link">
+                  {{ b.property_title }}
+                </a>
+              </td>
+              <td>{{ b.property_city }}</td>
+              <td>KES {{ b.property_price | number:'1.0-0' }}</td>
+              <td>{{ b.created_at | date:'d MMM y' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusBadgeClass(b.status)">
+                  {{ b.status | titlecase }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Quick info row -->
+    <section class="info-row">
+      <div class="info-tile tile-accent">
+        <span class="tile-icon">📆</span>
+        <div>
+          <div class="tile-num">{{ tenantData.period_bookings }}</div>
+          <div class="tile-lbl">Bookings in Last {{ tenantData.period_days }} Days</div>
+        </div>
+      </div>
+    </section>
+
+  </ng-container>
+
+</div>

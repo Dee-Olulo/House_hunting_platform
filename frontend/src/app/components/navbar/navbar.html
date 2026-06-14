@@ -18,12 +18,6 @@
       
       <!-- Tenant Links -->
       <ng-container *ngIf="isLoggedIn && userRole === 'tenant'">
-        <!-- <li>
-          <a routerLink="/tenant/dashboard" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">Dashboard</span>
-          </a>
-        </li> -->
         <li>
           <a routerLink="/properties" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">🔍</span>
@@ -44,12 +38,13 @@
             <span class="nav-text">My Bookings</span>
           </a>
         </li>
-        <!-- <li>
-          <a routerLink="/tenant/payments/history" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">💳</span>
-            <span class="nav-text">Payments</span>
+         <li>
+          <a routerLink="/tenant/analytics" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Analytics</span>
           </a>
-        </li> -->
+        </li>
+      
       </ng-container>
      
       <!-- Landlord Links -->
@@ -72,17 +67,13 @@
             <span class="nav-text">Bookings</span>
           </a>
         </li>
-        <!-- <li>
-          <a routerLink="/landlord/subscription" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">💼</span>
-            <span class="nav-text">Subscription Plan</span>
+        <li>
+          <a routerLink="/landlord/analytics" routerLinkActive="active" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Analytics</span>
           </a>
-        </li> -->
-        <!-- <li>
-          <a routerLink="/landlord/reviews" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">⭐</span>
-            <span class="nav-text">My Reviews</span>
-          </a> -->
+        </li>
+
       </ng-container>
       
       <!-- Admin Links -->
@@ -96,7 +87,7 @@
       </ng-container>
       <ng-container *ngIf="isLoggedIn && userRole === 'admin'">
         <li>
-          <a routerLink="/admin/analytics" routerLinkActive="active" class="nav-link">
+          <a routerLink="/landlord/analytics" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">📊</span>
             <span class="nav-text">Analytics</span>
           </a>

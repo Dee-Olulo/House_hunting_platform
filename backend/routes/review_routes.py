@@ -1,6 +1,6 @@
 # backend/routes/review_routes.py
 """
-Review & Rating System - FIXED VERSION
+Review & Rating System - 
 Properly handles tenant anonymization
 """
 
@@ -13,9 +13,7 @@ from utils.decorators import landlord_only
 
 review_bp = Blueprint("reviews", __name__)
 
-# ============================================================================
 # HELPER FUNCTION - ANONYMIZE TENANT NAME
-# ============================================================================
 
 def get_anonymous_tenant_name(tenant_email):
     """
@@ -41,9 +39,9 @@ def get_anonymous_tenant_name(tenant_email):
     except:
         return "Tenant"
 
-# ============================================================================
+
 # CREATE REVIEW
-# ============================================================================
+
 
 @review_bp.route("/create", methods=["POST"])
 @jwt_required()
@@ -145,7 +143,7 @@ def create_review():
         }
         mongo.db.notifications.insert_one(notification)
         
-        print(f"✅ Review created: {review_id} - {rating} stars by {review['tenant_name']}")
+        print(f" Review created: {review_id} - {rating} stars by {review['tenant_name']}")
         
         return jsonify({
             "message": "Review submitted successfully",
@@ -154,13 +152,10 @@ def create_review():
         }), 201
         
     except Exception as e:
-        print(f"❌ Error creating review: {str(e)}")
+        print(f" Error creating review: {str(e)}")
         return jsonify({"error": f"Failed to create review: {str(e)}"}), 500
 
-
-# ============================================================================
 # GET LANDLORD REVIEWS (PUBLIC)
-# ============================================================================
 
 @review_bp.route("/landlord/<landlord_id>", methods=["GET"])
 def get_landlord_reviews(landlord_id):
@@ -226,13 +221,10 @@ def get_landlord_reviews(landlord_id):
         }), 200
         
     except Exception as e:
-        print(f"❌ Error getting reviews: {str(e)}")
+        print(f" Error getting reviews: {str(e)}")
         return jsonify({"error": f"Failed to get reviews: {str(e)}"}), 500
 
-
-# ============================================================================
 # GET MY REVIEWS (TENANT)
-# ============================================================================
 
 @review_bp.route("/my-reviews", methods=["GET"])
 @jwt_required()
@@ -257,13 +249,10 @@ def get_my_reviews():
         return jsonify({"reviews": reviews}), 200
         
     except Exception as e:
-        print(f"❌ Error getting tenant reviews: {str(e)}")
+        print(f" Error getting tenant reviews: {str(e)}")
         return jsonify({"error": f"Failed to get reviews: {str(e)}"}), 500
 
-
-# ============================================================================
 # GET REVIEWS ABOUT ME (LANDLORD)
-# ============================================================================
 
 @review_bp.route("/about-me", methods=["GET"])
 @jwt_required()
@@ -310,13 +299,10 @@ def get_reviews_about_me():
         }), 200
         
     except Exception as e:
-        print(f"❌ Error getting landlord reviews: {str(e)}")
+        print(f" Error getting landlord reviews: {str(e)}")
         return jsonify({"error": f"Failed to get reviews: {str(e)}"}), 500
 
-
-# ============================================================================
 # UPDATE REVIEW
-# ============================================================================
 
 @review_bp.route("/<review_id>", methods=["PUT"])
 @jwt_required()
@@ -371,13 +357,11 @@ def update_review(review_id):
         return jsonify({"message": "Review updated successfully"}), 200
         
     except Exception as e:
-        print(f"❌ Error updating review: {str(e)}")
+        print(f" Error updating review: {str(e)}")
         return jsonify({"error": f"Failed to update review: {str(e)}"}), 500
 
 
-# ============================================================================
 # DELETE REVIEW
-# ============================================================================
 
 @review_bp.route("/<review_id>", methods=["DELETE"])
 @jwt_required()
@@ -407,13 +391,10 @@ def delete_review(review_id):
         return jsonify({"message": "Review deleted successfully"}), 200
         
     except Exception as e:
-        print(f"❌ Error deleting review: {str(e)}")
+        print(f" Error deleting review: {str(e)}")
         return jsonify({"error": f"Failed to delete review: {str(e)}"}), 500
 
-
-# ============================================================================
 # MARK REVIEW AS HELPFUL
-# ============================================================================
 
 @review_bp.route("/<review_id>/helpful", methods=["POST"])
 @jwt_required()
@@ -431,14 +412,10 @@ def mark_helpful(review_id):
         return jsonify({"message": "Marked as helpful"}), 200
         
     except Exception as e:
-        print(f"❌ Error marking helpful: {str(e)}")
+        print(f" Error marking helpful: {str(e)}")
         return jsonify({"error": f"Failed to mark as helpful: {str(e)}"}), 500
 
-
-# ============================================================================
 # REPORT REVIEW
-# ============================================================================
-
 @review_bp.route("/<review_id>/report", methods=["POST"])
 @jwt_required()
 def report_review(review_id):
@@ -475,13 +452,11 @@ def report_review(review_id):
         return jsonify({"message": "Review reported"}), 200
         
     except Exception as e:
-        print(f"❌ Error reporting review: {str(e)}")
+        print(f" Error reporting review: {str(e)}")
         return jsonify({"error": f"Failed to report review: {str(e)}"}), 500
 
 
-# ============================================================================
 # HELPER FUNCTIONS
-# ============================================================================
 
 def update_landlord_rating(landlord_id):
     """Update landlord's overall rating based on reviews"""
@@ -532,7 +507,7 @@ def update_landlord_rating(landlord_id):
             )
         
     except Exception as e:
-        print(f"❌ Error updating landlord rating: {str(e)}")
+        print(f" Error updating landlord rating: {str(e)}")
 
 
 def calculate_landlord_stats(landlord_id):
@@ -619,5 +594,5 @@ def calculate_landlord_stats(landlord_id):
         }
         
     except Exception as e:
-        print(f"❌ Error calculating stats: {str(e)}")
+        print(f" Error calculating stats: {str(e)}")
         return {}
