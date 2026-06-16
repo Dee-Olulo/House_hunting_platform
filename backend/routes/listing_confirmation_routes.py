@@ -38,7 +38,7 @@ def confirm_property(property_id: str):
 
         current_user_id = get_jwt_identity()
 
-        # ── ownership guard ─────────────────────────────────────────
+        # ── ownership guard 
         property_doc = mongo.db.properties.find_one(
             {"_id": ObjectId(property_id)},
             {"landlord_id": 1, "title": 1, "status": 1}
@@ -69,9 +69,8 @@ def confirm_property(property_id: str):
         return jsonify({"error": f"Failed to confirm property: {str(e)}"}), 500
 
 
-# ──────────────────────────────────────────────────────────
 # GET   /status  — confirmation status of one property
-# ──────────────────────────────────────────────────────────
+
 @listing_confirmation_bp.route("/<property_id>/status", methods=["GET"])
 @jwt_required()
 def get_confirmation_status(property_id: str):

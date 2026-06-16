@@ -18,9 +18,8 @@ export class BookingService {
 
   constructor(private http: HttpClient) {}
 
-  // ============================================
   // LANDLORD ENDPOINTS
-  // ============================================
+ 
 
   /**
    * Get all bookings for landlord's properties with optional filters
@@ -104,9 +103,8 @@ export class BookingService {
     return this.http.get<{ bookings: Booking[]; count: number }>(`${this.API_URL}/landlord/upcoming`);
   }
 
-  // ============================================
   // TENANT ENDPOINTS
-  // ============================================
+  
 
   /**
    * Create a new booking request

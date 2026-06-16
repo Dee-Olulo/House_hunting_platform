@@ -1,4 +1,6 @@
-
+/*This file is the Angular routing configuration
+ file. Its purpose is to define how users navigate through
+  the application and which components are displayed for each URL.*/
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
@@ -35,7 +37,7 @@ export const routes: Routes = [
       .then(m => m.ForgotPasswordComponent)
 },
 
-  // ✅ FIXED: Add general properties list route (accessible to all authenticated users)
+  // Add general properties list route (accessible to all authenticated users)
   {
     path: 'properties',
     canActivate: [authGuard],

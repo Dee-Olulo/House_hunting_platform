@@ -34,18 +34,15 @@ from services.listing_scheduler import run_listing_confirmation_check
 
 
 def create_app():
-    # ------------------------------------------------------------------ #
-    # 1. Create the Flask app and load config from config.py              #
-    # ------------------------------------------------------------------ #
+    
+    # 1. Create the Flask app and load config from config.py             
     app = Flask(__name__)
     app.config.from_object(Config)
 
     # Cap incoming request size at 50 MB to prevent large upload abuse
     app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
-    # ------------------------------------------------------------------ #
-    # 2. Bind extensions to this app instance                             #
-    # ------------------------------------------------------------------ #
+    # 2. Bind extensions to this app instance                          
     # init_app() is the second half of the two-step extension setup.
     # mongo  -> database access
     # bcrypt -> password hashing
@@ -54,9 +51,8 @@ def create_app():
     bcrypt.init_app(app)
     jwt.init_app(app)
 
-    # ------------------------------------------------------------------ #
-    # 3. Configure CORS (Cross-Origin Resource Sharing)                   #
-    # ------------------------------------------------------------------ #
+   
+    # 3. Configure CORS (Cross-Origin Resource Sharing)                
     # The Angular dev server runs on port 4200. Without CORS headers the
     # browser blocks all requests from it to this Flask server on 5000.
     CORS(app, resources={
