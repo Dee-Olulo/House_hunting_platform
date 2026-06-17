@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    # flack configuration
+    # flask configuration
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
     # MongoDB

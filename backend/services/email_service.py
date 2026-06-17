@@ -13,7 +13,7 @@ class EmailService:
     def __init__(self):
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.sender_email = os.getenv("SENDER_EMAIL", "noreply@househunting.com")
+        self.sender_email = os.getenv("SENDER_EMAIL", "dianajerusha02@gmail.com")
         self.sender_password = os.getenv("SENDER_PASSWORD", "")
         self.sender_name = os.getenv("SENDER_NAME", "House Hunting Platform")
         self.enabled = os.getenv("EMAIL_ENABLED", "true").lower() == "true"
@@ -23,7 +23,7 @@ class EmailService:
         Send email using SMTP
         """
         if not self.enabled:
-            print(f"📧 [EMAIL DISABLED] Would send to {to_email}: {subject}")
+            print(f"[EMAIL DISABLED] Would send to {to_email}: {subject}")
             return True
         
         try:
@@ -51,10 +51,7 @@ class EmailService:
             print(f"❌ Failed to send email to {to_email}: {str(e)}")
             return False
 
-    # ==========================================
-    # PASSWORD RESET EMAIL  ← NEW
-    # ==========================================
-
+    # PASSWORD RESET EMAIL  
     def send_password_reset_email(self, user_email, user_name, reset_token):
         """Send the 6-digit password reset code to the user"""
         subject = "Your Password Reset Code - House Hunting Platform"
@@ -104,7 +101,7 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>🔐 Password Reset</h1>
+                    <h1>Password Reset</h1>
                 </div>
                 <div class="content">
                     <p>Hi {user_name},</p>
