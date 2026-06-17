@@ -93,18 +93,7 @@ export const routes: Routes = [
           import('./shared/notifications/notifications')
             .then(m => m.NotificationsComponent)
       },
-      {
-        path: 'payments',
-        loadComponent: () =>
-          import('./payments/payment-history/payment-history')
-            .then(m => m.PaymentHistoryComponent)
-      },
-      {
-        path: 'payments/:id',
-        loadComponent: () =>
-          import('./payments/payment-details/payment-details')
-            .then(m => m.PaymentDetailsComponent)
-      },
+      
       {
       path: 'analytics',
       loadComponent: () =>
@@ -167,24 +156,7 @@ export const routes: Routes = [
           import('./tenant/favourites/favourites.component')
             .then(m => m.FavouritesComponent)
       },
-      {
-        path: 'payments/create',
-        loadComponent: () =>
-          import('./payments/create-payment/create-payment')
-            .then(m => m.CreatePaymentComponent)
-      },
-      {
-        path: 'payments/history',
-        loadComponent: () =>
-          import('./payments/payment-history/payment-history')
-            .then(m => m.PaymentHistoryComponent)
-      },
-      {
-        path: 'payments/:id',
-        loadComponent: () =>
-          import('./payments/payment-details/payment-details')
-            .then(m => m.PaymentDetailsComponent)
-      },
+  
       {
         path: 'reviews',
         loadComponent: () =>

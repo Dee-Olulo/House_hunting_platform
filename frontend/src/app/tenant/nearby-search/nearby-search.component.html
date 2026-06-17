@@ -157,11 +157,7 @@
     <!-- List View -->
     <div class="properties-list" *ngIf="!isSearching && properties.length > 0 && viewMode === 'list'">
       <div class="property-card" *ngFor="let property of properties">
-        <!-- <img
-          [src]="property.images?.[0] || 'assets/images/placeholder-property.jpg'"
-          [alt]="property.title"
-          class="property-image"
-        /> -->
+        
         
         <div class="property-content">
           <div class="property-header">

@@ -18,7 +18,7 @@
       </div>
       <div class="header-actions">
         <button class="btn-mark-all" (click)="markAllAsRead()" *ngIf="statistics && statistics.unread_count > 0">
-          ✓ Mark All Read
+           Mark All Read
         </button>
         
       </div>
@@ -26,10 +26,10 @@
 
     <!-- Alerts -->
     <div class="alert alert-success" *ngIf="successMessage">
-      ✅ {{ successMessage }}
+      success {{ successMessage }}
     </div>
     <div class="alert alert-error" *ngIf="errorMessage">
-      ❌ {{ errorMessage }}
+      error {{ errorMessage }}
     </div>
 
     <!-- Filters -->

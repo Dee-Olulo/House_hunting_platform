@@ -19,15 +19,15 @@
 
     <!-- Alerts -->
     <div class="alert alert-success" *ngIf="successMessage">
-      ✅ {{ successMessage }}
+       {{ successMessage }}
     </div>
     <div class="alert alert-error" *ngIf="errorMessage">
-      ❌ {{ errorMessage }}
+       {{ errorMessage }}
     </div>
 
     <!-- Filters -->
     <div class="filters-section">
-      <h3>🔍 Filter Bookings</h3>
+      <h3>Filter Bookings</h3>
       <div class="filters-grid">
         <div class="filter-group">
           <label>Status</label>
@@ -88,7 +88,7 @@
 
           <div class="booking-info">
             <div class="info-row">
-              <span class="label">📍 Location:</span>
+              <span class="label"> Location:</span>
               <span>{{ booking.property_details?.address }}, {{ booking.property_details?.city }}</span>
             </div>
             <div class="info-row">
@@ -96,23 +96,23 @@
               <span>{{ booking.tenant_name }}</span>
             </div>
             <div class="info-row">
-              <span class="label">📧 Email:</span>
+              <span class="label">Email:</span>
               <span>{{ booking.tenant_email }}</span>
             </div>
             <div class="info-row" *ngIf="booking.tenant_phone">
-              <span class="label">📞 Phone:</span>
+              <span class="label">Phone:</span>
               <span>{{ booking.tenant_phone }}</span>
             </div>
             <div class="info-row">
-              <span class="label">📅 Date:</span>
+              <span class="label">Date:</span>
               <span>{{ formatDate(booking.booking_date) }}</span>
             </div>
             <div class="info-row">
-              <span class="label">🕐 Time:</span>
+              <span class="label">Time:</span>
               <span>{{ formatTime(booking.booking_time) }}</span>
             </div>
             <div class="info-row" *ngIf="booking.message">
-              <span class="label">💬 Message:</span>
+              <span class="label"> Message:</span>
               <span>{{ booking.message }}</span>
             </div>
           </div>
@@ -127,23 +127,23 @@
             <!-- Pending Actions -->
             <ng-container *ngIf="booking.status === 'pending'">
               <button class="btn-confirm" (click)="confirmBooking(booking)">
-                ✅ Confirm
+                Confirm
               </button>
               <button class="btn-reject" (click)="openRejectModal(booking)">
-                ❌ Reject
+                Reject
               </button>
             </ng-container>
 
             <!-- Confirmed Actions -->
             <ng-container *ngIf="booking.status === 'confirmed'">
               <button class="btn-complete" (click)="openCompleteModal(booking)">
-                ✔️ Complete
+                Complete
               </button>
             </ng-container>
 
             <!-- Notes Button -->
             <button class="btn-notes" (click)="openNotesModal(booking)">
-              📝 Notes
+              Notes
             </button>
           </div>
         </div>

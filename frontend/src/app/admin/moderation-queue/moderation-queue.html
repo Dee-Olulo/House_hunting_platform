@@ -93,20 +93,20 @@
         <!-- Property Stats -->
         <div class="property-stats">
           <span class="stat">
-            🖼️ {{ property.images.length }} images
+             {{ property.images.length }} images
           </span>
           <span class="stat">
-            📅 {{ property.created_at | date:'MMM d, y' }}
+             {{ property.created_at | date:'MMM d, y' }}
           </span>
         </div>
 
         <!-- Actions -->
         <div class="card-actions">
           <button class="approve-btn" (click)="openApproveModal(property)">
-            ✅ Approve
+             Approve
           </button>
           <button class="reject-btn" (click)="openRejectModal(property)">
-            ❌ Reject
+             Reject
           </button>
         </div>
       </div>
@@ -116,11 +116,11 @@
   <!-- No Properties -->
   <div *ngIf="!isLoading && properties.length === 0" class="no-properties">
     <div class="empty-state">
-      <div class="empty-icon">✨</div>
+      <div class="empty-icon"></div>
       <h2>All Clear!</h2>
       <p>No properties pending review at the moment.</p>
       <button class="refresh-btn" (click)="loadQueue()">
-        🔄 Check Again
+         Check Again
       </button>
     </div>
   </div>
@@ -149,7 +149,7 @@
   <!-- Approve Modal -->
   <div *ngIf="showApproveModal" class="modal-overlay" (click)="closeApproveModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>✅ Approve Property</h2>
+      <h2> Approve Property</h2>
       
       <div class="modal-property-info">
         <img
@@ -158,7 +158,7 @@
           class="modal-image"
         />
         <h3>{{ selectedProperty?.title }}</h3>
-        <p class="modal-location">📍 {{ selectedProperty?.city }}</p>
+        <p class="modal-location"> {{ selectedProperty?.city }}</p>
         <p class="modal-price">KES {{ selectedProperty?.price | number }}</p>
       </div>
 

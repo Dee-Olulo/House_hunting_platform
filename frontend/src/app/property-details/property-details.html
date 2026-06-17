@@ -6,7 +6,7 @@
 
 <!-- Error State -->
 <div *ngIf="errorMessage && !isLoading" class="error-container">
-  <div class="error-icon">⚠️</div>
+  <div class="error-icon"></div>
   <h3>Error Loading Property</h3>
   <p>{{ errorMessage }}</p>
   <button class="btn btn-primary" (click)="goBack()">Go Back</button>
@@ -18,10 +18,10 @@
   <!-- Header with Back Button -->
   <div class="details-header">
     <button class="back-btn" (click)="goBack()">
-      ← Back to Properties
+       Back to Properties
     </button>
     <button *ngIf="isOwner()" class="edit-btn" (click)="editProperty()">
-      ✏️ Edit Property
+       Edit Property
     </button>
   </div>
 
@@ -57,7 +57,7 @@
 
   <!-- Placeholder if no images -->
   <div class="no-image-placeholder" *ngIf="!hasImages()">
-    <div class="placeholder-icon">🏠</div>
+    <div class="placeholder-icon"></div>
     <p>No images available</p>
   </div>
   
@@ -115,12 +115,12 @@
         <span class="stat-label">Bathrooms</span>
       </div>
       <div class="stat-item" *ngIf="property.area_sqft">
-        <span class="stat-icon">📏</span>
+        <span class="stat-icon"></span>
         <span class="stat-value">{{ property.area_sqft }}</span>
         <span class="stat-label">Sq Ft</span>
       </div>
       <div class="stat-item">
-        <span class="stat-icon">🏢</span>
+        <span class="stat-icon"></span>
         <span class="stat-value">{{ property.property_type }}</span>
         <span class="stat-label">Type</span>
       </div>
@@ -128,13 +128,13 @@
 
     <!-- Description -->
     <div class="property-section">
-      <h2>📝 Description</h2>
+      <h2> Description</h2>
       <p class="description">{{ property.description }}</p>
     </div>
 
     <!-- Amenities -->
     <div class="property-section" *ngIf="property.amenities && property.amenities.length > 0">
-      <h2>✨ Amenities</h2>
+      <h2> Amenities</h2>
       <div class="amenities-grid">
         <div class="amenity-item" *ngFor="let amenity of property.amenities">
           <span class="amenity-icon">✓</span>
@@ -145,7 +145,7 @@
 
     <!-- Location & Map -->
     <div class="property-section" *ngIf="property.latitude && property.longitude">
-      <h2>📍 Location</h2>
+      <h2> Location</h2>
       <div class="location-info">
         <p>
           <strong>Address:</strong> {{ property.address }}<br>
@@ -154,7 +154,7 @@
           <strong>Country:</strong> {{ property.country }}
         </p>
         <button *ngIf="distanceToProperty !== null" class="btn btn-secondary" (click)="getDirections()">
-          🧭 Get Directions
+           Get Directions
         </button>
       </div>
       
@@ -166,13 +166,13 @@
     <!-- Action Buttons -->
     <div class="action-buttons">
       <button class="btn btn-primary btn-large" (click)="bookViewing()" *ngIf="!isOwner()">
-        📅 Book a Viewing
+         Book a Viewing
       </button>
     </div>
     
     <!-- Moderation Panel (for owners) -->
     <div *ngIf="isOwner() && property.moderation_status" class="moderation-panel">
-      <h3>📋 Moderation Status</h3>
+      <h3>Moderation Status</h3>
       
       <div class="moderation-info">
         <div class="info-row">
@@ -205,7 +205,7 @@
           <button *ngIf="property.moderation_status !== 'approved'" 
                   class="btn btn-primary"
                   (click)="requestRemoderation()">
-            🔄 Request Re-Review
+             Request Re-Review
           </button>
         </div>
       </div>

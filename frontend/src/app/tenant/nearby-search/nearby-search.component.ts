@@ -166,7 +166,7 @@ export class NearbySearchComponent implements OnInit {
    * Reset filters
    */
   resetFilters(): void {
-    this.radiusKm = 5;
+    this.radiusKm = 20;
     this.propertyType = '';
     this.minPrice = null;
     this.maxPrice = null;
